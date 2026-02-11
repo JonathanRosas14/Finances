@@ -1,0 +1,162 @@
+═════════════════════════════════════════════════════════════════
+        DOCUMENTACIÓN DEL PROYECTO FINANCES_PRO
+═════════════════════════════════════════════════════════════════
+
+DESCRIPCIÓN DEL PROYECTO
+─────────────────────────
+Proyecto de gestión financiera con arquitectura de microservicios usando:
+- Backend: Django + Django REST Framework
+- Frontend: Vue.js 3 con Vite
+- Base de datos: PostgreSQL
+- Contenedorización: Docker & Docker Compose
+- Autenticación: Local, Google y Apple
+
+
+═════════════════════════════════════════════════════════════════
+1. ESTRUCTURA INICIAL DEL PROYECTO
+═════════════════════════════════════════════════════════════════
+Se crearon las carpetas base:
+  • Backend/
+  • Frontend/
+
+Se configuraron archivos de contenedorización:
+  • docker-compose.yml (gestión de redes y contenedores)
+  • Backend/Dockerfile
+  • Frontend/Dockerfile
+
+
+═════════════════════════════════════════════════════════════════
+2. CONFIGURACIÓN DEL BACKEND (Django)
+═════════════════════════════════════════════════════════════════
+
+2.1 Instalación de dependencias iniciales
+─────────────────────────────────────────
+Command: pip install django
+Command: django-admin startproject core .
+
+2.2 Dependencias del proyecto (requirements.txt)
+─────────────────────────────────────────────────
+  • Django==5.0.1
+  • djangorestframework==3.14.0
+  • django-cors-headers==4.3.1
+  • psycopg2-binary==2.9.9
+  • python-dotenv==1.0.0
+
+2.3 Entorno virtual Python
+───────────────────────────
+Crear: python3 -m venv venv
+Activar: source venv/bin/activate
+
+2.4 Configuración de variables de entorno
+──────────────────────────────────────────
+Se creó archivo .env en la raíz del proyecto con:
+  • SECRET_KEY
+  • DEBUG
+  • ALLOWED_HOSTS
+  • Credenciales de base de datos
+
+2.5 Configuración de Django (settings.py)
+───────────────────────────────────────────
+Se habilitaron:
+  • Django REST Framework
+  • CORS Headers (para comunicación con Frontend)
+  • App 'finances'
+  • Carga de variables de entorno con python-dotenv
+
+
+═════════════════════════════════════════════════════════════════
+3. CONFIGURACIÓN DEL FRONTEND (Vue.js)
+═════════════════════════════════════════════════════════════════
+
+3.1 Inicialización del proyecto
+────────────────────────────────
+Command: npm create vue@latest
+
+3.2 Características seleccionadas
+──────────────────────────────────
+  • Router (SPA development)
+  • Pinia (state management)
+  • Linter (error prevention)
+  • Prettier (code formatting)
+
+3.3 Estructura del Frontend
+─────────────────────────────
+  • src/components/ - Componentes reutilizables
+  • src/router/ - Configuración de rutas
+  • src/stores/ - Gestión de estado con Pinia
+  • src/views/ - Vistas principales de la aplicación
+
+
+═════════════════════════════════════════════════════════════════
+4. CREACIÓN DE MODELOS Y BASE DE DATOS
+═════════════════════════════════════════════════════════════════
+
+4.1 Creación de la app 'finances'
+──────────────────────────────────
+Command: docker compose exec backend python manage.py startapp finances
+
+4.2 Modelos creados
+────────────────────
+Modelo: User
+  • username (CharField, unique)
+  • email (EmailField, unique)
+  • password (CharField)
+  • provider (CharField, choices: local/google/apple)
+  • provider_id (CharField, para OAuth)
+  • created_at (DateTimeField, auto_now_add)
+  • updated_at (DateTimeField, auto_now)
+  • Tabla: 'users'
+
+4.3 Migraciones
+────────────────
+Crear migraciones: docker compose exec backend python manage.py makemigrations
+Aplicar migraciones: docker compose exec backend python manage.py migrate
+
+
+═════════════════════════════════════════════════════════════════
+5. VERIFICACIÓN DE LA BASE DE DATOS
+═════════════════════════════════════════════════════════════════
+
+Acceder a PostgreSQL:
+Command: docker compose exec backend python manage.py dbshell
+
+Comandos útiles en PostgreSQL:
+  • \dt          - Ver todas las tablas
+  • \d users     - Ver estructura de la tabla 'users'
+  • \q           - Salir
+
+
+═════════════════════════════════════════════════════════════════
+6. LEVANTAMIENTO DE CONTENEDORES
+═════════════════════════════════════════════════════════════════
+
+Levantar contenedores:
+Command: docker compose up --build
+
+Ver logs de un contenedor:
+Command: docker logs <IDCONTAINER>
+
+Ver logs en tiempo real:
+Command: docker compose logs -f
+
+
+═════════════════════════════════════════════════════════════════
+7. ENDPOINTS DISPONIBLES
+═════════════════════════════════════════════════════════════════
+
+(A completar con los endpoints creados en la app finances)
+
+
+═════════════════════════════════════════════════════════════════
+8. PRÓXIMOS PASOS
+═════════════════════════════════════════════════════════════════
+
+  ☐ Crear serializers para User (serializers.py)
+  ☐ Crear viewsets/views para la API (views.py)
+  ☐ Configurar routers para los endpoints
+  ☐ Implementar autenticación con JWT
+  ☐ Configurar filtros y búsqueda en API
+  ☐ Crear componentes del Frontend
+  ☐ Integración Frontend-Backend
+  ☐ Tests unitarios
+  ☐ Documentación de API (Swagger/Redoc)

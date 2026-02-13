@@ -1,4 +1,5 @@
 from django.db import models
+import bcrypt
 
 class User(models.Model):
     PROVIDER_CHOICES = [
@@ -16,6 +17,18 @@ class User(models.Model):
 
     class Meta:
         db_table = 'users'
+    
+    def set_password(self, raw_password):
+        self.password = bycrypt.hashpw(
+            raw_password.encode('utf-8'), 
+            bcrypt.gensalt()
+        ).decode('utf-8')
+
+    def check_password(self, raw_password):
+        return bcrypt.checkpw(
+            raw_password.encode('utf-8'), 
+            self.password.encode('utf-8')
+        )    
         
     def __str__(self):
         return self.username

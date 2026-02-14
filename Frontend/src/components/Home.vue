@@ -201,8 +201,8 @@
             <h3>PRODUCT</h3>
             <ul>
               <li><router-link to="/features">Features</router-link></li>
-              <li><router-link to="/prices">Prices</router-link></li>
-              <li><router-link to="/security">Security</router-link></li>
+              <li><router-link to="/">Prices</router-link></li>
+              <li><router-link to="/">Security</router-link></li>
             </ul>
           </div>
           <div class="footer-column3">
@@ -210,7 +210,7 @@
             <ul>
               <li><router-link to="/about">About Us</router-link></li>
               <li><router-link to="/contact">Contact</router-link></li>
-              <li><router-link to="/blog">Blog</router-link></li>
+              <li><router-link to="/">Blog</router-link></li>
             </ul>
           </div>
         </div>

@@ -86,6 +86,13 @@ Command: npm create vue@latest
   • src/stores/ - Gestión de estado con Pinia
   • src/views/ - Vistas principales de la aplicación
 
+Instalamos axion para el Frontend
+docker-compose exec frontend npm install axios
+
+
+Instalamos google identity
+docker-compose exec frontend npm install vue3-google-login
+
 
 ═════════════════════════════════════════════════════════════════
 4. CREACIÓN DE MODELOS Y BASE DE DATOS
@@ -124,6 +131,8 @@ Comandos útiles en PostgreSQL:
   • \dt          - Ver todas las tablas
   • \d users     - Ver estructura de la tabla 'users'
   • \q           - Salir
+  • SELECT * FROM users;
+
 
 
 ═════════════════════════════════════════════════════════════════
@@ -141,22 +150,369 @@ Command: docker compose logs -f
 
 
 ═════════════════════════════════════════════════════════════════
-7. ENDPOINTS DISPONIBLES
+7. IMPLEMENTACIÓN DE SERIALIZERS Y VISTAS
 ═════════════════════════════════════════════════════════════════
 
-(A completar con los endpoints creados en la app finances)
+7.1 UserSerializer (serializers.py)
+────────────────────────────────────
+Se creó un serializer básico para el modelo User:
+  • Campos: id, username, email, created_at
+  • read_only_fields: id, created_at
+  • Utilizado en respuestas de API
+
+7.2 Vistas de Autenticación (views.py)
+────────────────────────────────────────
+Implementadas tres vistas principales:
+
+a) REGISTER (POST)
+   - URL: /api/register/
+   - Parámetros: username, email, password
+   - Comportamiento:
+     • Valida que todos los campos sean obligatorios
+     • Verifica que el email no esté registrado
+     • Hash de contraseña con bcrypt
+     • Retorna: mensaje de éxito (201)
+
+b) LOGIN (POST)
+   - URL: /api/login/
+   - Parámetros: email, password
+   - Comportamiento:
+     • Valida credenciales contra la BD
+     • Soporta usuarios locales y OAuth
+     • Genera JWT tokens (access_token y refresh_token)
+     • Retorna: token JWT y datos del usuario
+
+c) GOOGLE_AUTH (POST)
+   - URL: /api/google/
+   - Parámetros: token (ID token de Google)
+   - Comportamiento:
+     • Verifica el token OAuth2 de Google
+     • Crea usuario automáticamente si no existe
+     • Extrae: email, nombre, provider_id
+     • Retorna: token JWT, datos del usuario e isNewUser flag
 
 
 ═════════════════════════════════════════════════════════════════
-8. PRÓXIMOS PASOS
+8. ENDPOINTS DISPONIBLES
 ═════════════════════════════════════════════════════════════════
 
-  ☐ Crear serializers para User (serializers.py)
-  ☐ Crear viewsets/views para la API (views.py)
-  ☐ Configurar routers para los endpoints
-  ☐ Implementar autenticación con JWT
-  ☐ Configurar filtros y búsqueda en API
-  ☐ Crear componentes del Frontend
-  ☐ Integración Frontend-Backend
-  ☐ Tests unitarios
-  ☐ Documentación de API (Swagger/Redoc)
+BASE_URL: http://localhost:8000/api
+
+1. REGISTRO DE USUARIO
+   POST /register/
+   Body: {
+     "username": "string",
+     "email": "string",
+     "password": "string"
+   }
+   Response (201): {
+     "message": "Usuario registrado exitosamente"
+   }
+
+2. LOGIN LOCAL
+   POST /login/
+   Body: {
+     "email": "string",
+     "password": "string"
+   }
+   Response (200): {
+     "token": "jwt_token",
+     "user": {
+       "id": integer,
+       "username": "string",
+       "email": "string"
+     }
+   }
+
+3. AUTENTICACIÓN CON GOOGLE
+   POST /google/
+   Body: {
+     "token": "google_id_token"
+   }
+   Response (200): {
+     "token": "jwt_token",
+     "user": {
+       "id": integer,
+       "username": "string",
+       "email": "string"
+     },
+     "isNewUser": boolean
+   }
+
+
+═════════════════════════════════════════════════════════════════
+9. COMPONENTES DEL FRONTEND (Vue.js 3)
+═════════════════════════════════════════════════════════════════
+
+Se han creado los siguientes componentes principales:
+
+9.1 Componentes Implementados
+──────────────────────────────
+  • Home.vue         - Página de inicio
+  • Login.vue        - Formulario de login con Google OAuth
+  • Register.vue     - Formulario de registro con validaciones
+  • Dashboard.vue    - Panel principal (protegido)
+  • MainPage.vue     - Layout principal de la aplicación
+  • Features.vue     - Características del app
+  • About.vue        - Información del proyecto
+  • Contact.vue      - Página de contacto
+  • AuthSuccess.vue  - Página de éxito tras autenticación
+
+9.2 Rutas Configuradas (Router)
+─────────────────────────────────
+  • /                  → Home (pública)
+  • /login             → Login (pública)
+  • /register          → Register (pública)
+  • /features          → Features (pública)
+  • /about             → About (pública)
+  • /contact           → Contact (pública)
+  • /auth-success      → AuthSuccess (privada)
+  • /Dashboard         → MainPage + Dashboard (privada)
+
+9.3 Librerías Instaladas
+──────────────────────────
+  • axios              - HTTP client para llamadas API
+  • vue3-google-login  - Integración con Google OAuth
+
+
+═════════════════════════════════════════════════════════════════
+10. CONFIGURACIÓN DE JWT EN SETTINGS.PY
+═════════════════════════════════════════════════════════════════
+
+Se agregaron las siguientes configuraciones:
+
+1. Instalación de dependencia:
+   Command: pip install djangorestframework-simplejwt
+
+2. En INSTALLED_APPS:
+   • rest_framework_simplejwt
+
+3. Configuración JWT:
+   SIMPLE_JWT = {
+       'ACCESS_TOKEN_LIFETIME': timedelta(minutes=5),
+       'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
+       'ALGORITHM': 'HS256',
+   }
+
+4. REST_FRAMEWORK:
+   'DEFAULT_AUTHENTICATION_CLASSES': [
+       'rest_framework_simplejwt.authentication.JWTAuthentication',
+   ]
+
+
+═════════════════════════════════════════════════════════════════
+10. AUTENTICACIÓN GOOGLE - CONFIGURACIÓN REQUERIDA
+═════════════════════════════════════════════════════════════════
+
+Variables de entorno necesarias en .env:
+  • GOOGLE_CLIENT_ID=tu_google_client_id_aqui
+  • GOOGLE_CLIENT_SECRET=tu_google_client_secret_aqui
+
+Instalación:
+  Command: pip install google-auth google-auth-oauthlib google-auth-httplib2
+
+
+═════════════════════════════════════════════════════════════════
+11. AUTENTICACIÓN GOOGLE - CONFIGURACIÓN REQUERIDA
+═════════════════════════════════════════════════════════════════
+
+Variables de entorno necesarias en .env:
+  • GOOGLE_CLIENT_ID=tu_google_client_id_aqui
+  • GOOGLE_CLIENT_SECRET=tu_google_client_secret_aqui
+
+Instalación:
+  Command: pip install google-auth google-auth-oauthlib google-auth-httplib2
+
+
+═════════════════════════════════════════════════════════════════
+12. FLUJO DE AUTENTICACIÓN - FRONTEND
+═════════════════════════════════════════════════════════════════
+
+12.1 Login Local
+─────────────────
+1. Usuario ingresa email y contraseña en Login.vue
+2. Se hace POST a /api/login/ con credenciales
+3. Backend valida y retorna JWT token
+4. Frontend almacena token en localStorage
+5. Usuario es redirigido a /Dashboard
+
+12.2 Registro de Nuevo Usuario
+────────────────────────────────
+1. Usuario completa formulario en Register.vue
+2. Se valida que:
+   - Email sea único
+   - Contraseña tenga mínimo 8 caracteres
+   - Campos obligatorios estén completos
+3. POST a /api/register/ con datos
+4. Usuario es redirigido a /login
+
+12.3 Google OAuth
+──────────────────
+1. Usuario hace click en "Sign in with Google"
+2. Google abre modal de autenticación
+3. Tras autenticar, Google retorna ID token
+4. Frontend envía token a POST /api/google/
+5. Backend verifica y crea/obtiene usuario
+6. Se retorna JWT token y datos del usuario
+7. Usuario es redirigido a /auth-success o /Dashboard
+
+
+═════════════════════════════════════════════════════════════════
+13. PRÓXIMOS PASOS
+═════════════════════════════════════════════════════════════════
+
+COMPLETADOS ✓
+  ✓ Estructura base del proyecto
+  ✓ Configuración Docker y docker-compose
+  ✓ Setup de Django + DRF
+  ✓ Creación de modelo User
+  ✓ Serializers para User
+  ✓ Vistas de register, login y google_auth
+  ✓ Configuración de URLs (routers)
+  ✓ Autenticación con JWT
+  ✓ Autenticación con Google OAuth2
+  ✓ CORS configurado para Frontend
+
+PENDIENTES ☐
+  ☐ Autenticación con Apple OAuth
+  ☐ Crear modelo de Transacciones/Movimientos
+  ☐ Crear modelo de Categorías
+  ☐ Crear modelo de Presupuesto
+  ☐ ViewSets para gestión completa de datos (CRUD)
+  ☐ Filtros y búsqueda avanzada
+  ☐ Validaciones adicionales en serializers
+  ☐ Tests unitarios para Backend
+  ☐ Integración complete Frontend-Backend
+  ☐ Componentes del Frontend (Login, Register, Dashboard)
+  ☐ Gestión de estado (Pinia stores)
+  ☐ Manejo de errores y excepciones
+  ☐ Documentación Swagger/Redoc
+  ☐ Deployment a producción
+
+
+═════════════════════════════════════════════════════════════════
+14. COMANDOS ÚTILES PARA DESARROLLO
+═════════════════════════════════════════════════════════════════
+
+14.1 Docker & Docker Compose
+──────────────────────────────
+Levantar contenedores (first time):
+  Command: docker compose up --build
+
+Levantar contenedores:
+  Command: docker compose up
+
+Detener contenedores:
+  Command: docker compose down
+
+Restartear contenedores:
+  Command: docker compose restart
+
+Ver logs en tiempo real:
+  Command: docker compose logs -f
+
+Ver logs de un servicio específico:
+  Command: docker compose logs -f backend
+  Command: docker compose logs -f frontend
+
+14.2 Backend - Comandos Django
+────────────────────────────────
+Ejecutar comando en el contenedor:
+  Command: docker compose exec backend python manage.py <command>
+
+Crear migraciones:
+  Command: docker compose exec backend python manage.py makemigrations
+
+Aplicar migraciones:
+  Command: docker compose exec backend python manage.py migrate
+
+Acceder a la shell de Django:
+  Command: docker compose exec backend python manage.py shell
+
+Acceder a PostgreSQL desde Django:
+  Command: docker compose exec backend python manage.py dbshell
+
+Crear superusuario:
+  Command: docker compose exec backend python manage.py createsuperuser
+
+14.3 Frontend - Comandos npm
+──────────────────────────────
+Instalar dependencias:
+  Command: docker compose exec frontend npm install
+
+Instalar paquete específico:
+  Command: docker compose exec frontend npm install <nombre_paquete>
+
+Ver procesos ejecutándose:
+  Command: docker compose ps
+
+14.4 Acceso a Servicios
+────────────────────────
+Backend (API):        http://localhost:8000
+Admin Django:         http://localhost:8000/admin
+Frontend:             http://localhost:5173
+
+
+═════════════════════════════════════════════════════════════════
+15. CONFIGURACIÓN DE VARIABLES DE ENTORNO
+═════════════════════════════════════════════════════════════════
+
+Crear archivo .env en la raíz del Backend con:
+
+# Django
+SECRET_KEY=your-secret-key-here
+DEBUG=1
+ALLOWED_HOSTS=localhost,127.0.0.1,backend
+
+# Database
+DB_ENGINE=django.db.backends.postgresql
+DB_NAME=finances_db
+DB_USER=finances_user
+DB_PASSWORD=your_password
+DB_HOST=db
+DB_PORT=5432
+
+# Google OAuth
+GOOGLE_CLIENT_ID=your-google-client-id
+GOOGLE_CLIENT_SECRET=your-google-client-secret
+
+# CORS
+CORS_ALLOWED_ORIGINS=http://localhost:5173,http://localhost:3000
+
+# JWT
+ACCESS_TOKEN_LIFETIME=5
+REFRESH_TOKEN_LIFETIME=1
+
+
+═════════════════════════════════════════════════════════════════
+16. ESTRUCTURA DE CARPETAS - DETALLES
+═════════════════════════════════════════════════════════════════
+
+Backend/
+├── core/                    # Configuración principal de Django
+│   ├── settings.py           # Configuración del proyecto
+│   ├── urls.py               # URLs principales
+│   ├── wsgi.py               # Servidor WSGI
+│   └── asgi.py               # Servidor ASGI
+├── finances/               # App principal de la aplicación
+│   ├── models.py             # Modelos de BD
+│   ├── serializers.py        # DRF Serializers
+│   ├── views.py              # Vistas y endpoints
+│   ├── urls.py               # URLs de la app
+│   ├── admin.py              # Admin de Django
+│   └── migrations/           # Migraciones de BD
+├── manage.py               # Script de gestión Django
+├── requirements.txt        # Dependencias Python
+└── Dockerfile             # Configuración Docker
+
+Frontend/
+├── src/
+│   ├── components/         # Componentes Vue
+│   ├── router/             # Configuración de rutas
+│   ├── stores/             # Estado Pinia (futuro)
+│   ├── assets/             # Imágenes y estilos
+│   ├── App.vue             # Componente raíz
+│   └── main.js             # Entry point
+├── package.json            # Dependencias npm
+├── vite.config.js          # Configuración Vite
+└── Dockerfile             # Configuración Docker

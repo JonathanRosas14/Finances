@@ -1,15 +1,14 @@
-from django.shortcuts import render
 from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import IsAuthenticated, AllowAny
+from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework_simplejwt.tokens import RefreshToken
-from django.conf import settings
 from google.oauth2 import id_token
 from google.auth.transport import requests as google_requests
 from .models import User
-from .serializers import UserSerializer
+import bcrypt
 import os
+
 
 def get_tokens_for_user(user):
     refresh = RefreshToken()
@@ -20,7 +19,7 @@ def get_tokens_for_user(user):
         'refresh': str(refresh),
     }
 
-# Registro de usuario
+
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def register(request):
@@ -41,8 +40,12 @@ def register(request):
                 status=status.HTTP_409_CONFLICT
             )
 
-        user = User(username=username, email=email)
-        user.set_password(password)
+        hashed = bcrypt.hashpw(
+            password.encode('utf-8'),
+            bcrypt.gensalt()
+        ).decode('utf-8')
+
+        user = User(username=username, email=email, password=hashed)
         user.save()
 
         return Response(
@@ -50,12 +53,13 @@ def register(request):
             status=status.HTTP_201_CREATED
         )
     except Exception as e:
+        print(f"Error en register: {e}")
         return Response(
-            {'message': 'Error al registrar el usuario'},
+            {'message': str(e)},
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
 
-# Login de usuario
+
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def login(request):
@@ -83,7 +87,10 @@ def login(request):
                 status=status.HTTP_401_UNAUTHORIZED
             )
 
-        if not user.check_password(password):
+        if not bcrypt.checkpw(
+            password.encode('utf-8'),
+            user.password.encode('utf-8')
+        ):
             return Response(
                 {'message': 'Credenciales inválidas'},
                 status=status.HTTP_401_UNAUTHORIZED
@@ -99,12 +106,13 @@ def login(request):
             }
         })
     except Exception as e:
+        print(f"Error en login: {e}")
         return Response(
-            {'message': 'Error al iniciar sesión'},
+            {'message': str(e)},
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
 
-# Login con Google
+
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def google_auth(request):
@@ -141,7 +149,8 @@ def google_auth(request):
             'isNewUser': created
         })
     except Exception as e:
+        print(f"Error en google_auth: {e}")
         return Response(
-            {'message': 'Error en autenticación con Google'},
+            {'message': str(e)},
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
         )

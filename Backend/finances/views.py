@@ -8,6 +8,9 @@ from google.auth.transport import requests as google_requests
 from .models import User
 import bcrypt
 import os
+from .models import User, Category
+from .serializers import CategorySerializer
+from rest_framework_simplejwt.tokens import AccessToken
 
 
 def get_tokens_for_user(user):
@@ -150,6 +153,162 @@ def google_auth(request):
         })
     except Exception as e:
         print(f"Error en google_auth: {e}")
+        return Response(
+            {'message': str(e)},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+
+# Obtener categorías del usuario
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def get_categories(request):
+    try:
+        auth_header = request.headers.get('Authorization', '')
+        if not auth_header.startswith('Bearer '):
+            return Response(
+                {'message': 'Token no proporcionado'},
+                status=status.HTTP_401_UNAUTHORIZED
+            )
+        
+        token = auth_header.split(' ')[1]
+        access_token = AccessToken(token)
+        user_id = access_token['id']
+        
+        user = User.objects.get(id=user_id)
+        categories = Category.objects.filter(user=user).order_by('-created_at')
+        serializer = CategorySerializer(categories, many=True)
+        
+        return Response(serializer.data)
+    except Exception as e:
+        print(f"Error en get_categories: {e}")
+        return Response(
+            {'message': str(e)},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+
+
+# Crear categoría
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def create_category(request):
+    try:
+        auth_header = request.headers.get('Authorization', '')
+        if not auth_header.startswith('Bearer '):
+            return Response(
+                {'message': 'Token no proporcionado'},
+                status=status.HTTP_401_UNAUTHORIZED
+            )
+        
+        token = auth_header.split(' ')[1]
+        access_token = AccessToken(token)
+        user_id = access_token['id']
+        user = User.objects.get(id=user_id)
+        
+        request.user = user
+        serializer = CategorySerializer(data=request.data, context={'request': request})
+        
+        if not serializer.is_valid():
+            errors = serializer.errors
+            first_error = next(iter(errors.values()))[0]
+            return Response(
+                {'message': str(first_error)},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        category = serializer.save(user=user)
+        
+        return Response({
+            'message': 'Categoría creada exitosamente',
+            'category': CategorySerializer(category).data
+        }, status=status.HTTP_201_CREATED)
+        
+    except Exception as e:
+        print(f"Error en create_category: {e}")
+        return Response(
+            {'message': str(e)},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+
+
+# Actualizar categoría
+@api_view(['PUT'])
+@permission_classes([AllowAny])
+def update_category(request, category_id):
+    try:
+        auth_header = request.headers.get('Authorization', '')
+        if not auth_header.startswith('Bearer '):
+            return Response(
+                {'message': 'Token no proporcionado'},
+                status=status.HTTP_401_UNAUTHORIZED
+            )
+        
+        token = auth_header.split(' ')[1]
+        access_token = AccessToken(token)
+        user_id = access_token['id']
+        user = User.objects.get(id=user_id)
+        
+        try:
+            category = Category.objects.get(id=category_id, user=user)
+        except Category.DoesNotExist:
+            return Response(
+                {'message': 'Categoría no encontrada'},
+                status=status.HTTP_404_NOT_FOUND
+            )
+        
+        request.user = user
+        serializer = CategorySerializer(category, data=request.data, context={'request': request})
+        
+        if not serializer.is_valid():
+            errors = serializer.errors
+            first_error = next(iter(errors.values()))[0]
+            return Response(
+                {'message': str(first_error)},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        serializer.save()
+        
+        return Response({'message': 'Categoría actualizada exitosamente'})
+        
+    except Exception as e:
+        print(f"Error en update_category: {e}")
+        return Response(
+            {'message': str(e)},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+
+
+# Eliminar categoría
+@api_view(['DELETE'])
+@permission_classes([AllowAny])
+def delete_category(request, category_id):
+    try:
+        auth_header = request.headers.get('Authorization', '')
+        if not auth_header.startswith('Bearer '):
+            return Response(
+                {'message': 'Token no proporcionado'},
+                status=status.HTTP_401_UNAUTHORIZED
+            )
+        
+        token = auth_header.split(' ')[1]
+        access_token = AccessToken(token)
+        user_id = access_token['id']
+        user = User.objects.get(id=user_id)
+        
+        try:
+            category = Category.objects.get(id=category_id, user=user)
+        except Category.DoesNotExist:
+            return Response(
+                {'message': 'Categoría no encontrada'},
+                status=status.HTTP_404_NOT_FOUND
+            )
+        
+        category.delete()
+        
+        return Response({'message': 'Categoría eliminada exitosamente'})
+        
+    except Exception as e:
+        print(f"Error en delete_category: {e}")
         return Response(
             {'message': str(e)},
             status=status.HTTP_500_INTERNAL_SERVER_ERROR

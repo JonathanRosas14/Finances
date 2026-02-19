@@ -25,6 +25,21 @@ const routes = [
         name: 'Dashboard',
         component: () => import('../components/Dashboard.vue'),
       },
+      {
+        path: '/budgets',
+        name: 'Budgets',
+        component: () => import('../components/Budgets.vue'),
+      },
+      {
+        path: '/goals',
+        name: 'Goals',
+        component: () => import('../components/Goals.vue'),
+      },
+      {
+        path: '/categories',
+        name: 'Categories',
+        component: () => import('../components/Categories.vue'),
+      },
     ],
   },
 ]

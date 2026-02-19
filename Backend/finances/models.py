@@ -19,7 +19,7 @@ class User(models.Model):
         db_table = 'users'
     
     def set_password(self, raw_password):
-        self.password = bycrypt.hashpw(
+        self.password = bcrypt.hashpw(
             raw_password.encode('utf-8'), 
             bcrypt.gensalt()
         ).decode('utf-8')
@@ -32,3 +32,24 @@ class User(models.Model):
         
     def __str__(self):
         return self.username
+
+class Category(models.Model):
+    Type_CHOICES = [
+        ('income', 'Income'),
+        ('expense', 'Expense'),
+    ]
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='categories')
+    name = models.CharField(max_length=50)
+    icon = models.CharField(max_length=50, default='📦')
+    color = models.CharField(max_length=7, default='#95A5A6')
+    type = models.CharField(max_length=20, choices=Type_CHOICES)
+    parent_id = models.IntegerField(blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = 'categories'
+        unique_together = ('user', 'name', 'type')
+    
+    def __str__(self):
+        return f"{self.name} ({self.type})"
+    

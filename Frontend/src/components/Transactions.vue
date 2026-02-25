@@ -67,7 +67,7 @@
               >
                 <td>{{ formatDate(transaction.transaction_date) }}</td>
                 <td>{{ transaction.description }}</td>
-                <td>{{ transaction.category_name }}</td>
+                <td>{{ transaction.category_name || "Sin categoría" }}</td>
                 <td>{{ transaction.type }}</td>
                 <td>${{ transaction.amount }}</td>
                 <td>
@@ -365,12 +365,6 @@ const getCategoryName = (categoryId) => {
   return category ? category.name : "Sin categoría";
 };
 
-// Obtener color de categoría
-const getCategoryColor = (categoryId) => {
-  const category = categories.value.find((c) => c.id === categoryId);
-  return category ? category.color : "#95A5A6";
-};
-
 // Formatear fecha
 const formatDate = (dateString) => {
   const date = new Date(dateString);
@@ -597,6 +591,12 @@ onMounted(() => {
   padding: 20px;
 }
 
+.botom-agree {
+  display: flex;
+  justify-content: flex-start;
+  margin-bottom: 30px;
+}
+
 .botom-agree button {
   background-color: #1a7f3a;
   color: #ffffff;
@@ -748,6 +748,7 @@ onMounted(() => {
   box-shadow: 0 2px 6px rgba(231, 76, 60, 0.2);
   transform: translateY(-1px);
 }
+
 /* Modal Animations */
 .modal-fade-enter-active,
 .modal-fade-leave-active {

@@ -98,21 +98,54 @@ class CategorySerializer(serializers.ModelSerializer):
             raise serializers.ValidationError('Ya existe una categoría con ese nombre')
         
         return value
-    
+            
 class TransactionSerializer(serializers.ModelSerializer):
-    category_id = serializers.SerializerMethodField(read_only=True)
+    category_id = serializers.IntegerField(required=False, allow_null=True, write_only=False)
     category_name = serializers.SerializerMethodField(read_only=True)
     
     class Meta:
         model = Transaction
-        fields = ['id', 'amount', 'transaction_date', 'description', 'category', 'category_id', 'category_name', 'type', 'payment_method', 'is_recurring', 'recurring_frequency', 'notes', 'created_at']
-        read_only_fields = ['id', 'created_at']
-    
-    def get_category_id(self, obj):
-        return obj.category.id if obj.category else None
+        fields = ['id', 'amount', 'transaction_date', 'description', 'category_id', 'category_name', 'type', 'payment_method', 'is_recurring', 'recurring_frequency', 'notes', 'created_at']
+        read_only_fields = ['id', 'created_at', 'category_name']
     
     def get_category_name(self, obj):
         return obj.category.name if obj.category else 'Sin categoría'
+    
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        data['category_id'] = instance.category.id if instance.category else None
+        return data
+    
+    def create(self, validated_data):
+        category_id = validated_data.pop('category_id', None)
+        
+        if category_id:
+            try:
+                category = Category.objects.get(id=category_id, user=self.context['request'].user)
+                validated_data['category'] = category
+            except Category.DoesNotExist:
+                raise serializers.ValidationError('Categoría no encontrada')
+        
+        return Transaction.objects.create(**validated_data)
+    
+    def update(self, instance, validated_data):
+        category_id = validated_data.pop('category_id', None)
+        
+        if category_id is not None:
+            if category_id:
+                try:
+                    category = Category.objects.get(id=category_id, user=self.context['request'].user)
+                    instance.category = category
+                except Category.DoesNotExist:
+                    raise serializers.ValidationError('Categoría no encontrada')
+            else:
+                instance.category = None
+        
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+        
+        instance.save()
+        return instance
     
     def validate_transaction_date(self, value):
         if value is None:

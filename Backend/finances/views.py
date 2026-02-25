@@ -270,7 +270,7 @@ def delete_category(request, category_id):
 def get_transactions(request):
     try:
         transactions = Transaction.objects.filter(user=request.user).order_by('-created_at')
-        serializer = TransactionSerializer(transactions, many=True)
+        serializer = TransactionSerializer(transactions, many=True, context={'request': request})
         return Response(serializer.data)
     except Exception as e:
         print(f"Error en get_transactions: {e}")
@@ -283,7 +283,7 @@ def get_transactions(request):
 @permission_classes([IsAuthenticated])
 def create_transaction(request):
     try:
-        serializer = TransactionSerializer(data=request.data)
+        serializer = TransactionSerializer(data=request.data, context={'request': request})
         
         if not serializer.is_valid():
             errors = serializer.errors
@@ -297,7 +297,7 @@ def create_transaction(request):
         
         return Response({
             'message': 'Transacción creada exitosamente',
-            'transaction': TransactionSerializer(transaction).data
+            'transaction': TransactionSerializer(transaction, context={'request': request}).data
         }, status=status.HTTP_201_CREATED)
         
     except Exception as e:
@@ -320,7 +320,7 @@ def update_transaction(request, transaction_id):
                 status=status.HTTP_404_NOT_FOUND
             )
         
-        serializer = TransactionSerializer(transaction, data=request.data)
+        serializer = TransactionSerializer(transaction, data=request.data, context={'request': request}, partial=True)
         
         if not serializer.is_valid():
             errors = serializer.errors
@@ -332,7 +332,10 @@ def update_transaction(request, transaction_id):
         
         serializer.save()
         
-        return Response({'message': 'Transacción actualizada exitosamente'})
+        return Response({
+            'message': 'Transacción actualizada exitosamente',
+            'transaction': TransactionSerializer(serializer.instance, context={'request': request}).data
+        })
         
     except Exception as e:
         print(f"Error en update_transaction: {e}")

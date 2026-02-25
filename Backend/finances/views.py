@@ -1,24 +1,25 @@
 from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework_simplejwt.tokens import RefreshToken
 from google.oauth2 import id_token
 from google.auth.transport import requests as google_requests
-from .models import User
+from .serializers import RegisterSerializer, LoginSerializer, CategorySerializer, TransactionSerializer
+from .models import User, Category, Transaction
 import bcrypt
 import os
-from .models import User, Category
-from .serializers import CategorySerializer
-from rest_framework_simplejwt.tokens import AccessToken
 
 
 def get_tokens_for_user(user):
     refresh = RefreshToken()
+    refresh['user_id'] = user.id
     refresh['id'] = user.id
     refresh['email'] = user.email
+    refresh['username'] = user.username
+    access = refresh.access_token
     return {
-        'token': str(refresh.access_token),
+        'token': str(access),
         'refresh': str(refresh),
     }
 
@@ -160,24 +161,11 @@ def google_auth(request):
 
 # Obtener categorías del usuario
 @api_view(['GET'])
-@permission_classes([AllowAny])
+@permission_classes([IsAuthenticated])
 def get_categories(request):
     try:
-        auth_header = request.headers.get('Authorization', '')
-        if not auth_header.startswith('Bearer '):
-            return Response(
-                {'message': 'Token no proporcionado'},
-                status=status.HTTP_401_UNAUTHORIZED
-            )
-        
-        token = auth_header.split(' ')[1]
-        access_token = AccessToken(token)
-        user_id = access_token['id']
-        
-        user = User.objects.get(id=user_id)
-        categories = Category.objects.filter(user=user).order_by('-created_at')
+        categories = Category.objects.filter(user=request.user).order_by('-created_at')
         serializer = CategorySerializer(categories, many=True)
-        
         return Response(serializer.data)
     except Exception as e:
         print(f"Error en get_categories: {e}")
@@ -189,22 +177,9 @@ def get_categories(request):
 
 # Crear categoría
 @api_view(['POST'])
-@permission_classes([AllowAny])
+@permission_classes([IsAuthenticated])
 def create_category(request):
     try:
-        auth_header = request.headers.get('Authorization', '')
-        if not auth_header.startswith('Bearer '):
-            return Response(
-                {'message': 'Token no proporcionado'},
-                status=status.HTTP_401_UNAUTHORIZED
-            )
-        
-        token = auth_header.split(' ')[1]
-        access_token = AccessToken(token)
-        user_id = access_token['id']
-        user = User.objects.get(id=user_id)
-        
-        request.user = user
         serializer = CategorySerializer(data=request.data, context={'request': request})
         
         if not serializer.is_valid():
@@ -215,7 +190,7 @@ def create_category(request):
                 status=status.HTTP_400_BAD_REQUEST
             )
         
-        category = serializer.save(user=user)
+        category = serializer.save(user=request.user)
         
         return Response({
             'message': 'Categoría creada exitosamente',
@@ -232,30 +207,17 @@ def create_category(request):
 
 # Actualizar categoría
 @api_view(['PUT'])
-@permission_classes([AllowAny])
+@permission_classes([IsAuthenticated])
 def update_category(request, category_id):
     try:
-        auth_header = request.headers.get('Authorization', '')
-        if not auth_header.startswith('Bearer '):
-            return Response(
-                {'message': 'Token no proporcionado'},
-                status=status.HTTP_401_UNAUTHORIZED
-            )
-        
-        token = auth_header.split(' ')[1]
-        access_token = AccessToken(token)
-        user_id = access_token['id']
-        user = User.objects.get(id=user_id)
-        
         try:
-            category = Category.objects.get(id=category_id, user=user)
+            category = Category.objects.get(id=category_id, user=request.user)
         except Category.DoesNotExist:
             return Response(
                 {'message': 'Categoría no encontrada'},
                 status=status.HTTP_404_NOT_FOUND
             )
         
-        request.user = user
         serializer = CategorySerializer(category, data=request.data, context={'request': request})
         
         if not serializer.is_valid():
@@ -280,23 +242,11 @@ def update_category(request, category_id):
 
 # Eliminar categoría
 @api_view(['DELETE'])
-@permission_classes([AllowAny])
+@permission_classes([IsAuthenticated])
 def delete_category(request, category_id):
     try:
-        auth_header = request.headers.get('Authorization', '')
-        if not auth_header.startswith('Bearer '):
-            return Response(
-                {'message': 'Token no proporcionado'},
-                status=status.HTTP_401_UNAUTHORIZED
-            )
-        
-        token = auth_header.split(' ')[1]
-        access_token = AccessToken(token)
-        user_id = access_token['id']
-        user = User.objects.get(id=user_id)
-        
         try:
-            category = Category.objects.get(id=category_id, user=user)
+            category = Category.objects.get(id=category_id, user=request.user)
         except Category.DoesNotExist:
             return Response(
                 {'message': 'Categoría no encontrada'},
@@ -309,6 +259,107 @@ def delete_category(request, category_id):
         
     except Exception as e:
         print(f"Error en delete_category: {e}")
+        return Response(
+            {'message': str(e)},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+
+#obterner transacciones del usuario
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_transactions(request):
+    try:
+        transactions = Transaction.objects.filter(user=request.user).order_by('-created_at')
+        serializer = TransactionSerializer(transactions, many=True)
+        return Response(serializer.data)
+    except Exception as e:
+        print(f"Error en get_transactions: {e}")
+        return Response(
+            {'message': str(e)},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+#crear transacción
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def create_transaction(request):
+    try:
+        serializer = TransactionSerializer(data=request.data)
+        
+        if not serializer.is_valid():
+            errors = serializer.errors
+            first_error = next(iter(errors.values()))[0]
+            return Response(
+                {'message': str(first_error)},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        transaction = serializer.save(user=request.user)
+        
+        return Response({
+            'message': 'Transacción creada exitosamente',
+            'transaction': TransactionSerializer(transaction).data
+        }, status=status.HTTP_201_CREATED)
+        
+    except Exception as e:
+        print(f"Error en create_transaction: {e}")
+        return Response(
+            {'message': str(e)},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+
+#actualizar transacción
+@api_view(['PUT'])
+@permission_classes([IsAuthenticated])
+def update_transaction(request, transaction_id):
+    try:
+        try:
+            transaction = Transaction.objects.get(id=transaction_id, user=request.user)
+        except Transaction.DoesNotExist:
+            return Response(
+                {'message': 'Transacción no encontrada'},
+                status=status.HTTP_404_NOT_FOUND
+            )
+        
+        serializer = TransactionSerializer(transaction, data=request.data)
+        
+        if not serializer.is_valid():
+            errors = serializer.errors
+            first_error = next(iter(errors.values()))[0]
+            return Response(
+                {'message': str(first_error)},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        serializer.save()
+        
+        return Response({'message': 'Transacción actualizada exitosamente'})
+        
+    except Exception as e:
+        print(f"Error en update_transaction: {e}")
+        return Response(
+            {'message': str(e)},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+
+#eliminar transacción
+@api_view(['DELETE'])
+@permission_classes([IsAuthenticated])
+def delete_transaction(request, transaction_id):
+    try:
+        try:
+            transaction = Transaction.objects.get(id=transaction_id, user=request.user)
+        except Transaction.DoesNotExist:
+            return Response(
+                {'message': 'Transacción no encontrada'},
+                status=status.HTTP_404_NOT_FOUND
+            )
+        
+        transaction.delete()
+        
+        return Response({'message': 'Transacción eliminada exitosamente'})
+        
+    except Exception as e:
+        print(f"Error en delete_transaction: {e}")
         return Response(
             {'message': str(e)},
             status=status.HTTP_500_INTERNAL_SERVER_ERROR

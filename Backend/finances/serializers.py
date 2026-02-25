@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import User, Category
+from .models import User, Category, Transaction
 import re
 
 
@@ -97,4 +97,29 @@ class CategorySerializer(serializers.ModelSerializer):
         if query.exists():
             raise serializers.ValidationError('Ya existe una categoría con ese nombre')
         
+        return value
+    
+class TransactionSerializer(serializers.ModelSerializer):
+    category_id = serializers.SerializerMethodField(read_only=True)
+    category_name = serializers.SerializerMethodField(read_only=True)
+    
+    class Meta:
+        model = Transaction
+        fields = ['id', 'amount', 'transaction_date', 'description', 'category', 'category_id', 'category_name', 'type', 'payment_method', 'is_recurring', 'recurring_frequency', 'notes', 'created_at']
+        read_only_fields = ['id', 'created_at']
+    
+    def get_category_id(self, obj):
+        return obj.category.id if obj.category else None
+    
+    def get_category_name(self, obj):
+        return obj.category.name if obj.category else 'Sin categoría'
+    
+    def validate_transaction_date(self, value):
+        if value is None:
+            raise serializers.ValidationError('La fecha es obligatoria')
+        return value
+    
+    def validate_amount(self, value):
+        if value <= 0:
+            raise serializers.ValidationError('El monto debe ser mayor a 0')
         return value

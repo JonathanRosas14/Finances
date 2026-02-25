@@ -44,6 +44,22 @@
       </div>
     </div>
 
+    <!-- Delete Confirmation Modal -->
+    <transition name="modal-fade">
+      <div v-if="showDeleteConfirmModal" class="modal-delete" @click="cancelDeleteCategory">
+        <div class="modal-delete-content" @click.stop>
+          <div class="modal-delete-header">
+            <h2>Eliminar Categoría</h2>
+            <p>¿Estás seguro de que deseas eliminar esta categoría?</p>
+          </div>
+          <div class="modal-delete-buttons">
+            <button @click="cancelDeleteCategory" class="btn-cancel">Cancelar</button>
+            <button @click="confirmDeleteCategory" class="btn-delete">Eliminar</button>
+          </div>
+        </div>
+      </div>
+    </transition>
+
     <!-- Modal component would go here -->
     <transition name="modal">
       <!-- Modal content placeholder -->
@@ -156,6 +172,9 @@ const categoryForm = ref({
   icon: "🏪",
 });
 
+const showDeleteConfirmModal = ref(false);
+const deleteConfirmId = ref(null);
+
 const openModal = () => {
   categoryForm.value = {
     name: "",
@@ -233,12 +252,18 @@ const fetchCategories = async () => {
   }
 };
 
-const deleteCategory = async (categoryId) => {
-  if (!confirm("Are you sure you want to delete this category?")) {
-    return;
-  }
+const deleteCategory = (categoryId) => {
+  console.log("🗑️ Abriendo modal para eliminar categoría...");
+  deleteConfirmId.value = categoryId;
+  showDeleteConfirmModal.value = true;
+};
+
+const confirmDeleteCategory = async () => {
+  const categoryId = deleteConfirmId.value;
+  showDeleteConfirmModal.value = false;
 
   try {
+    console.log("🔑 Token obtenido, enviando DELETE...");
     const token = localStorage.getItem("token");
 
     const response = await fetch(
@@ -255,11 +280,18 @@ const deleteCategory = async (categoryId) => {
       throw new Error("Error deleting category");
     }
 
+    console.log("✅ Categoría eliminada exitosamente");
     categories.value = categories.value.filter((c) => c.id !== categoryId);
   } catch (error) {
     console.error("Error deleting category:", error);
     alert("Error deleting category");
   }
+};
+
+const cancelDeleteCategory = () => {
+  console.log("❌ Eliminación cancelada");
+  showDeleteConfirmModal.value = false;
+  deleteConfirmId.value = null;
 };
 
 onMounted(() => {
@@ -645,5 +677,108 @@ onMounted(() => {
   border-color: #1a7f3a;
   background-color: #e8f4ec;
   box-shadow: 0 0 0 2px rgba(26, 127, 58, 0.1);
+}
+
+/* Delete Confirmation Modal Styles */
+.modal-delete {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.4);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 2000;
+}
+
+.modal-delete-content {
+  background-color: white;
+  border-radius: 12px;
+  padding: 32px;
+  max-width: 500px;
+  width: 90%;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+  animation: slideUp 0.3s ease-out;
+}
+
+.modal-delete-header {
+  margin-bottom: 32px;
+  text-align: center;
+}
+
+.modal-delete-header h2 {
+  font-size: 22px;
+  font-weight: 700;
+  color: #1a1a1a;
+  margin-bottom: 12px;
+}
+
+.modal-delete-header p {
+  font-size: 14px;
+  color: #666;
+  line-height: 1.5;
+}
+
+.modal-delete-buttons {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+}
+
+.btn-cancel,
+.btn-delete {
+  padding: 12px 28px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 15px;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  min-width: 120px;
+}
+
+.btn-cancel {
+  background-color: #e8ebe8;
+  color: #333;
+}
+
+.btn-cancel:hover {
+  background-color: #dce0dc;
+  transform: translateY(-2px);
+}
+
+.btn-delete {
+  background-color: #e74c3c;
+  color: white;
+  box-shadow: 0 2px 8px rgba(231, 76, 60, 0.2);
+}
+
+.btn-delete:hover {
+  background-color: #c0392b;
+  box-shadow: 0 4px 12px rgba(231, 76, 60, 0.3);
+  transform: translateY(-2px);
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.modal-fade-enter-active,
+.modal-fade-leave-active {
+  transition: opacity 0.3s ease;
+}
+
+.modal-fade-enter-from,
+.modal-fade-leave-to {
+  opacity: 0;
 }
 </style>

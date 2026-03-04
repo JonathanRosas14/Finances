@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import User, Category, Transaction
+from .models import User, Category, Transaction, Budget
 import re
 
 
@@ -156,3 +156,39 @@ class TransactionSerializer(serializers.ModelSerializer):
         if value <= 0:
             raise serializers.ValidationError('El monto debe ser mayor a 0')
         return value
+
+class BudgetSerializer(serializers.ModelSerializer):
+    category_name = serializers.SerializerMethodField(read_only=True)
+
+    class Meta:
+        model = Budget
+        fields = [
+            'id', 
+            'name', 
+            'category', 
+            'category_name',
+            'amount', 
+            'period', 
+            'start_date', 
+            'end_date', 
+            'alert_percentage',
+            'is_active',
+            'description',
+            'created_at'
+        ]  
+    read_only_fields = ['id', 'created_at', 'category_name']
+
+    def get_category_name(self, obj):
+        return obj.category.name if obj.category else None
+
+    def validate_amount(self, value):
+        if value <= 0:
+            raise serializers.ValidationError('El monto del presupuesto debe ser mayor a 0')
+        return value
+    
+    def validate(self, data):
+        if data.get('end_date') and data.get('start_date'):
+            if data['end_date'] < data['start_date']:
+                raise serializers.ValidationError('La fecha de fin debe ser posterior a la fecha de inicio')
+        return data
+

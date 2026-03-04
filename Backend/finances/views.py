@@ -2,11 +2,11 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework import status
-from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework_simplejwt.tokens import RefreshToken, AccessToken
 from google.oauth2 import id_token
 from google.auth.transport import requests as google_requests
-from .serializers import RegisterSerializer, LoginSerializer, CategorySerializer, TransactionSerializer
-from .models import User, Category, Transaction
+from .serializers import RegisterSerializer, LoginSerializer, CategorySerializer, TransactionSerializer, BudgetSerializer
+from .models import User, Category, Transaction, Budget
 import bcrypt
 import os
 
@@ -363,6 +363,160 @@ def delete_transaction(request, transaction_id):
         
     except Exception as e:
         print(f"Error en delete_transaction: {e}")
+        return Response(
+            {'message': str(e)},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+
+# Obtener presupuestos del usuario
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def get_budgets(request):
+    try:
+        auth_header = request.headers.get('Authorization', '')
+        if not auth_header.startswith('Bearer '):
+            return Response(
+                {'message': 'Token no proporcionado'},
+                status=status.HTTP_401_UNAUTHORIZED
+            )
+        
+        token = auth_header.split(' ')[1]
+        access_token = AccessToken(token)
+        user_id = access_token['id']
+        
+        user = User.objects.get(id=user_id)
+        budgets = Budget.objects.filter(user=user, is_active=True).select_related('category').order_by('-start_date')
+        serializer = BudgetSerializer(budgets, many=True)
+        
+        return Response(serializer.data)
+    except Exception as e:
+        print(f"❌ Error en get_budgets: {e}")
+        return Response(
+            {'message': str(e)},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+
+
+# Crear presupuesto
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def create_budget(request):
+    try:
+        auth_header = request.headers.get('Authorization', '')
+        if not auth_header.startswith('Bearer '):
+            return Response(
+                {'message': 'Token no proporcionado'},
+                status=status.HTTP_401_UNAUTHORIZED
+            )
+        
+        token = auth_header.split(' ')[1]
+        access_token = AccessToken(token)
+        user_id = access_token['id']
+        user = User.objects.get(id=user_id)
+        
+        serializer = BudgetSerializer(data=request.data)
+        
+        if not serializer.is_valid():
+            errors = serializer.errors
+            first_error = next(iter(errors.values()))[0]
+            return Response(
+                {'message': str(first_error)},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        budget = serializer.save(user=user)
+        
+        return Response({
+            'message': 'Presupuesto creado exitosamente',
+            'budget': BudgetSerializer(budget).data
+        }, status=status.HTTP_201_CREATED)
+        
+    except Exception as e:
+        print(f"❌ Error en create_budget: {e}")
+        return Response(
+            {'message': str(e)},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+
+
+# Actualizar presupuesto
+@api_view(['PUT'])
+@permission_classes([AllowAny])
+def update_budget(request, budget_id):
+    try:
+        auth_header = request.headers.get('Authorization', '')
+        if not auth_header.startswith('Bearer '):
+            return Response(
+                {'message': 'Token no proporcionado'},
+                status=status.HTTP_401_UNAUTHORIZED
+            )
+        
+        token = auth_header.split(' ')[1]
+        access_token = AccessToken(token)
+        user_id = access_token['id']
+        user = User.objects.get(id=user_id)
+        
+        try:
+            budget = Budget.objects.get(id=budget_id, user=user)
+        except Budget.DoesNotExist:
+            return Response(
+                {'message': 'Presupuesto no encontrado'},
+                status=status.HTTP_404_NOT_FOUND
+            )
+        
+        serializer = BudgetSerializer(budget, data=request.data, partial=True)
+        
+        if not serializer.is_valid():
+            errors = serializer.errors
+            first_error = next(iter(errors.values()))[0]
+            return Response(
+                {'message': str(first_error)},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        serializer.save()
+        
+        return Response({'message': 'Presupuesto actualizado exitosamente'})
+        
+    except Exception as e:
+        print(f"❌ Error en update_budget: {e}")
+        return Response(
+            {'message': str(e)},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+
+
+# Eliminar presupuesto
+@api_view(['DELETE'])
+@permission_classes([AllowAny])
+def delete_budget(request, budget_id):
+    try:
+        auth_header = request.headers.get('Authorization', '')
+        if not auth_header.startswith('Bearer '):
+            return Response(
+                {'message': 'Token no proporcionado'},
+                status=status.HTTP_401_UNAUTHORIZED
+            )
+        
+        token = auth_header.split(' ')[1]
+        access_token = AccessToken(token)
+        user_id = access_token['id']
+        user = User.objects.get(id=user_id)
+        
+        try:
+            budget = Budget.objects.get(id=budget_id, user=user)
+        except Budget.DoesNotExist:
+            return Response(
+                {'message': 'Presupuesto no encontrado'},
+                status=status.HTTP_404_NOT_FOUND
+            )
+        
+        budget.delete()
+        
+        return Response({'message': 'Presupuesto eliminado exitosamente'})
+        
+    except Exception as e:
+        print(f"❌ Error en delete_budget: {e}")
         return Response(
             {'message': str(e)},
             status=status.HTTP_500_INTERNAL_SERVER_ERROR

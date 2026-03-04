@@ -95,3 +95,30 @@ class Transaction(models.Model):
     def __str__(self):
         cat_name = self.category.name if self.category else 'Sin categoría'
         return f"{cat_name}: {self.amount} on {self.transaction_date}"
+
+class Budget(models.Model):
+    PERIOD_CHOICES = [
+        ('monthly', 'Monthly'),
+        ('quarterly', 'Quarterly'),
+        ('yearly', 'Yearly'),
+    ]
+
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='budgets')
+    category = models.ForeignKey(Category, on_delete=models.SET_NULL, null=True, blank=True, related_name='budgets')
+    name = models.CharField(max_length=255)
+    amount = models.DecimalField(max_digits=15, decimal_places=2)
+    period = models.CharField(max_length=20, choices=PERIOD_CHOICES, default='monthly')
+    start_date = models.DateField()
+    end_date = models.DateField(null=True, blank=True)
+    alert_percentage = models.IntegerField(default=80)
+    is_active = models.BooleanField(default=True)
+    description = models.TextField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'budgets'
+        ordering = ['-start_date']
+
+    def __str__(self):
+        return f"{self.name} - {self.amount}"

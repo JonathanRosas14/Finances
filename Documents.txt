@@ -1,28 +1,74 @@
 ═════════════════════════════════════════════════════════════════
         DOCUMENTACIÓN DEL PROYECTO FINANCES_PRO
+        Última actualización: 5 Marzo 2026
 ═════════════════════════════════════════════════════════════════
 
 DESCRIPCIÓN DEL PROYECTO
 ─────────────────────────
-Proyecto de gestión financiera con arquitectura de microservicios usando:
-- Backend: Django + Django REST Framework
-- Frontend: Vue.js 3 con Vite
-- Base de datos: PostgreSQL
-- Contenedorización: Docker & Docker Compose
-- Autenticación: Local, Google y Apple
+Proyecto de gestión financiera personal con arquitectura de microservicios.
+Permite a los usuarios administrar sus finanzas, categorizar transacciones,
+establecer presupuestos y generar reportes financieros.
+
+STACK TECNOLÓGICO
+─────────────────
+Backend:     Django 5.0.1 + Django REST Framework 3.14.0
+Frontend:    Vue.js 3 + Vite
+Base de datos: PostgreSQL 15
+Autenticación: JWT (djangorestframework-simplejwt)
+OAuth:       Google OAuth2
+Containerización: Docker + Docker Compose
 
 
 ═════════════════════════════════════════════════════════════════
 1. ESTRUCTURA INICIAL DEL PROYECTO
 ═════════════════════════════════════════════════════════════════
-Se crearon las carpetas base:
-  • Backend/
-  • Frontend/
 
-Se configuraron archivos de contenedorización:
-  • docker-compose.yml (gestión de redes y contenedores)
-  • Backend/Dockerfile
-  • Frontend/Dockerfile
+Estructura de carpetas:
+  
+  FINANCES_PRO/
+  ├── Backend/
+  │   ├── core/                    # Configuración Django
+  │   │   ├── settings.py          # Configuración del proyecto
+  │   │   ├── urls.py              # URLs principales
+  │   │   ├── wsgi.py              # Servidor WSGI
+  │   │   └── asgi.py              # Servidor ASGI
+  │   ├── finances/                # App principal
+  │   │   ├── models.py            # Modelos de BD
+  │   │   ├── serializers.py       # DRF Serializers
+  │   │   ├── views.py             # Vistas y endpoints
+  │   │   ├── urls.py              # URLs de la app
+  │   │   ├── authentication.py    # Custom JWT Auth
+  │   │   ├── admin.py             # Admin de Django
+  │   │   └── migrations/          # Migraciones de BD
+  │   ├── manage.py                # Script de gestión Django
+  │   ├── requirements.txt         # Dependencias Python
+  │   ├── Dockerfile               # Configuración Docker
+  │   └── .env                     # Variables de entorno
+  ├── Frontend/
+  │   ├── src/
+  │   │   ├── components/          # Componentes Vue
+  │   │   │   ├── Home.vue
+  │   │   │   ├── Login.vue
+  │   │   │   ├── Register.vue
+  │   │   │   ├── MainPage.vue
+  │   │   │   ├── Dashboard.vue
+  │   │   │   ├── Categories.vue
+  │   │   │   ├── Transactions.vue
+  │   │   │   ├── Budgets.vue
+  │   │   │   ├── Features.vue
+  │   │   │   ├── About.vue
+  │   │   │   ├── Contact.vue
+  │   │   │   └── AuthSuccess.vue
+  │   │   ├── router/              # Configuración de rutas
+  │   │   │   └── index.js
+  │   │   ├── stores/              # Estado Pinia (futuro)
+  │   │   ├── assets/              # Imágenes y estilos
+  │   │   ├── App.vue              # Componente raíz
+  │   │   └── main.js              # Entry point
+  │   ├── package.json             # Dependencias npm
+  │   ├── vite.config.js           # Configuración Vite
+  │   └── Dockerfile               # Configuración Docker
+  └── docker-compose.yml           # Orquestación de servicios
 
 
 ═════════════════════════════════════════════════════════════════
@@ -36,32 +82,100 @@ Command: django-admin startproject core .
 
 2.2 Dependencias del proyecto (requirements.txt)
 ─────────────────────────────────────────────────
-  • Django==5.0.1
-  • djangorestframework==3.14.0
-  • django-cors-headers==4.3.1
-  • psycopg2-binary==2.9.9
-  • python-dotenv==1.0.0
+Django==5.0.1
+djangorestframework==3.14.0
+djangorestframework-simplejwt==5.3.1
+django-cors-headers==4.3.1
+psycopg2-binary==2.9.9
+python-dotenv==1.0.0
+bcrypt==4.1.2
+google-auth==2.25.2
+google-auth-oauthlib==1.2.0
+google-auth-httplib2==0.2.0
 
 2.3 Entorno virtual Python
 ───────────────────────────
 Crear: python3 -m venv venv
-Activar: source venv/bin/activate
+Activar (Linux/Mac): source venv/bin/activate
+Activar (Windows): venv\Scripts\activate
 
-2.4 Configuración de variables de entorno
-──────────────────────────────────────────
-Se creó archivo .env en la raíz del proyecto con:
-  • SECRET_KEY
-  • DEBUG
-  • ALLOWED_HOSTS
-  • Credenciales de base de datos
+2.4 Configuración de variables de entorno (.env)
+──────────────────────────────────────────────────
+Crear archivo .env en Backend/ con:
+
+# Django
+SECRET_KEY=tu-secret-key-super-segura-aqui
+DEBUG=1
+ALLOWED_HOSTS=localhost,127.0.0.1,backend
+
+# Database
+DB_ENGINE=django.db.backends.postgresql
+DB_NAME=finances_db
+DB_USER=finances_user
+DB_PASSWORD=tu_password_seguro
+DB_HOST=db
+DB_PORT=5432
+
+# Google OAuth
+GOOGLE_CLIENT_ID=tu-google-client-id.apps.googleusercontent.com
+GOOGLE_CLIENT_SECRET=tu-google-client-secret
+
+# CORS
+CORS_ALLOWED_ORIGINS=http://localhost:5173,http://localhost:3000
+
+# JWT
+ACCESS_TOKEN_LIFETIME=5
+REFRESH_TOKEN_LIFETIME=1
 
 2.5 Configuración de Django (settings.py)
 ───────────────────────────────────────────
-Se habilitaron:
-  • Django REST Framework
-  • CORS Headers (para comunicación con Frontend)
-  • App 'finances'
-  • Carga de variables de entorno con python-dotenv
+Configuraciones clave en core/settings.py:
+
+INSTALLED_APPS = [
+    'django.contrib.admin',
+    'django.contrib.auth',
+    'django.contrib.contenttypes',
+    'django.contrib.sessions',
+    'django.contrib.messages',
+    'django.contrib.staticfiles',
+    'rest_framework',
+    'rest_framework_simplejwt',
+    'corsheaders',
+    'finances',
+]
+
+MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',
+    'django.middleware.security.SecurityMiddleware',
+    'django.contrib.sessions.middleware.SessionMiddleware',
+    'django.middleware.common.CommonMiddleware',
+    'django.middleware.csrf.CsrfViewMiddleware',
+    'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'django.contrib.messages.middleware.MessageMiddleware',
+    'django.middleware.clickjacking.XFrameOptionsMiddleware',
+]
+
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    ],
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.IsAuthenticated',
+    ],
+}
+
+from datetime import timedelta
+
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=int(os.getenv('ACCESS_TOKEN_LIFETIME', 5))),
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=int(os.getenv('REFRESH_TOKEN_LIFETIME', 1))),
+    'ALGORITHM': 'HS256',
+    'SIGNING_KEY': SECRET_KEY,
+    'AUTH_HEADER_TYPES': ('Bearer',),
+}
+
+CORS_ALLOWED_ORIGINS = os.getenv('CORS_ALLOWED_ORIGINS', 'http://localhost:5173').split(',')
+CORS_ALLOW_CREDENTIALS = True
 
 
 ═════════════════════════════════════════════════════════════════
@@ -74,24 +188,22 @@ Command: npm create vue@latest
 
 3.2 Características seleccionadas
 ──────────────────────────────────
-  • Router (SPA development)
-  • Pinia (state management)
-  • Linter (error prevention)
-  • Prettier (code formatting)
+  ✓ Router (SPA development)
+  ✓ Pinia (state management)
+  ✓ Linter (error prevention)
+  ✓ Prettier (code formatting)
 
-3.3 Estructura del Frontend
-─────────────────────────────
-  • src/components/ - Componentes reutilizables
-  • src/router/ - Configuración de rutas
-  • src/stores/ - Gestión de estado con Pinia
-  • src/views/ - Vistas principales de la aplicación
+3.3 Dependencias instaladas
+────────────────────────────
+Command: docker compose exec frontend npm install axios
+Command: docker compose exec frontend npm install vue3-google-login
 
-Instalamos axion para el Frontend
-docker-compose exec frontend npm install axios
-
-
-Instalamos google identity
-docker-compose exec frontend npm install vue3-google-login
+package.json incluye:
+  • vue@3.x
+  • vue-router@4.x
+  • pinia@2.x
+  • axios@1.x
+  • vue3-google-login@2.x
 
 
 ═════════════════════════════════════════════════════════════════
@@ -102,835 +214,1446 @@ docker-compose exec frontend npm install vue3-google-login
 ──────────────────────────────────
 Command: docker compose exec backend python manage.py startapp finances
 
-4.2 Modelos creados
-────────────────────
+4.2 Modelos creados (Backend/finances/models.py)
+─────────────────────────────────────────────────
 
-Modelo: User
-  • username (CharField, unique)
-  • email (EmailField, unique)
-  • password (CharField)
-  • provider (CharField, choices: local/google/apple)
-  • provider_id (CharField, para OAuth)
-  • created_at (DateTimeField, auto_now_add)
-  • updated_at (DateTimeField, auto_now)
-  • Tabla: 'users'
-  • Métodos: is_authenticated, is_active, set_password(), check_password()
+═══════════════════════════════════════════════════════════════
+MODELO: User
+═══════════════════════════════════════════════════════════════
 
-Modelo: Category
-  • user (ForeignKey - User CASCADE)
-  • name (CharField, max_length=50)
-  • icon (CharField, default emoji '📦')
-  • color (CharField, default '#95A5A6')
-  • type (CharField, choices: income/expense)
-  • parent_id (IntegerField, opcional para subcategorías)
-  • created_at (DateTimeField, auto_now_add)
-  • Tabla: 'categories'
-  • Constraint: (user, name, type) único junto
+from django.db import models
+import bcrypt
 
-Modelo: Transaction
-  • user (ForeignKey - User CASCADE)
-  • category (ForeignKey - Category SET_NULL, opcional)
-  • amount (DecimalField, max_digits=10, decimal_places=2)
-  • transaction_date (DateField)
-  • description (CharField, max_length=255, opcional)
-  • type (CharField, choices: income/expense)
-  • payment_method (CharField, choices: cash/credit_card/debit_card/bank_transfer)
-  • is_recurring (BooleanField, default=False)
-  • recurring_frequency (CharField, opcional)
-  • notes (TextField, opcional)
-  • created_at (DateTimeField, auto_now_add)
-  • updated_at (DateTimeField, auto_now)
-  • Tabla: 'transactions'
-  • Ordering: por -transaction_date
+class User(models.Model):
+    PROVIDER_CHOICES = [
+        ('local', 'Local'),
+        ('google', 'Google'),
+        ('apple', 'Apple'),
+    ]
+    
+    username = models.CharField(max_length=50, unique=True)
+    email = models.EmailField(max_length=254, unique=True)
+    password = models.CharField(max_length=128)
+    provider = models.CharField(max_length=20, choices=PROVIDER_CHOICES, default='local')
+    provider_id = models.CharField(max_length=255, blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        db_table = 'users'
+    
+    @property
+    def is_authenticated(self):
+        return True
+    
+    @property
+    def is_active(self):
+        return True
+    
+    def set_password(self, raw_password):
+        self.password = bcrypt.hashpw(
+            raw_password.encode('utf-8'), 
+            bcrypt.gensalt()
+        ).decode('utf-8')
+    
+    def check_password(self, raw_password):
+        return bcrypt.checkpw(
+            raw_password.encode('utf-8'), 
+            self.password.encode('utf-8')
+        )
+    
+    def __str__(self):
+        return self.username
+
+Campos:
+  • username: Nombre de usuario único, max 50 caracteres
+  • email: Email único, validado automáticamente por Django
+  • password: Contraseña hasheada con bcrypt
+  • provider: Proveedor de autenticación (local/google/apple)
+  • provider_id: ID del proveedor OAuth (opcional)
+  • created_at: Fecha de creación automática
+  • updated_at: Fecha de última actualización automática
+
+Métodos personalizados:
+  • set_password(): Hashea contraseña con bcrypt
+  • check_password(): Verifica contraseña hasheada
+  • is_authenticated: Propiedad que retorna True
+  • is_active: Propiedad que retorna True
+
+
+═══════════════════════════════════════════════════════════════
+MODELO: Category
+═══════════════════════════════════════════════════════════════
+
+class Category(models.Model):
+    TYPE_CHOICES = [
+        ('income', 'Income'),
+        ('expense', 'Expense'),
+    ]
+    
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='categories')
+    name = models.CharField(max_length=50)
+    icon = models.CharField(max_length=50, default='📦')
+    color = models.CharField(max_length=7, default='#95A5A6')
+    type = models.CharField(max_length=20, choices=TYPE_CHOICES)
+    parent_id = models.IntegerField(blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        db_table = 'categories'
+        unique_together = ('user', 'name', 'type')
+        ordering = ['-created_at']
+    
+    def __str__(self):
+        return f"{self.name} ({self.type})"
+
+Campos:
+  • user: Relación ForeignKey con User (CASCADE delete)
+  • name: Nombre de la categoría, max 50 caracteres
+  • icon: Emoji o texto del ícono, default '📦'
+  • color: Color en formato hexadecimal, default '#95A5A6'
+  • type: Tipo de categoría (income/expense)
+  • parent_id: ID de categoría padre para subcategorías (opcional)
+  • created_at: Fecha de creación automática
+
+Constraints:
+  • unique_together: (user, name, type) → No duplicados por usuario
+
+
+═══════════════════════════════════════════════════════════════
+MODELO: Transaction - ACTUALIZADO (5 Marzo 2026)
+═══════════════════════════════════════════════════════════════
+
+class Transaction(models.Model):
+    TYPE_CHOICES = [
+        ('income', 'Income'),
+        ('expense', 'Expense'),
+    ]
+    
+    PAYMENT_METHOD_CHOICES = [
+        ('cash', 'Cash'),
+        ('credit_card', 'Credit Card'),
+        ('debit_card', 'Debit Card'),
+        ('transfer', 'Bank Transfer'),
+        ('digital_wallet', 'Digital Wallet'),
+        ('other', 'Other'),
+    ]
+    
+    FREQUENCY_CHOICES = [
+        ('daily', 'Daily'),
+        ('weekly', 'Weekly'),
+        ('monthly', 'Monthly'),
+        ('yearly', 'Yearly'),
+    ]
+    
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='transactions')
+    category = models.ForeignKey(Category, on_delete=models.SET_NULL, null=True, blank=True, related_name='transactions')
+    type = models.CharField(max_length=20, choices=TYPE_CHOICES)
+    amount = models.DecimalField(max_digits=15, decimal_places=2)
+    transaction_date = models.DateField()
+    description = models.CharField(max_length=255, blank=True)
+    payment_method = models.CharField(max_length=20, choices=PAYMENT_METHOD_CHOICES, default='cash')
+    is_recurring = models.BooleanField(default=False)
+    recurring_frequency = models.CharField(max_length=20, choices=FREQUENCY_CHOICES, blank=True, null=True)
+    notes = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        db_table = 'transactions'
+        ordering = ['-transaction_date', '-created_at']
+    
+    def __str__(self):
+        return f"{self.type}: {self.amount} on {self.transaction_date}"
+
+Campos:
+  • user: Relación ForeignKey con User (CASCADE delete)
+  • category: Relación ForeignKey con Category (SET_NULL al eliminar, opcional)
+  • type: Tipo de transacción (income/expense)
+  • amount: Monto de la transacción (max 15 dígitos, 2 decimales)
+  • transaction_date: Fecha de la transacción
+  • description: Descripción de la transacción (opcional)
+  • payment_method: Método de pago utilizado (default: cash)
+  • is_recurring: Indica si es recurrente (default: False)
+  • recurring_frequency: Frecuencia de recurrencia (opcional)
+  • notes: Notas adicionales (opcional)
+  • created_at: Fecha de creación automática
+  • updated_at: Fecha de última actualización automática
+
+Ordenamiento por defecto:
+  • Primero por transaction_date descendente (más reciente primero)
+  • Luego por created_at descendente
+
+
+═══════════════════════════════════════════════════════════════
+MODELO: Budget
+═══════════════════════════════════════════════════════════════
+
+class Budget(models.Model):
+    PERIOD_CHOICES = [
+        ('monthly', 'Monthly'),
+        ('quarterly', 'Quarterly'),
+        ('yearly', 'Yearly'),
+    ]
+    
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='budgets')
+    category = models.ForeignKey(Category, on_delete=models.SET_NULL, null=True, blank=True, related_name='budgets')
+    name = models.CharField(max_length=255)
+    amount = models.DecimalField(max_digits=15, decimal_places=2)
+    period = models.CharField(max_length=20, choices=PERIOD_CHOICES, default='monthly')
+    start_date = models.DateField()
+    end_date = models.DateField(null=True, blank=True)
+    alert_percentage = models.IntegerField(default=80)
+    is_active = models.BooleanField(default=True)
+    description = models.TextField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        db_table = 'budgets'
+        ordering = ['-start_date']
+    
+    def __str__(self):
+        return f"{self.name}: {self.amount} ({self.period})"
+
+Campos:
+  • user: Relación ForeignKey con User (CASCADE delete)
+  • category: Relación ForeignKey con Category (SET_NULL, opcional)
+  • name: Nombre descriptivo del presupuesto
+  • amount: Límite de gasto para el período
+  • period: Período del presupuesto (monthly/quarterly/yearly)
+  • start_date: Fecha de inicio del presupuesto
+  • end_date: Fecha de fin del presupuesto (opcional)
+  • alert_percentage: Porcentaje para activar alerta (default: 80%)
+  • is_active: Indica si el presupuesto está activo
+  • description: Descripción adicional (opcional)
+  • created_at: Fecha de creación automática
+  • updated_at: Fecha de última actualización automática
 
 4.3 Migraciones
 ────────────────
-Crear migraciones: docker compose exec backend python manage.py makemigrations
-Aplicar migraciones: docker compose exec backend python manage.py migrate
+Crear migraciones:
+  Command: docker compose exec backend python manage.py makemigrations
+
+Aplicar migraciones:
+  Command: docker compose exec backend python manage.py migrate
 
 Archivos de migración creados:
   • 0001_initial.py - Creación de modelo User
   • 0002_category.py - Creación de modelo Category
   • 0003_transaction.py - Creación de modelo Transaction
+  • 0004_budget.py - Creación de modelo Budget
 
 
 ═════════════════════════════════════════════════════════════════
 5. VERIFICACIÓN DE LA BASE DE DATOS
 ═════════════════════════════════════════════════════════════════
 
-Acceder a PostgreSQL:
+Acceder a PostgreSQL desde Django:
 Command: docker compose exec backend python manage.py dbshell
 
 Comandos útiles en PostgreSQL:
-  • \dt          - Ver todas las tablas
-  • \d users     - Ver estructura de la tabla 'users'
-  • \q           - Salir
-  • SELECT * FROM users;
+  • \dt                    - Ver todas las tablas
+  • \d users               - Ver estructura de la tabla 'users'
+  • \d categories          - Ver estructura de 'categories'
+  • \d transactions        - Ver estructura de 'transactions'
+  • \d budgets             - Ver estructura de 'budgets'
+  • SELECT * FROM users;   - Ver todos los usuarios
+  • \q                     - Salir
 
+Verificar tablas creadas:
+  • users
+  • categories
+  • transactions
+  • budgets
+  • django_migrations
+  • auth_* (tablas de Django)
 
 
 ═════════════════════════════════════════════════════════════════
 6. LEVANTAMIENTO DE CONTENEDORES
 ═════════════════════════════════════════════════════════════════
 
-Levantar contenedores:
+Levantar contenedores (primera vez):
 Command: docker compose up --build
 
-Ver logs de un contenedor:
-Command: docker logs <IDCONTAINER>
+Levantar contenedores:
+Command: docker compose up
+
+Levantar en segundo plano (detached):
+Command: docker compose up -d
+
+Detener contenedores:
+Command: docker compose down
+
+Restartear contenedores:
+Command: docker compose restart
+
+Restartear servicio específico:
+Command: docker compose restart backend
+Command: docker compose restart frontend
 
 Ver logs en tiempo real:
 Command: docker compose logs -f
 
+Ver logs de servicio específico:
+Command: docker compose logs -f backend
+Command: docker compose logs -f frontend
+Command: docker compose logs -f db
+
+Ver estado de contenedores:
+Command: docker compose ps
+
 
 ═════════════════════════════════════════════════════════════════
-7. IMPLEMENTACIÓN DE SERIALIZERS Y VISTAS
+7. SERIALIZERS Y VALIDACIONES
 ═════════════════════════════════════════════════════════════════
 
-7.1 UserSerializer (serializers.py)
-────────────────────────────────────
-Se creó un serializer para el modelo User:
-  • Campos: id, username, email, provider, created_at
-  • read_only_fields: id, created_at
-  • Utilizado en respuestas de API
+Ubicación: Backend/finances/serializers.py
 
-7.2 RegisterSerializer (serializers.py)
-──────────────────────────────────────────
-Validaciones incluidas:
-  • username: 3-50 caracteres, solo letras/números/guiones bajos, único
-  • email: formato válido, único en BD
-  • password: min 8 caracteres, debe contener mayúscula y número
+7.1 RegisterSerializer
+──────────────────────
 
-7.3 LoginSerializer (serializers.py)
-─────────────────────────────────────
-Campos:
+from rest_framework import serializers
+from .models import User, Category, Transaction, Budget
+import re
+
+class RegisterSerializer(serializers.Serializer):
+    username = serializers.CharField(
+        min_length=3,
+        max_length=50,
+        error_messages={
+            'min_length': 'El username debe tener al menos 3 caracteres.',
+            'max_length': 'El username no puede tener más de 50 caracteres.',
+            'required': 'El username es obligatorio.',
+        }
+    )
+    email = serializers.EmailField(
+        max_length=100,
+        error_messages={
+            'invalid': 'Ingresa un email válido.',
+            'required': 'El email es obligatorio.',
+        }
+    )
+    password = serializers.CharField(
+        min_length=8,
+        max_length=255,
+        error_messages={
+            'min_length': 'La contraseña debe tener al menos 8 caracteres.',
+            'required': 'La contraseña es obligatoria.',
+        }
+    )
+    
+    def validate_username(self, value):
+        if not re.match(r'^[a-zA-Z0-9_]+$', value):
+            raise serializers.ValidationError(
+                'El username solo puede contener letras, números y guiones bajos.'
+            )
+        if User.objects.filter(username=value).exists():
+            raise serializers.ValidationError('Este username ya está en uso.')
+        return value
+    
+    def validate_email(self, value):
+        if User.objects.filter(email=value).exists():
+            raise serializers.ValidationError('Este email ya está registrado.')
+        return value.lower()
+    
+    def validate_password(self, value):
+        if not re.search(r'[A-Z]', value):
+            raise serializers.ValidationError(
+                'La contraseña debe tener al menos una letra mayúscula.'
+            )
+        if not re.search(r'\d', value):
+            raise serializers.ValidationError(
+                'La contraseña debe tener al menos un número.'
+            )
+        return value
+
+Validaciones implementadas:
+  • username: 3-50 caracteres, solo alfanuméricos y guiones bajos, único
+  • email: formato válido, único en BD, convertido a minúsculas
+  • password: min 8 caracteres, al menos 1 mayúscula, al menos 1 número
+
+
+7.2 LoginSerializer
+───────────────────
+
+class LoginSerializer(serializers.Serializer):
+    email = serializers.EmailField(
+        error_messages={
+            'invalid': 'Ingresa un email válido.',
+            'required': 'El email es obligatorio.',
+        }
+    )
+    password = serializers.CharField(
+        error_messages={
+            'required': 'La contraseña es obligatoria.',
+        }
+    )
+
+Campos requeridos:
   • email: EmailField obligatorio
   • password: CharField obligatorio
 
-7.4 CategorySerializer (serializers.py)
-──────────────────────────────────────
-Campos: id, name, icon, color, type, parent_id, created_at
+
+7.3 UserSerializer
+──────────────────
+
+class UserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ['id', 'username', 'email', 'provider', 'created_at']
+        read_only_fields = ['id', 'created_at']
+
+Campos expuestos en la API:
+  • id: ID del usuario (read-only)
+  • username: Nombre de usuario
+  • email: Email del usuario
+  • provider: Proveedor de autenticación
+  • created_at: Fecha de creación (read-only)
+
+
+7.4 CategorySerializer
+──────────────────────
+
+class CategorySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Category
+        fields = ['id', 'name', 'icon', 'color', 'type', 'parent_id', 'created_at']
+        read_only_fields = ['id', 'created_at']
+    
+    def validate_name(self, value):
+        user = self.context['request'].user
+        category_id = self.instance.id if self.instance else None
+        query = Category.objects.filter(user=user, name=value)
+        if category_id:
+            query = query.exclude(id=category_id)
+        if query.exists():
+            raise serializers.ValidationError('Ya existe una categoría con ese nombre')
+        return value
+
 Validaciones:
-  • name: debe ser único por usuario
-  • Solo usuarios autenticados pueden crear/editar
+  • name: Único por usuario (no permite duplicados del mismo usuario)
+  • Excluye la categoría actual al editar (no falla si el nombre es el mismo)
 
-7.5 TransactionSerializer (serializers.py)
-────────────────────────────────────────────
-Campos: id, amount, transaction_date, description, category_id, category_name,
-        type, payment_method, is_recurring, recurring_frequency, notes, created_at
-Read-only: id, created_at, category_name
+
+7.5 TransactionSerializer - ACTUALIZADO (5 Marzo 2026)
+───────────────────────────────────────────────────────
+
+class TransactionSerializer(serializers.ModelSerializer):
+    category_name = serializers.SerializerMethodField(read_only=True)
+    category_icon = serializers.SerializerMethodField(read_only=True)
+    category_color = serializers.SerializerMethodField(read_only=True)
+    
+    class Meta:
+        model = Transaction
+        fields = [
+            'id', 'category', 'category_name', 'category_icon', 'category_color',
+            'type', 'amount', 'transaction_date', 'description',
+            'payment_method', 'is_recurring', 'recurring_frequency',
+            'notes', 'created_at', 'updated_at'
+        ]
+        read_only_fields = ['id', 'created_at', 'updated_at', 'category_name', 'category_icon', 'category_color']
+    
+    def get_category_name(self, obj):
+        return obj.category.name if obj.category else None
+    
+    def get_category_icon(self, obj):
+        return obj.category.icon if obj.category else None
+    
+    def get_category_color(self, obj):
+        return obj.category.color if obj.category else None
+    
+    def validate_amount(self, value):
+        if value <= 0:
+            raise serializers.ValidationError('El monto debe ser mayor a cero')
+        return value
+
+Campos incluidos:
+  • Campos básicos del modelo
+  • category_name: Nombre de la categoría (calculado, read-only)
+  • category_icon: Ícono de la categoría (calculado, read-only)
+  • category_color: Color de la categoría (calculado, read-only)
+
 Validaciones:
-  • amount: debe ser mayor a 0
-  • transaction_date: obligatorio
-  • category_id: refencia a categoría del usuario autenticado
+  • amount: Debe ser > 0
+  • Maneja categorías null sin errores (SerializerMethodField)
 
-7.6 Vistas de Autenticación (views.py)
-────────────────────────────────────────
-Implementadas tres vistas principales:
 
-a) REGISTER (POST)
-   - URL: /api/register/
-   - Parámetros: username, email, password
-   - Comportamiento:
-     • Valida que todos los campos sean obligatorios
-     • Verifica que el email no esté registrado
-     • Hash de contraseña con bcrypt
-     • Retorna: mensaje de éxito (201)
+7.6 BudgetSerializer
+────────────────────
 
-b) LOGIN (POST)
-   - URL: /api/login/
-   - Parámetros: email, password
-   - Comportamiento:
-     • Valida credenciales contra la BD
-     • Soporta usuarios locales y OAuth
-     • Genera JWT tokens (access_token y refresh_token)
-     • Retorna: token JWT y datos del usuario
+class BudgetSerializer(serializers.ModelSerializer):
+    category_name = serializers.SerializerMethodField(read_only=True)
+    
+    class Meta:
+        model = Budget
+        fields = [
+            'id', 'name', 'category', 'category_name',
+            'amount', 'period', 'start_date', 'end_date',
+            'alert_percentage', 'is_active', 'description', 'created_at'
+        ]
+        read_only_fields = ['id', 'created_at', 'category_name']
+    
+    def get_category_name(self, obj):
+        return obj.category.name if obj.category else None
+    
+    def validate_amount(self, value):
+        if value <= 0:
+            raise serializers.ValidationError('El monto debe ser mayor a cero')
+        return value
+    
+    def validate(self, data):
+        if data.get('end_date') and data.get('start_date'):
+            if data['end_date'] < data['start_date']:
+                raise serializers.ValidationError(
+                    'La fecha de fin debe ser posterior a la fecha de inicio'
+                )
+        return data
 
-c) GOOGLE_AUTH (POST)
-   - URL: /api/google/
-   - Parámetros: token (ID token de Google)
-   - Comportamiento:
-     • Verifica el token OAuth2 de Google
-     • Crea usuario automáticamente si no existe
-     • Extrae: email, nombre, provider_id
-     • Retorna: token JWT, datos del usuario e isNewUser flag
+Validaciones:
+  • amount: Debe ser > 0
+  • end_date: Si existe, debe ser mayor que start_date
+  • category_name: Maneja null sin errores
 
 
 ═════════════════════════════════════════════════════════════════
-8. ENDPOINTS DISPONIBLES
+8. VISTAS Y ENDPOINTS DE LA API
 ═════════════════════════════════════════════════════════════════
+
+Ubicación: Backend/finances/views.py
+
+8.1 Custom JWT Authentication
+──────────────────────────────
+
+Ubicación: Backend/finances/authentication.py
+
+from rest_framework_simplejwt.authentication import JWTAuthentication
+from rest_framework_simplejwt.exceptions import InvalidToken, AuthenticationFailed
+from .models import User
+
+class CustomJWTAuthentication(JWTAuthentication):
+    def get_validated_token(self, raw_token):
+        try:
+            validated_token = super().get_validated_token(raw_token)
+            return validated_token
+        except InvalidToken:
+            raise AuthenticationFailed('Invalid token')
+        except Exception as e:
+            raise AuthenticationFailed(str(e))
+    
+    def get_user(self, validated_token):
+        try:
+            user_id = validated_token.get('user_id')
+            if not user_id:
+                user_id = validated_token.get('id')
+            if not user_id:
+                raise AuthenticationFailed('Token contains no user_id')
+            user = User.objects.get(id=user_id)
+            return user
+        except User.DoesNotExist:
+            raise AuthenticationFailed('User not found')
+        except Exception as e:
+            raise AuthenticationFailed(str(e))
+
+Funcionalidad:
+  • Valida tokens JWT
+  • Busca user_id o id en el token
+  • Obtiene el usuario de la BD
+  • Maneja errores de token inválido o usuario no encontrado
+
+
+8.2 Endpoints de Autenticación
+───────────────────────────────
 
 BASE_URL: http://localhost:8000/api
 
-AUTENTICACIÓN
-─────────────
+REGISTRO DE USUARIO
+───────────────────
+POST /api/register/
 
-1. REGISTRO DE USUARIO
-   POST /register/
-   Body: {
-     "username": "string",
-     "email": "string",
-     "password": "string"
-   }
-   Response (201): {
-     "message": "Usuario registrado exitosamente"
-   }
+Body:
+{
+  "username": "string",
+  "email": "string",
+  "password": "string"
+}
 
-2. LOGIN LOCAL
-   POST /login/
-   Body: {
-     "email": "string",
-     "password": "string"
-   }
-   Response (200): {
-     "token": "jwt_token",
-     "user": {
-       "id": integer,
-       "username": "string",
-       "email": "string"
-     }
-   }
+Response (201 Created):
+{
+  "message": "Usuario registrado exitosamente"
+}
 
-3. AUTENTICACIÓN CON GOOGLE
-   POST /google/
-   Body: {
-     "token": "google_id_token"
-   }
-   Response (200): {
-     "token": "jwt_token",
-     "user": {
-       "id": integer,
-       "username": "string",
-       "email": "string"
-     },
-     "isNewUser": boolean
-   }
+Errores posibles:
+  • 400: Campos obligatorios faltantes o validación fallida
+  • 409: Usuario o email ya existe
 
-CATEGORÍAS
-──────────
 
-4. OBTENER TODAS LAS CATEGORÍAS (Requiere autenticación)
-   GET /categories/
-   Headers: Authorization: Bearer <token>
-   Response (200): [
-     {
-       "id": integer,
-       "name": "string",
-       "icon": "emoji",
-       "color": "#hexcolor",
-       "type": "income|expense",
-       "parent_id": integer or null,
-       "created_at": "datetime"
-     }
-   ]
+LOGIN LOCAL
+───────────
+POST /api/login/
 
-5. CREAR CATEGORÍA (Requiere autenticación)
-   POST /categories/create/
-   Headers: Authorization: Bearer <token>
-   Body: {
-     "name": "string",
-     "icon": "emoji",
-     "color": "#hexcolor",
-     "type": "income|expense",
-     "parent_id": integer (opcional)
-   }
-   Response (201): {
-     "message": "Categoría creada exitosamente",
-     "category": {...}
-   }
+Body:
+{
+  "email": "string",
+  "password": "string"
+}
 
-6. ACTUALIZAR CATEGORÍA (Requiere autenticación)
-   PUT /categories/<category_id>/
-   Headers: Authorization: Bearer <token>
-   Body: {
-     "name": "string",
-     "icon": "emoji",
-     "color": "#hexcolor",
-     "type": "income|expense"
-   }
-   Response (200): {
-     "message": "Categoría actualizada exitosamente"
-   }
+Response (200 OK):
+{
+  "token": "jwt_access_token",
+  "user": {
+    "id": 1,
+    "username": "string",
+    "email": "string"
+  }
+}
 
-7. ELIMINAR CATEGORÍA (Requiere autenticación)
-   DELETE /categories/<category_id>/delete/
-   Headers: Authorization: Bearer <token>
-   Response (200): {
-     "message": "Categoría eliminada exitosamente"
-   }
+Errores posibles:
+  • 400: Campos faltantes
+  • 401: Credenciales inválidas o cuenta de Google
 
-TRANSACCIONES
-──────────────
 
-8. OBTENER TODAS LAS TRANSACCIONES (Requiere autenticación)
-   GET /transactions/
-   Headers: Authorization: Bearer <token>
-   Response (200): [
-     {
-       "id": integer,
-       "amount": decimal,
-       "transaction_date": "YYYY-MM-DD",
-       "description": "string",
-       "category_id": integer or null,
-       "category_name": "string",
-       "type": "income|expense",
-       "payment_method": "cash|credit_card|debit_card|bank_transfer",
-       "is_recurring": boolean,
-       "recurring_frequency": "string",
-       "notes": "string",
-       "created_at": "datetime"
-     }
-   ]
+AUTENTICACIÓN CON GOOGLE
+─────────────────────────
+POST /api/google/
 
-9. CREAR TRANSACCIÓN (Requiere autenticación)
-   POST /transactions/create/
-   Headers: Authorization: Bearer <token>
-   Body: {
-     "amount": decimal,
-     "transaction_date": "YYYY-MM-DD",
-     "description": "string",
-     "category_id": integer (opcional),
-     "type": "income|expense",
-     "payment_method": "cash|credit_card|debit_card|bank_transfer",
-     "is_recurring": boolean,
-     "recurring_frequency": "string",
-     "notes": "string"
-   }
-   Response (201): {
-     "message": "Transacción creada exitosamente",
-     "transaction": {...}
-   }
+Body:
+{
+  "token": "google_id_token"
+}
 
-10. ACTUALIZAR TRANSACCIÓN (Requiere autenticación)
-    PUT /transactions/<transaction_id>/
-    Headers: Authorization: Bearer <token>
-    Body: {
-      "amount": decimal,
-      "transaction_date": "YYYY-MM-DD",
-      "description": "string",
-      "category_id": integer,
-      "type": "income|expense",
-      "payment_method": "string",
-      "is_recurring": boolean,
-      "recurring_frequency": "string",
-      "notes": "string"
-    }
-    Response (200): {
-      "message": "Transacción actualizada exitosamente",
-      "transaction": {...}
-    }
+Response (200 OK):
+{
+  "token": "jwt_access_token",
+  "user": {
+    "id": 1,
+    "username": "string",
+    "email": "string"
+  },
+  "isNewUser": boolean
+}
 
-11. ELIMINAR TRANSACCIÓN (Requiere autenticación)
-    DELETE /transactions/<transaction_id>/delete/
-    Headers: Authorization: Bearer <token>
-    Response (200): {
-      "message": "Transacción eliminada exitosamente"
-    }
+Funcionalidad:
+  • Verifica token de Google
+  • Crea usuario si no existe
+  • Retorna JWT y flag isNewUser
+  • isNewUser=true → Usuario recién creado
+  • isNewUser=false → Usuario existente
+
+Errores posibles:
+  • 400: Token inválido o faltante
+  • 500: Error al verificar con Google
+
+
+8.3 Endpoints de Categorías
+────────────────────────────
+
+OBTENER TODAS LAS CATEGORÍAS
+─────────────────────────────
+GET /api/categories/
+
+Headers:
+Authorization: Bearer <jwt_token>
+
+Response (200 OK):
+[
+  {
+    "id": 1,
+    "name": "Alimentación",
+    "icon": "🍔",
+    "color": "#FF6B6B",
+    "type": "expense",
+    "parent_id": null,
+    "created_at": "2026-03-05T10:30:00Z"
+  },
+  ...
+]
+
+Errores posibles:
+  • 401: Token no proporcionado o inválido
+
+
+CREAR CATEGORÍA
+───────────────
+POST /api/categories/create/
+
+Headers:
+Authorization: Bearer <jwt_token>
+
+Body:
+{
+  "name": "string",
+  "icon": "emoji",
+  "color": "#hexcolor",
+  "type": "income|expense",
+  "parent_id": integer (opcional)
+}
+
+Response (201 Created):
+{
+  "message": "Categoría creada exitosamente",
+  "category": {
+    "id": 1,
+    "name": "string",
+    "icon": "emoji",
+    "color": "#hexcolor",
+    "type": "income|expense",
+    "parent_id": null
+  }
+}
+
+Errores posibles:
+  • 400: Validación fallida o campos faltantes
+  • 401: Token no proporcionado o inválido
+  • 409: Ya existe una categoría con ese nombre
+
+
+ACTUALIZAR CATEGORÍA
+────────────────────
+PUT /api/categories/<category_id>/
+
+Headers:
+Authorization: Bearer <jwt_token>
+
+Body:
+{
+  "name": "string",
+  "icon": "emoji",
+  "color": "#hexcolor",
+  "type": "income|expense",
+  "parent_id": integer
+}
+
+Response (200 OK):
+{
+  "message": "Categoría actualizada exitosamente"
+}
+
+Errores posibles:
+  • 400: Validación fallida
+  • 401: Token no proporcionado o inválido
+  • 404: Categoría no encontrada
+  • 409: Ya existe otra categoría con ese nombre
+
+
+ELIMINAR CATEGORÍA
+──────────────────
+DELETE /api/categories/<category_id>/delete/
+
+Headers:
+Authorization: Bearer <jwt_token>
+
+Response (200 OK):
+{
+  "message": "Categoría eliminada exitosamente"
+}
+
+Errores posibles:
+  • 401: Token no proporcionado o inválido
+  • 404: Categoría no encontrada
+
+
+8.4 Endpoints de Transacciones
+───────────────────────────────
+
+OBTENER TODAS LAS TRANSACCIONES
+────────────────────────────────
+GET /api/transactions/
+
+Headers:
+Authorization: Bearer <jwt_token>
+
+Response (200 OK):
+[
+  {
+    "id": 1,
+    "category": 2,
+    "category_name": "Alimentación",
+    "category_icon": "🍔",
+    "category_color": "#FF6B6B",
+    "type": "expense",
+    "amount": "150.50",
+    "transaction_date": "2026-03-05",
+    "description": "Compra en supermercado",
+    "payment_method": "credit_card",
+    "is_recurring": false,
+    "recurring_frequency": null,
+    "notes": "",
+    "created_at": "2026-03-05T10:30:00Z",
+    "updated_at": "2026-03-05T10:30:00Z"
+  },
+  ...
+]
+
+Ordenamiento:
+  • Por transaction_date descendente (más reciente primero)
+  • Luego por created_at descendente
+
+Errores posibles:
+  • 401: Token no proporcionado o inválido
+
+
+CREAR TRANSACCIÓN
+─────────────────
+POST /api/transactions/create/
+
+Headers:
+Authorization: Bearer <jwt_token>
+
+Body:
+{
+  "category": integer (opcional),
+  "type": "income|expense",
+  "amount": decimal,
+  "transaction_date": "YYYY-MM-DD",
+  "description": "string" (opcional),
+  "payment_method": "cash|credit_card|debit_card|transfer|digital_wallet|other",
+  "is_recurring": boolean (opcional),
+  "recurring_frequency": "daily|weekly|monthly|yearly" (opcional),
+  "notes": "string" (opcional)
+}
+
+Response (201 Created):
+{
+  "message": "Transacción creada exitosamente",
+  "transaction": {
+    "id": 1,
+    "category": 2,
+    "type": "expense",
+    "amount": "150.50",
+    "transaction_date": "2026-03-05",
+    "description": "Compra en supermercado",
+    "payment_method": "credit_card",
+    "is_recurring": false,
+    "recurring_frequency": null,
+    "notes": ""
+  }
+}
+
+Campos obligatorios:
+  • type
+  • amount (debe ser > 0)
+  • transaction_date
+
+Errores posibles:
+  • 400: Validación fallida o campos obligatorios faltantes
+  • 401: Token no proporcionado o inválido
+
+
+ACTUALIZAR TRANSACCIÓN
+──────────────────────
+PUT /api/transactions/<transaction_id>/
+
+Headers:
+Authorization: Bearer <jwt_token>
+
+Body: (igual que crear transacción)
+
+Response (200 OK):
+{
+  "message": "Transacción actualizada exitosamente",
+  "transaction": {...}
+}
+
+Errores posibles:
+  • 400: Validación fallida
+  • 401: Token no proporcionado o inválido
+  • 404: Transacción no encontrada
+
+
+ELIMINAR TRANSACCIÓN
+────────────────────
+DELETE /api/transactions/<transaction_id>/delete/
+
+Headers:
+Authorization: Bearer <jwt_token>
+
+Response (200 OK):
+{
+  "message": "Transacción eliminada exitosamente"
+}
+
+Errores posibles:
+  • 401: Token no proporcionado o inválido
+  • 404: Transacción no encontrada
+
+
+8.5 Endpoints de Presupuestos
+──────────────────────────────
+
+OBTENER TODOS LOS PRESUPUESTOS
+───────────────────────────────
+GET /api/budgets/
+
+Headers:
+Authorization: Bearer <jwt_token>
+
+Response (200 OK):
+[
+  {
+    "id": 1,
+    "name": "Presupuesto Mensual Alimentación",
+    "category": 2,
+    "category_name": "Alimentación",
+    "amount": "500.00",
+    "period": "monthly",
+    "start_date": "2026-03-01",
+    "end_date": "2026-03-31",
+    "alert_percentage": 80,
+    "is_active": true,
+    "description": "Presupuesto para comida del mes",
+    "created_at": "2026-03-01T00:00:00Z"
+  },
+  ...
+]
+
+Ordenamiento:
+  • Por start_date descendente (más reciente primero)
+
+Errores posibles:
+  • 401: Token no proporcionado o inválido
+
+
+CREAR PRESUPUESTO
+─────────────────
+POST /api/budgets/create/
+
+Headers:
+Authorization: Bearer <jwt_token>
+
+Body:
+{
+  "name": "string",
+  "category": integer (opcional),
+  "amount": decimal,
+  "period": "monthly|quarterly|yearly",
+  "start_date": "YYYY-MM-DD",
+  "end_date": "YYYY-MM-DD" (opcional),
+  "alert_percentage": integer (default 80),
+  "is_active": boolean (default true),
+  "description": "string" (opcional)
+}
+
+Response (201 Created):
+{
+  "message": "Presupuesto creado exitosamente",
+  "budget": {
+    "id": 1,
+    "name": "string",
+    "category": 2,
+    "amount": "500.00",
+    "period": "monthly",
+    "start_date": "2026-03-01",
+    "end_date": "2026-03-31",
+    "alert_percentage": 80,
+    "is_active": true,
+    "description": ""
+  }
+}
+
+Campos obligatorios:
+  • name
+  • amount (debe ser > 0)
+  • period
+  • start_date
+
+Validaciones:
+  • amount > 0
+  • end_date > start_date (si se proporciona)
+
+Errores posibles:
+  • 400: Validación fallida o campos obligatorios faltantes
+  • 401: Token no proporcionado o inválido
+
+
+ACTUALIZAR PRESUPUESTO
+──────────────────────
+PUT /api/budgets/<budget_id>/
+
+Headers:
+Authorization: Bearer <jwt_token>
+
+Body: (igual que crear presupuesto)
+
+Response (200 OK):
+{
+  "message": "Presupuesto actualizado exitosamente"
+}
+
+Errores posibles:
+  • 400: Validación fallida
+  • 401: Token no proporcionado o inválido
+  • 404: Presupuesto no encontrado
+
+
+ELIMINAR PRESUPUESTO
+────────────────────
+DELETE /api/budgets/<budget_id>/delete/
+
+Headers:
+Authorization: Bearer <jwt_token>
+
+Response (200 OK):
+{
+  "message": "Presupuesto eliminado exitosamente"
+}
+
+Errores posibles:
+  • 401: Token no proporcionado o inválido
+  • 404: Presupuesto no encontrado
 
 
 ═════════════════════════════════════════════════════════════════
 9. COMPONENTES DEL FRONTEND (Vue.js 3)
 ═════════════════════════════════════════════════════════════════
 
-Se han creado los siguientes componentes principales:
+Ubicación: Frontend/src/components/
 
 9.1 Componentes Implementados
 ──────────────────────────────
-  • Home.vue         - Página de inicio
+
+PÚBLICOS (sin autenticación requerida):
+  • Home.vue         - Página de inicio/landing
   • Login.vue        - Formulario de login con Google OAuth
   • Register.vue     - Formulario de registro con validaciones
-  • Dashboard.vue    - Panel principal (protegido)
-  • MainPage.vue     - Layout principal de la aplicación
-  • Features.vue     - Características del app
+  • Features.vue     - Características de la aplicación
   • About.vue        - Información del proyecto
   • Contact.vue      - Página de contacto
-  • AuthSuccess.vue  - Página de éxito tras autenticación
+
+PRIVADOS (requieren autenticación):
+  • AuthSuccess.vue  - Página intermedia tras autenticación OAuth
+  • MainPage.vue     - Layout principal con sidebar y navbar
+  • Dashboard.vue    - Panel de control con resumen financiero
+  • Categories.vue   - Gestión de categorías (CRUD completo)
+  • Transactions.vue - Gestión de transacciones (CRUD completo)
+  • Budgets.vue      - Gestión de presupuestos (CRUD completo)
+
 
 9.2 Rutas Configuradas (Router)
 ─────────────────────────────────
-  • /                  → Home (pública)
-  • /login             → Login (pública)
-  • /register          → Register (pública)
-  • /features          → Features (pública)
-  • /about             → About (pública)
-  • /contact           → Contact (pública)
-  • /auth-success      → AuthSuccess (privada)
-  • /Dashboard         → MainPage + Dashboard (privada)
 
-9.3 Librerías Instaladas
+Ubicación: Frontend/src/router/index.js
+
+import { createRouter, createWebHistory } from 'vue-router'
+import Home from '../components/Home.vue'
+import Login from '../components/Login.vue'
+import Register from '../components/Register.vue'
+import Features from '../components/Features.vue'
+import About from '../components/About.vue'
+import Contact from '../components/Contact.vue'
+import AuthSuccess from '../components/AuthSuccess.vue'
+import MainPage from '../components/MainPage.vue'
+import Dashboard from '../components/Dashboard.vue'
+import Categories from '../components/Categories.vue'
+import Transactions from '../components/Transactions.vue'
+import Budgets from '../components/Budgets.vue'
+
+const routes = [
+  {
+    path: '/',
+    name: 'Home',
+    component: Home
+  },
+  {
+    path: '/login',
+    name: 'Login',
+    component: Login
+  },
+  {
+    path: '/register',
+    name: 'Register',
+    component: Register
+  },
+  {
+    path: '/features',
+    name: 'Features',
+    component: Features
+  },
+  {
+    path: '/about',
+    name: 'About',
+    component: About
+  },
+  {
+    path: '/contact',
+    name: 'Contact',
+    component: Contact
+  },
+  {
+    path: '/auth-success',
+    name: 'AuthSuccess',
+    component: AuthSuccess
+  },
+  {
+    path: '/dashboard',
+    component: MainPage,
+    children: [
+      {
+        path: '',
+        name: 'Dashboard',
+        component: Dashboard
+      },
+      {
+        path: 'categories',
+        name: 'Categories',
+        component: Categories
+      },
+      {
+        path: 'transactions',
+        name: 'Transactions',
+        component: Transactions
+      },
+      {
+        path: 'budgets',
+        name: 'Budgets',
+        component: Budgets
+      }
+    ]
+  }
+]
+
+const router = createRouter({
+  history: createWebHistory(),
+  routes
+})
+
+export default router
+
+Rutas disponibles:
+  • /                        → Home (pública)
+  • /login                   → Login (pública)
+  • /register                → Register (pública)
+  • /features                → Features (pública)
+  • /about                   → About (pública)
+  • /contact                 → Contact (pública)
+  • /auth-success            → AuthSuccess (privada)
+  • /dashboard               → Dashboard (privada)
+  • /dashboard/categories    → Categories (privada)
+  • /dashboard/transactions  → Transactions (privada)
+  • /dashboard/budgets       → Budgets (privada)
+
+
+9.3 Componente Categories.vue
+──────────────────────────────
+
+Funcionalidades:
+  ✓ Listado de categorías en grid
+  ✓ Filtrado por tipo (income/expense)
+  ✓ Crear nueva categoría (modal)
+  ✓ Editar categoría existente
+  ✓ Eliminar categoría con confirmación
+  ✓ Selector de iconos (emojis)
+  ✓ Selector de colores (paleta predefinida)
+  ✓ Validaciones en tiempo real
+
+Métodos principales:
+  • loadCategories() - Obtiene categorías del usuario
+  • openModal() - Abre modal para crear
+  • editCategory(id) - Abre modal para editar
+  • createCategory() - POST a /api/categories/create/
+  • updateCategory() - PUT a /api/categories/<id>/
+  • deleteCategory(id) - DELETE a /api/categories/<id>/delete/
+
+Estado:
+  • categories: Array de categorías
+  • showModal: Boolean para mostrar/ocultar modal
+  • isEditMode: Boolean para modo editar
+  • categoryForm: Objeto con datos del formulario
+
+
+9.4 Componente Transactions.vue - ACTUALIZADO (5 Marzo 2026)
+─────────────────────────────────────────────────────────────
+
+Funcionalidades:
+  ✓ Listado de transacciones en tabla
+  ✓ Filtros por categoría, tipo y rango de fechas
+  ✓ Búsqueda por descripción
+  ✓ Crear nueva transacción (modal)
+  ✓ Editar transacción existente
+  ✓ Eliminar transacción con confirmación
+  ✓ Formateo de montos con colores (+verde income / -rojo expense)
+  ✓ Badges de categoría con iconos y colores
+  ✓ Selector de método de pago
+  ✓ Soporte para transacciones recurrentes
+  ✓ Campo de notas adicionales
+
+Métodos principales:
+  • loadTransactions() - GET /api/transactions/
+  • loadCategories() - GET /api/categories/
+  • openModal() - Abre modal para crear
+  • editTransaction(id) - Abre modal para editar con datos
+  • addTransaction() - POST /api/transactions/create/
+  • updateTransaction() - PUT /api/transactions/<id>/
+  • deleteTransaction(id) - DELETE /api/transactions/<id>/delete/
+  • formatDate(date) - Formatea fecha a español
+  • formatAmount(amount, type) - Formatea monto con signo y color
+
+Filtros implementados:
+  • search: Búsqueda por descripción
+  • filterCategory: Filtrar por categoría
+  • filterType: Filtrar por tipo (income/expense)
+  • filterDate: Filtrar por rango de fechas (últimos 7/30/90 días)
+
+Estado:
+  • transactions: Array de transacciones
+  • categories: Array de categorías (para selector)
+  • showModal: Boolean para modal
+  • isEditMode: Boolean para modo editar
+  • editingId: ID de la transacción en edición
+  • loading: Boolean para estados de carga
+  • form: Objeto con datos del formulario
+
+Formulario incluye:
+  • type: income/expense (requerido)
+  • amount: Monto (requerido, > 0)
+  • category_id: ID de categoría (requerido)
+  • transaction_date: Fecha (requerido)
+  • description: Descripción (opcional)
+  • payment_method: Método de pago (default: cash)
+  • is_recurring: Boolean (default: false)
+  • recurring_frequency: Si is_recurring=true (opcional)
+  • notes: Notas adicionales (opcional)
+
+
+9.5 Componente Budgets.vue
+───────────────────────────
+
+Funcionalidades:
+  ✓ Listado de presupuestos en grid
+  ✓ Cálculo automático de gasto vs límite
+  ✓ Barra de progreso visual
+  ✓ Sistema de alertas (rojo cuando se alcanza threshold)
+  ✓ Crear nuevo presupuesto (modal)
+  ✓ Editar presupuesto existente
+  ✓ Eliminar presupuesto con confirmación
+  ✓ Auto-refresh cada 10 segundos
+  ✓ Recarga automática al volver a la pestaña
+
+Métodos principales:
+  • loadBudgets() - GET /api/budgets/
+  • loadCategories() - GET /api/categories/
+  • loadTransactions() - GET /api/transactions/
+  • getBudgetSpent(budget) - Calcula gasto del presupuesto
+  • getProgressPercentage(budget) - Calcula % de uso
+  • isAlertActive(budget) - Verifica si se alcanzó threshold
+  • formatDateRange(start, end) - Formatea rango de fechas
+  • addBudget() - POST /api/budgets/create/
+  • editBudget(id) - Abre modal para editar
+  • updateBudget() - PUT /api/budgets/<id>/
+  • deleteBudget(id) - DELETE /api/budgets/<id>/delete/
+
+Cálculo de gasto:
+  • Filtra transacciones por usuario
+  • Solo considera type='expense'
+  • Si budget tiene categoría, solo suma esa categoría
+  • Solo suma transacciones entre start_date y end_date
+  • Retorna monto total gastado
+
+Sistema de alertas:
+  • alert_percentage: Threshold configurable (default 80%)
+  • Si gasto >= threshold: Tarjeta se resalta en rojo
+  • Barra de progreso cambia de verde a rojo
+  • Indicador visual claro para el usuario
+
+Ciclo de vida:
+  • onMounted(): Carga inicial de datos
+  • Interval de 10s: Recarga transacciones automáticamente
+  • Listener de visibilidad: Recarga al volver a la pestaña
+
+
+9.6 Componente AuthSuccess.vue
+───────────────────────────────
+
+Propósito: Página intermedia tras autenticación OAuth
+
+Funcionalidad:
+  1. Usuario completa OAuth con Google
+  2. Google redirige a /auth-success?token=JWT_TOKEN
+  3. AuthSuccess extrae token del query param
+  4. Guarda token en localStorage
+  5. Redirige automáticamente a /dashboard
+
+Código principal:
+  onMounted(() => {
+    const token = route.query.token;
+    if (token) {
+      localStorage.setItem('token', token);
+      router.push('/dashboard');
+    } else {
+      router.push('/login');
+    }
+  });
+
+
+9.7 Librerías Instaladas
 ──────────────────────────
-  • axios              - HTTP client para llamadas API
-  • vue3-google-login  - Integración con Google OAuth
+
+Command: docker compose exec frontend npm install axios
+Command: docker compose exec frontend npm install vue3-google-login
+
+package.json incluye:
+  • vue@3.x - Framework frontend
+  • vue-router@4.x - Enrutamiento SPA
+  • pinia@2.x - Gestión de estado (no implementado aún)
+  • axios@1.x - Cliente HTTP para API calls
+  • vue3-google-login@2.x - Integración Google OAuth
+  • vite@5.x - Build tool y dev server
 
 
 ═════════════════════════════════════════════════════════════════
-10. CONFIGURACIÓN DE JWT EN SETTINGS.PY
+10. FLUJO DE AUTENTICACIÓN
 ═════════════════════════════════════════════════════════════════
 
-Se agregaron las siguientes configuraciones:
-
-1. Instalación de dependencia:
-   Command: pip install djangorestframework-simplejwt
-
-2. En INSTALLED_APPS:
-   • rest_framework_simplejwt
-
-3. Configuración JWT:
-   SIMPLE_JWT = {
-       'ACCESS_TOKEN_LIFETIME': timedelta(minutes=5),
-       'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
-       'ALGORITHM': 'HS256',
-   }
-
-4. REST_FRAMEWORK:
-   'DEFAULT_AUTHENTICATION_CLASSES': [
-       'rest_framework_simplejwt.authentication.JWTAuthentication',
-   ]
-
-
-═════════════════════════════════════════════════════════════════
-10. AUTENTICACIÓN GOOGLE - CONFIGURACIÓN REQUERIDA
-═════════════════════════════════════════════════════════════════
-
-Variables de entorno necesarias en .env:
-  • GOOGLE_CLIENT_ID=tu_google_client_id_aqui
-  • GOOGLE_CLIENT_SECRET=tu_google_client_secret_aqui
-
-Instalación:
-  Command: pip install google-auth google-auth-oauthlib google-auth-httplib2
-
-
-═════════════════════════════════════════════════════════════════
-11. AUTENTICACIÓN GOOGLE - CONFIGURACIÓN REQUERIDA
-═════════════════════════════════════════════════════════════════
-
-Variables de entorno necesarias en .env:
-  • GOOGLE_CLIENT_ID=tu_google_client_id_aqui
-  • GOOGLE_CLIENT_SECRET=tu_google_client_secret_aqui
-
-Instalación:
-  Command: pip install google-auth google-auth-oauthlib google-auth-httplib2
-
-
-═════════════════════════════════════════════════════════════════
-12. FLUJO DE AUTENTICACIÓN - FRONTEND
-═════════════════════════════════════════════════════════════════
-
-12.1 Login Local
+10.1 Login Local
 ─────────────────
-1. Usuario ingresa email y contraseña en Login.vue
-2. Se hace POST a /api/login/ con credenciales
-3. Backend valida y retorna JWT token
-4. Frontend almacena token en localStorage
-5. Usuario es redirigido a /Dashboard
 
-12.2 Registro de Nuevo Usuario
+1. Usuario accede a /login
+2. Completa email y contraseña
+3. Frontend hace POST a /api/login/
+4. Backend valida credenciales:
+   - Verifica email existe en BD
+   - Verifica que no sea cuenta de Google
+   - Compara password con bcrypt
+5. Si válido: Backend genera JWT token
+6. Frontend recibe token y datos de usuario
+7. Frontend guarda token en localStorage
+8. Usuario es redirigido a /dashboard
+
+
+10.2 Registro de Nuevo Usuario
 ────────────────────────────────
-1. Usuario completa formulario en Register.vue
-2. Se valida que:
-   - Email sea único
-   - Contraseña tenga mínimo 8 caracteres
-   - Campos obligatorios estén completos
-3. POST a /api/register/ con datos
-4. Usuario es redirigido a /login
 
-12.3 Google OAuth
+1. Usuario accede a /register
+2. Completa formulario (username, email, password)
+3. Frontend valida campos localmente
+4. POST a /api/register/ con datos
+5. Backend valida:
+   - Username único y formato correcto
+   - Email único y formato válido
+   - Password cumple requisitos (8+ chars, mayúscula, número)
+6. Backend hashea password con bcrypt
+7. Backend crea usuario en BD
+8. Usuario es redirigido a /login
+9. Usuario debe iniciar sesión con sus credenciales
+
+
+10.3 Google OAuth
 ──────────────────
-1. Usuario hace click en "Sign in with Google"
+
+1. Usuario hace click en "Continue with Google" en /login o /register
 2. Google abre modal de autenticación
-3. Tras autenticar, Google retorna ID token
-4. Frontend envía token a POST /api/google/
-5. Backend verifica y crea/obtiene usuario
-6. Se retorna JWT token y datos del usuario
-7. Usuario es redirigido a /auth-success o /Dashboard
+3. Usuario selecciona cuenta y autoriza
+4. Google retorna ID token al frontend
+5. Frontend hace POST a /api/google/ con token
+6. Backend verifica token con Google API:
+   - Valida firma del token
+   - Extrae email, nombre, provider_id
+7. Backend busca usuario por email:
+   - Si existe: Genera JWT para ese usuario (isNewUser=false)
+   - Si no existe: Crea nuevo usuario automáticamente (isNewUser=true)
+8. Backend retorna JWT, datos de usuario e isNewUser flag
+9. Frontend guarda token en localStorage
+10. Si isNewUser=true:
+    - Redirige a /login con mensaje de bienvenida
+    - Usuario debe hacer login nuevamente con Google
+11. Si isNewUser=false:
+    - Redirige a /auth-success
+    - AuthSuccess procesa token y redirige a /dashboard
 
 
 ═════════════════════════════════════════════════════════════════
-13. PRÓXIMOS PASOS
+11. CONFIGURACIÓN DE JWT
 ═════════════════════════════════════════════════════════════════
 
-COMPLETADOS ✓
-  ✓ Estructura base del proyecto
-  ✓ Configuración Docker y docker-compose
-  ✓ Setup de Django + DRF
-  ✓ Creación de modelos: User, Category, Transaction
-  ✓ Serializers: User, Register, Login, Category, Transaction
-  ✓ Vistas CRUD para Categorías
-  ✓ Vistas CRUD para Transacciones
-  ✓ Configuración de URLs (routers)
-  ✓ Autenticación con JWT (djangorestframework-simplejwt)
-  ✓ Autenticación con Google OAuth2
-  ✓ CORS configurado para Frontend
-  ✓ Validaciones en serializers (email único, contraseña fuerte, etc.)
+Instalación:
+Command: pip install djangorestframework-simplejwt
 
-PENDIENTES ☐
-  ☐ Autenticación con Apple OAuth
-  ☐ Modelo de Presupuesto (Budget)
-  ☐ Modelo de Metas Financieras (Goals)
-  ☐ Filtros y búsqueda avanzada para Transacciones
-  ☐ Reportes y estadísticas (gráficos, totales por categoría)
-  ☐ Tests unitarios para Backend
-  ☐ Integración completa Frontend-Backend
-  ☐ Componentes del Frontend (Dashboard, Transactions, Categories)
-  ☐ Gestión de estado (Pinia stores)
-  ☐ Manejo de errores y excepciones mejorado
-  ☐ Documentación Swagger/Redoc (/api/docs/)
-  ☐ Rate limiting y seguridad adicional
-  ☐ Deployment a producción
-  ☐ Tests de integración E2E
+En settings.py:
 
+INSTALLED_APPS = [
+    ...
+    'rest_framework',
+    'rest_framework_simplejwt',
+    ...
+]
 
-═════════════════════════════════════════════════════════════════
-13.1 EJEMPLOS DE USO: LLAMADAS AXIOS DESDE FRONTEND
-═════════════════════════════════════════════════════════════════
-
-Configuración base en Frontend (crear archivo src/api/client.js):
-─────────────────────────────────────────────────────────────────
-
-import axios from 'axios';
-
-const API_BASE = 'http://localhost:8000/api';
-
-const client = axios.create({
-  baseURL: API_BASE,
-  headers: {
-    'Content-Type': 'application/json',
-  }
-});
-
-// Interceptor para agregar token JWT a todas las peticiones
-client.interceptors.request.use((config) => {
-  const token = localStorage.getItem('authToken');
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
-  }
-  return config;
-});
-
-export default client;
-
-Ejemplos de uso:
-────────────────
-
-1. REGISTRO
-import client from '@/api/client';
-
-const register = async (username, email, password) => {
-  const { data } = await client.post('/register/', {
-    username,
-    email,
-    password
-  });
-  return data;
-};
-
-2. LOGIN
-const login = async (email, password) => {
-  const { data } = await client.post('/login/', {
-    email,
-    password
-  });
-  localStorage.setItem('authToken', data.token);
-  return data;
-};
-
-3. GOOGLE AUTH
-const googleAuth = async (googleToken) => {
-  const { data } = await client.post('/google/', {
-    token: googleToken
-  });
-  localStorage.setItem('authToken', data.token);
-  return data;
-};
-
-4. OBTENER CATEGORÍAS
-const getCategories = async () => {
-  const { data } = await client.get('/categories/');
-  return data;
-};
-
-5. CREAR CATEGORÍA
-const createCategory = async (categoryData) => {
-  const { data } = await client.post('/categories/create/', {
-    name: categoryData.name,
-    icon: categoryData.icon,
-    color: categoryData.color,
-    type: categoryData.type
-  });
-  return data;
-};
-
-6. OBTENER TRANSACCIONES
-const getTransactions = async () => {
-  const { data } = await client.get('/transactions/');
-  return data;
-};
-
-7. CREAR TRANSACCIÓN
-const createTransaction = async (transactionData) => {
-  const { data } = await client.post('/transactions/create/', {
-    amount: parseFloat(transactionData.amount),
-    transaction_date: transactionData.date,
-    description: transactionData.description,
-    category_id: transactionData.categoryId,
-    type: transactionData.type,
-    payment_method: transactionData.paymentMethod,
-    notes: transactionData.notes
-  });
-  return data;
-};
-
-8. ACTUALIZAR TRANSACCIÓN
-const updateTransaction = async (transactionId, transactionData) => {
-  const { data } = await client.put(`/transactions/${transactionId}/`, transactionData);
-  return data;
-};
-
-Manejo de errores (ejemplo):
-──────────────────────────
-
-try {
-  const response = await client.post('/login/', { email, password });
-  localStorage.setItem('authToken', response.data.token);
-  // Redirigir a dashboard
-} catch (error) {
-  if (error.response?.status === 401) {
-    console.error('Credenciales inválidas');
-  } else if (error.response?.status === 400) {
-    console.error('Datos inválidos:', error.response.data);
-  } else {
-    console.error('Error del servidor:', error.response?.status);
-  }
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    ],
 }
 
+from datetime import timedelta
 
-═════════════════════════════════════════════════════════════════
-13.2 GUÍA PARA CONTINUAR DESARROLLO - PRÓXIMAS CARACTERÍSTICAS
-═════════════════════════════════════════════════════════════════
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=5),
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
+    'ALGORITHM': 'HS256',
+    'SIGNING_KEY': SECRET_KEY,
+    'AUTH_HEADER_TYPES': ('Bearer',),
+    'AUTH_HEADER_NAME': 'HTTP_AUTHORIZATION',
+    'USER_ID_FIELD': 'id',
+    'USER_ID_CLAIM': 'user_id',
+}
 
-PASO 1: IMPLEMENTAR MODELO BUDGET (Presupuesto)
-──────────────────────────────────────────────
-El modelo Budget será para establecer límites de gastos por categoría:
-
-Campos sugeridos:
-  • user (ForeignKey - User CASCADE)
-  • category (ForeignKey - Category CASCADE)
-  • name (CharField) - Ej: "Alimentación Mensual"
-  • limit_amount (DecimalField) - Límite de gasto
-  • period (CharField) - Choices: daily, weekly, monthly, yearly
-  • start_date (DateField)
-  • end_date (DateField, opcional)
-  • alert_threshold (IntegerField) - Porcentaje para alertas (ej: 80%)
-  • created_at, updated_at
-
-Instrucciones:
-  1. Crear el modelo en models.py
-  2. Crear BudgetSerializer en serializers.py
-  3. Crear vistas: get_budgets, create_budget, update_budget, delete_budget
-  4. Agregar rutas en urls.py
-  5. Generar migración: docker compose exec backend python manage.py makemigrations
-
-PASO 2: CREAR ENDPOINTS DE ESTADÍSTICAS
-────────────────────────────────────────
-Agregar vista para obtener resúmenes:
-
-GET /dashboard/
-  Response: {
-    "total_income": decimal,
-    "total_expense": decimal,
-    "balance": decimal,
-    "by_category": [
-      {
-        "category": "string",
-        "amount": decimal,
-        "percentage": float
-      }
-    ],
-    "last_transactions": [...]
-  }
-
-PASO 3: IMPLEMENTAR FILTROS EN TRANSACCIONES
-──────────────────────────────────────────────
-Agregar parámetros de querystring a GET /transactions/:
-  ?category_id=1
-  ?type=expense
-  ?start_date=2026-01-01
-  ?end_date=2026-02-28
-  ?payment_method=credit_card
-
-PASO 4: MODELS DE VALIDACIONES ADICIONALES
-──────────────────────────────────────────
-Agregar en serializers:
-  - Validar que amount no sea 0 o negativo
-  - Validar que transaction_date no sea en el futuro
-  - Validar que el usuario no pueda editar transacciones de otros usuarios
-  - Validar que el usuario solo vea sus propias categorías
-
-PASO 5: AGREGAR AUTENTICACIÓN CON APPLE
-───────────────────────────────────────
-Instalación:
-  pip install cryptography PyJWT
-
-Procedimiento similar a Google:
-  - POST /api/apple/ con token de Apple
-  - Verificar firma del token
-  - Crear usuario si no existe
-  - Retornar JWT y datos del usuario
+Características:
+  • ACCESS_TOKEN: Expira en 5 minutos (alta seguridad)
+  • REFRESH_TOKEN: Expira en 1 día
+  • Algoritmo: HS256
+  • Header: Authorization: Bearer <token>
 
 
 ═════════════════════════════════════════════════════════════════
-13.3 ESTRUCTURA RECOMENDADA PARA COMPONENTES FRONTEND
+12. COMANDOS ÚTILES PARA DESARROLLO
 ═════════════════════════════════════════════════════════════════
 
-Para continuar con el desarrollo Frontend, se recomienda esta estructura:
-
-src/
-├── components/
-│   ├── Auth/
-│   │   ├── LoginForm.vue         - Formulario de login
-│   │   ├── RegisterForm.vue      - Formulario de registro
-│   │   └── GoogleButton.vue      - Botón de Google OAuth
-│   ├── Dashboard/
-│   │   ├── BalanceSummary.vue    - Resumen de balance
-│   │   ├── ExpenseChart.vue      - Gráfico de gastos
-│   │   └── RecentTransactions.vue - Transacciones recientes
-│   ├── Transactions/
-│   │   ├── TransactionList.vue   - Lista de transacciones
-│   │   ├── TransactionForm.vue   - Formulario crear/editar
-│   │   └── TransactionFilter.vue - Filtros
-│   ├── Categories/
-│   │   ├── CategoryList.vue      - Lista de categorías
-│   │   └── CategoryForm.vue      - Formulario crear/editar
-│   └── Layout/
-│       ├── Navbar.vue            - Barra de navegación
-│       └── Sidebar.vue           - Menú lateral
-├── stores/
-│   ├── userStore.js              - Estado del usuario
-│   ├── transactionStore.js       - Estado de transacciones
-│   ├── categoryStore.js          - Estado de categorías
-│   └── uiStore.js                - Estado de UI (modales, etc)
-├── api/
-│   ├── client.js                 - Cliente axios configurado
-│   ├── auth.js                   - Calls a endpoints de auth
-│   ├── transactions.js           - Calls a endpoints de transacciones
-│   └── categories.js             - Calls a endpoints de categorías
-└── router/
-    └── index.js                  - Configuración de rutas
-
-Recomendaciones de Pinia Store para transacciones:
-─────────────────────────────────────────────────
-export const useTransactionStore = defineStore('transactions', {
-  state: () => ({
-    transactions: [],
-    loading: false,
-    error: null,
-    filters: {
-      categoryId: null,
-      type: null,
-      startDate: null,
-      endDate: null,
-    }
-  }),
-
-  getters: {
-    filteredTransactions(state) {
-      return state.transactions.filter(t => {
-        // Aplicar filtros
-      });
-    },
-    totalExpenses(state) {
-      return state.transactions
-        .filter(t => t.type === 'expense')
-        .reduce((sum, t) => sum + t.amount, 0);
-    },
-    totalIncome(state) {
-      return state.transactions
-        .filter(t => t.type === 'income')
-        .reduce((sum, t) => sum + t.amount, 0);
-    }
-  },
-
-  actions: {
-    async fetchTransactions() {
-      this.loading = true;
-      try {
-        this.transactions = await getTransactions();
-      } catch (error) {
-        this.error = error.message;
-      } finally {
-        this.loading = false;
-      }
-    },
-    async addTransaction(data) {
-      const newTx = await createTransaction(data);
-      this.transactions.push(newTx);
-    }
-  }
-});
-
-Componente Dashboard.vue - estructura básica:
-────────────────────────────────────────────
-<template>
-  <div class="dashboard">
-    <BalanceSummary 
-      :totalIncome="store.totalIncome"
-      :totalExpense="store.totalExpenses"
-    />
-    <div class="dashboard-grid">
-      <ExpenseChart :transactions="store.filteredTransactions" />
-      <RecentTransactions :transactions="store.transactions.slice(0, 5)" />
-    </div>
-    <TransactionList 
-      :transactions="store.filteredTransactions"
-      @add-transaction="handleAddTransaction"
-      @edit-transaction="handleEditTransaction"
-    />
-  </div>
-</template>
-
-<script setup>
-import { useTransactionStore } from '@/stores/transactionStore';
-import { onMounted } from 'vue';
-
-const store = useTransactionStore();
-
-onMounted(() => {
-  store.fetchTransactions();
-});
-
-const handleAddTransaction = async (data) => {
-  await store.addTransaction(data);
-};
-</script>
-
-
-═════════════════════════════════════════════════════════════════
-14. COMANDOS ÚTILES PARA DESARROLLO
-═════════════════════════════════════════════════════════════════
-
-14.1 Docker & Docker Compose
+12.1 Docker & Docker Compose
 ──────────────────────────────
-Levantar contenedores (first time):
+
+Levantar contenedores (primera vez):
   Command: docker compose up --build
 
 Levantar contenedores:
   Command: docker compose up
 
+Levantar en segundo plano:
+  Command: docker compose up -d
+
 Detener contenedores:
   Command: docker compose down
+
+Detener y eliminar volúmenes:
+  Command: docker compose down -v
 
 Restartear contenedores:
   Command: docker compose restart
 
+Restartear servicio específico:
+  Command: docker compose restart backend
+  Command: docker compose restart frontend
+  Command: docker compose restart db
+
 Ver logs en tiempo real:
   Command: docker compose logs -f
 
-Ver logs de un servicio específico:
+Ver logs de servicio específico:
   Command: docker compose logs -f backend
   Command: docker compose logs -f frontend
+  Command: docker compose logs -f db
 
-14.2 Backend - Comandos Django
+Ver estado de contenedores:
+  Command: docker compose ps
+
+Entrar al bash de un contenedor:
+  Command: docker compose exec backend bash
+  Command: docker compose exec frontend sh
+  Command: docker compose exec db psql -U finances_user -d finances_db
+
+
+12.2 Backend - Comandos Django
 ────────────────────────────────
+
 Ejecutar comando en el contenedor:
   Command: docker compose exec backend python manage.py <command>
 
@@ -939,6 +1662,12 @@ Crear migraciones:
 
 Aplicar migraciones:
   Command: docker compose exec backend python manage.py migrate
+
+Ver migraciones:
+  Command: docker compose exec backend python manage.py showmigrations
+
+Revertir migración:
+  Command: docker compose exec backend python manage.py migrate finances <numero_migracion>
 
 Acceder a la shell de Django:
   Command: docker compose exec backend python manage.py shell
@@ -949,293 +1678,625 @@ Acceder a PostgreSQL desde Django:
 Crear superusuario:
   Command: docker compose exec backend python manage.py createsuperuser
 
-14.3 Frontend - Comandos npm
+Correr servidor de desarrollo:
+  Command: docker compose exec backend python manage.py runserver 0.0.0.0:8000
+
+Recolectar archivos estáticos:
+  Command: docker compose exec backend python manage.py collectstatic
+
+Ejecutar tests:
+  Command: docker compose exec backend python manage.py test
+
+
+12.3 Frontend - Comandos npm
 ──────────────────────────────
+
 Instalar dependencias:
   Command: docker compose exec frontend npm install
 
 Instalar paquete específico:
   Command: docker compose exec frontend npm install <nombre_paquete>
 
-Ver procesos ejecutándose:
-  Command: docker compose ps
+Desinstalar paquete:
+  Command: docker compose exec frontend npm uninstall <nombre_paquete>
 
-14.4 Acceso a Servicios
+Ver paquetes instalados:
+  Command: docker compose exec frontend npm list
+
+Actualizar paquetes:
+  Command: docker compose exec frontend npm update
+
+Limpiar cache de npm:
+  Command: docker compose exec frontend npm cache clean --force
+
+
+12.4 PostgreSQL - Comandos directos
+────────────────────────────────────
+
+Entrar a PostgreSQL:
+  Command: docker compose exec db psql -U finances_user -d finances_db
+
+Comandos dentro de PostgreSQL:
+  \dt                    - Ver todas las tablas
+  \d users               - Ver estructura de tabla 'users'
+  \d+ users              - Ver estructura detallada
+  \l                     - Listar todas las bases de datos
+  \du                    - Listar usuarios
+  \c finances_db         - Conectar a base de datos
+  \q                     - Salir
+
+Consultas útiles:
+  SELECT * FROM users;
+  SELECT * FROM categories WHERE user_id = 1;
+  SELECT * FROM transactions ORDER BY transaction_date DESC LIMIT 10;
+  SELECT * FROM budgets WHERE is_active = true;
+
+Crear backup:
+  Command: docker compose exec db pg_dump -U finances_user finances_db > backup.sql
+
+Restaurar backup:
+  Command: docker compose exec -T db psql -U finances_user finances_db < backup.sql
+
+
+12.5 Acceso a Servicios
 ────────────────────────
+
 Backend (API):        http://localhost:8000
 Admin Django:         http://localhost:8000/admin
 Frontend:             http://localhost:5173
+PostgreSQL:           localhost:5432
 
 
 ═════════════════════════════════════════════════════════════════
-15. CONFIGURACIÓN DE VARIABLES DE ENTORNO
+13. TROUBLESHOOTING - ERRORES COMUNES
 ═════════════════════════════════════════════════════════════════
 
-Crear archivo .env en la raíz del Backend con:
-
-# Django
-SECRET_KEY=your-secret-key-here
-DEBUG=1
-ALLOWED_HOSTS=localhost,127.0.0.1,backend
-
-# Database
-DB_ENGINE=django.db.backends.postgresql
-DB_NAME=finances_db
-DB_USER=finances_user
-DB_PASSWORD=your_password
-DB_HOST=db
-DB_PORT=5432
-
-# Google OAuth
-GOOGLE_CLIENT_ID=your-google-client-id
-GOOGLE_CLIENT_SECRET=your-google-client-secret
-
-# CORS
-CORS_ALLOWED_ORIGINS=http://localhost:5173,http://localhost:3000
-
-# JWT
-ACCESS_TOKEN_LIFETIME=5
-REFRESH_TOKEN_LIFETIME=1
+ERROR: "Cannot connect to database"
+────────────────────────────────────
+Causa: PostgreSQL container no está corriendo o no está listo
+Solución:
+  1. docker compose ps (verificar estado)
+  2. docker compose logs db (ver logs de postgres)
+  3. Esperar 10-15 segundos tras iniciar contenedores
+  4. docker compose restart db
 
 
-═════════════════════════════════════════════════════════════════
-16. ESTRUCTURA DE CARPETAS - DETALLES
-═════════════════════════════════════════════════════════════════
-
-Backend/
-├── core/                    # Configuración principal de Django
-│   ├── settings.py           # Configuración del proyecto
-│   ├── urls.py               # URLs principales
-│   ├── wsgi.py               # Servidor WSGI
-│   └── asgi.py               # Servidor ASGI
-├── finances/               # App principal de la aplicación
-│   ├── models.py             # Modelos de BD
-│   ├── serializers.py        # DRF Serializers
-│   ├── views.py              # Vistas y endpoints
-│   ├── urls.py               # URLs de la app
-│   ├── admin.py              # Admin de Django
-│   └── migrations/           # Migraciones de BD
-├── manage.py               # Script de gestión Django
-├── requirements.txt        # Dependencias Python
-└── Dockerfile             # Configuración Docker
-
-Frontend/
-├── src/
-│   ├── components/         # Componentes Vue
-│   ├── router/             # Configuración de rutas
-│   ├── stores/             # Estado Pinia (futuro)
-│   ├── assets/             # Imágenes y estilos
-│   ├── App.vue             # Componente raíz
-│   └── main.js             # Entry point
-├── package.json            # Dependencias npm
-├── vite.config.js          # Configuración Vite
-└── Dockerfile             # Configuración Docker
+ERROR: 401 Unauthorized
+───────────────────────
+Causa: Token JWT expirado o inválido
+Solución:
+  1. Verificar que token esté en localStorage
+  2. Hacer logout y volver a iniciar sesión
+  3. Verificar que header Authorization esté bien formado:
+     Authorization: Bearer <token>
 
 
-═════════════════════════════════════════════════════════════════
-17. CONSIDERACIONES DE SEGURIDAD Y BEST PRACTICES
-═════════════════════════════════════════════════════════════════
+ERROR: CORS blocked
+───────────────────
+Causa: Frontend no está en CORS_ALLOWED_ORIGINS
+Solución:
+  1. Verificar settings.py:
+     CORS_ALLOWED_ORIGINS = ['http://localhost:5173']
+  2. Reiniciar backend: docker compose restart backend
+  3. Verificar que frontend corra en puerto 5173
 
-BACKEND - Seguridad
-────────────────────
 
-1. Variables de Entorno
-   ✓ NUNCA commitear .env a git
-   ✓ Usar archivo .env.example con valores de ejemplo
-   ✓ En producción, usar secrets management (AWS Secrets Manager, etc)
+ERROR: "category_name" undefined en frontend
+────────────────────────────────────────────
+Causa: Serializer no está retornando category_name
+Solución:
+  1. Verificar que serializer use SerializerMethodField
+  2. Implementar método get_category_name que maneje null
+  3. Ejemplo:
+     def get_category_name(self, obj):
+         return obj.category.name if obj.category else None
 
-2. Autenticación
-   ✓ JWT tokens con expiración corta (5 min access, 1 día refresh)
-   ✓ Refresh tokens en HTTP-only cookies (futuro)
-   ✓ CSRF protection habilitado
-   ✓ Rate limiting en endpoints sensibles
 
-3. Validación de Datos
-   ✓ Validar entrada del usuario en serializers
-   ✓ Usar IsAuthenticated en todas las vistas que modifican datos
-   ✓ Verificar que usuario solo acceda a sus propios datos
-   ✓ Sanitizar inputs para prevenir SQL injection
+ERROR: ModuleNotFoundError
+──────────────────────────
+Causa: Dependencia no instalada en requirements.txt
+Solución:
+  1. Agregar dependencia a requirements.txt
+  2. Rebuild container:
+     docker compose down
+     docker compose up --build
 
-4. CORS
-   ✓ Solo permitir Frontend origin en producción
-   ✓ Especificar métodos HTTP permitidos
-   ✓ Credenciales solo cuando sea necesario
 
-5. Base de Datos
-   ✓ Usar ORM (Django ORM) para evitar SQL injection
-   ✓ Hacer backup regulares (incluir en docker compose)
-   ✓ Usar SSL para conexiones en producción
+ERROR: Port already in use
+──────────────────────────
+Causa: Puerto 8000 o 5173 ya está siendo usado
+Solución:
+  1. Linux/Mac: lsof -i :8000 (ver qué proceso usa el puerto)
+  2. Windows: netstat -ano | findstr :8000
+  3. Matar proceso o cambiar puerto en docker-compose.yml
 
-6. API
-   ✓ Versionamiento de API (/api/v1/endpoints)
-   ✓ Rate limiting por usuario
-   ✓ Logging de accesos sospechosos
-   ✓ Error handling sin exponer detalles internos
 
-FRONTEND - Seguridad
-─────────────────────
+ERROR: ImportError: cannot import name 'AccessToken'
+─────────────────────────────────────────────────────
+Causa: Falta importación en views.py
+Solución:
+  Agregar en Backend/finances/views.py:
+  from rest_framework_simplejwt.tokens import AccessToken
 
-1. Token Handling
-   ✓ NO guardar tokens en cookies accesibles con JS
-   ✓ Implementar refresh token flow
-   ✓ Limpiar token al logout
-   ✓ Validar token expirado antes de requests
 
-2. XSS Prevention
-   ✓ Vue ya escapa template content por defecto
-   ✓ No usar v-html sin sanitizacion
-   ✓ Usar DOMPurify si es necesario
-
-3. CSRF Prevention
-   ✓ Backend ya incluye CSRF protection
-   ✓ Incluir token CSRF en requests POST/PUT/DELETE
-
-4. Privacidad de Datos
-   ✓ No guardar datos sensibles en localStorage
-   ✓ HTTPS en producción
-   ✓ Implementar logout automático tras inactividad
-
-FUNCIONES RECOMENDADAS PARA AGREGAR
-───────────────────────────────────
-
-1. Refresh Token Endpoint
-   POST /api/refresh/
-   Body: { "refresh": "refresh_token" }
-   Response: { "access": "new_access_token" }
-
-2. Logout Endpoint (opcional)
-   POST /api/logout/
-   Body: { "refresh": "refresh_token" }
-   Response: { "message": "Logout exitoso" }
-
-3. Cambio de Contraseña
-   POST /api/change-password/
-   Requiere: old_password, new_password
-   Validar contraseña anterior
-   Actualizar con hash bcrypt
-
-4. Recuperación de Contraseña
-   POST /api/forgot-password/
-   Body: { "email" }
-   Enviar token temporal por email
-   PUT /api/reset-password/
-   Body: { "token", "new_password" }
-
-TESTING
-───────
-
-Estructura de tests para Backend:
-  finances/tests/
-  ├── __init__.py
-  ├── test_models.py       - Tests de modelos
-  ├── test_serializers.py  - Tests de validación
-  ├── test_views.py        - Tests de endpoints
-  └── test_auth.py         - Tests de autenticación
-
-Ejemplo test simple:
-  from django.test import TestCase
-  from finances.models import User
-
-  class UserModelTest(TestCase):
-      def setUp(self):
-          self.user = User.objects.create(
-              username='testuser',
-              email='test@example.com'
-          )
-      
-      def test_user_creation(self):
-          self.assertEqual(self.user.username, 'testuser')
-          self.assertTrue(self.user.is_active)
-
-MONITOREO EN PRODUCCIÓN
-──────────────────────
-
-Herramientas recomendadas:
-  • Sentry: para error tracking
-  • New Relic: para performance monitoring
-  • DataDog: para logs y métricas
-  • Grafana: para dashboards
-
-Configuración en Django:
-  pip install sentry-sdk
+ERROR: AttributeError: 'NoneType' object has no attribute 'name'
+─────────────────────────────────────────────────────────────────
+Causa: Intentando acceder a category.name cuando category es None
+Solución:
+  Usar SerializerMethodField en lugar de source:
   
-En settings.py:
-  import sentry_sdk
-  sentry_sdk.init(
-      dsn="tu_sentry_dsn",
-      traces_sample_rate=1.0,
-  )
+  # ❌ INCORRECTO
+  category_name = serializers.CharField(source='category.name', read_only=True)
+  
+  # ✅ CORRECTO
+  category_name = serializers.SerializerMethodField(read_only=True)
+  
+  def get_category_name(self, obj):
+      return obj.category.name if obj.category else None
 
-════════════════════════════════════════════════════════════════
-18. RESUMEN DE ESTADO DEL PROYECTO (28 Feb 2026)
-════════════════════════════════════════════════════════════════
 
-BACKEND - Estado: 70% COMPLETO
-───────────────────────────────
+ERROR: 500 Internal Server Error
+─────────────────────────────────
+Causa: Error en el código del backend
+Solución:
+  1. Ver logs detallados: docker compose logs -f backend
+  2. Verificar tracebacks en la consola
+  3. Revisar validaciones de serializers
+  4. Verificar que todos los campos requeridos estén presentes
+
+
+ERROR: Frontend no se actualiza
+────────────────────────────────
+Causa: Cache del navegador o Vite HMR fallando
+Solución:
+  1. Hard refresh: Ctrl+Shift+R (Windows) / Cmd+Shift+R (Mac)
+  2. Limpiar cache del navegador
+  3. Reiniciar frontend: docker compose restart frontend
+  4. Rebuild: docker compose up --build frontend
+
+
+ERROR: Cannot read property 'map' of undefined
+───────────────────────────────────────────────
+Causa: Variable no inicializada o API retornó undefined
+Solución:
+  1. Inicializar arrays/objetos en ref() o reactive()
+  2. Verificar que API retorne datos correctos
+  3. Agregar validaciones: v-if="categories && categories.length > 0"
+  4. Usar optional chaining: categories?.map()
+
+
+ERROR: Network Error en axios
+──────────────────────────────
+Causa: Backend no accesible o URL incorrecta
+Solución:
+  1. Verificar que backend esté corriendo: docker compose ps
+  2. Verificar URL en axios: http://localhost:8000/api/...
+  3. Verificar CORS en backend
+  4. Ver logs de backend para errores
+
+
+═════════════════════════════════════════════════════════════════
+14. ESTADO DEL PROYECTO (5 Marzo 2026)
+═════════════════════════════════════════════════════════════════
+
+BACKEND: 75% COMPLETO
+─────────────────────
   ✓ Autenticación (Local, Google OAuth, JWT)
-  ✓ Modelos CRUD (User, Category, Transaction)
-  ✓ API Endpoints funcionando
+  ✓ Custom JWT Authentication
+  ✓ Modelos: User, Category, Transaction, Budget
+  ✓ Serializers con validaciones robustas
+  ✓ CRUD Categorías (GET, POST, PUT, DELETE)
+  ✓ CRUD Transacciones (GET, POST, PUT, DELETE)
+  ✓ CRUD Budgets (GET, POST, PUT, DELETE)
   ✓ Validaciones de datos
   ✓ CORS configurado
+  ✓ Error handling básico
   
-PENDIENTE:
-  ☐ Modelo Budget y endpoints
-  ☐ Endpoints de estadísticas/reportes
-  ☐ Filtros avanzados en transacciones
+  PENDIENTE (25%):
+  ☐ Endpoints de estadísticas/dashboard
+  ☐ Filtros avanzados en transacciones (query params)
   ☐ Apple OAuth
+  ☐ Refresh token endpoint
+  ☐ Recuperación de contraseña
   ☐ Tests unitarios
-  ☐ Documentación con Swagger
+  ☐ Documentación Swagger/Redoc
+  ☐ Rate limiting
+  ☐ Logging avanzado
 
-FRONTEND - Estado: 30% COMPLETO
-────────────────────────────────
-  ✓ Router configurado
-  ✓ Login/Register con Google
-  ✓ Estructura inicial
-  ✓ Librerías instaladas (axios, vue3-google-login)
 
-PENDIENTE:
-  ☐ Componentes Dashboard (balance, transacciones, categorías)
+FRONTEND: 55% COMPLETO
+──────────────────────
+  ✓ Router configurado con rutas públicas y privadas
+  ✓ Login/Register con Google OAuth
+  ✓ Componente AuthSuccess funcional
+  ✓ Componente Categories.vue completo (CRUD)
+  ✓ Componente Transactions.vue completo (CRUD)
+  ✓ Componente Budgets.vue completo (CRUD)
+  ✓ MainPage layout con sidebar
+  ✓ Validaciones de formularios
+  ✓ Formateo de fechas y montos
+  ✓ Filtros y búsqueda en tablas
+  
+  PENDIENTE (45%):
+  ☐ Dashboard.vue (resumen financiero)
   ☐ Stores Pinia para gestión de estado
-  ☐ Integración completa con Backend
-  ☐ Tablas y gráficos de datos
-  ☐ Responsividad en mobile
-  ☐ Tests E2E
+  ☐ Gráficos con Chart.js o Recharts
+  ☐ Reportes PDF
+  ☐ Responsive design mobile
+  ☐ Dark mode
+  ☐ Internacionalización (i18n)
+  ☐ Tests E2E (Cypress/Playwright)
+  ☐ Progressive Web App (PWA)
+  ☐ Notificaciones push
 
-BASE DE DATOS - Estado: 100% COMPLETO
-──────────────────────────────────────
+
+BASE DE DATOS: 100% COMPLETO
+────────────────────────────
   ✓ PostgreSQL configurado
   ✓ Modelos migrados
   ✓ Relaciones establecidas
   ✓ Índices en campos clave
+  ✓ Constraints de unicidad
 
-PRÓXIMAS MILESTONES
-──────────────────
 
-Semana 1: Completar componentes dashboard
-Semana 2: Integrar Pinia stores
-Semana 3: Agregar módulo de presupuestos
-Semana 4: Testing y optimización
-Semana 5: Deployment staging
+INFRAESTRUCTURA: 90% COMPLETO
+──────────────────────────────
+  ✓ Docker & Docker Compose configurado
+  ✓ Contenedores: backend, frontend, db
+  ✓ Volúmenes para persistencia
+  ✓ Networks configuradas
+  ✓ Variables de entorno
+  
+  PENDIENTE (10%):
+  ☐ Docker Compose para producción
+  ☐ Nginx reverse proxy
+  ☐ SSL/TLS certificates
+  ☐ CI/CD pipeline
+  ☐ Monitoreo y logs centralizados
 
-PREGUNTAS FRECUENTES DURANTE DESARROLLO
-────────────────────────────────────────
 
-P: ¿Cómo agregar un nuevo campo a un modelo?
-R: 1. Agregar campo en models.py
-   2. Crear migración: makemigrations
-   3. Aplicar: migrate
-   4. Actualizar serializer si es necesario
-   5. Crear/actualizar vistas
+═════════════════════════════════════════════════════════════════
+15. PRÓXIMOS PASOS RECOMENDADOS
+═════════════════════════════════════════════════════════════════
 
-P: ¿Cómo proteger endpoints que requieren autenticación?
-R: Usar @permission_classes([IsAuthenticated]) en vistas function-based
-   o authentication_classes en viewsets
+PRIORIDAD ALTA (Semana 1-2)
+────────────────────────────
+1. ☐ Implementar Dashboard.vue con:
+   - Balance total (ingresos - gastos)
+   - Resumen mensual
+   - Gráfico circular de gastos por categoría
+   - Gráfico de línea de evolución mensual
+   - Últimas transacciones
 
-P: ¿Cómo redirigir en Frontend tras validar token?
-R: Usar router.push() en componentes o middleware
+2. ☐ Crear endpoint de estadísticas:
+   GET /api/dashboard/stats/
+   Response: {
+     "total_income": decimal,
+     "total_expense": decimal,
+     "balance": decimal,
+     "current_month_income": decimal,
+     "current_month_expense": decimal,
+     "expenses_by_category": [
+       {"category": "string", "amount": decimal, "percentage": float}
+     ],
+     "monthly_evolution": [
+       {"month": "YYYY-MM", "income": decimal, "expense": decimal}
+     ]
+   }
 
-P: ¿Cómo manejar errores de CORS?
-R: Verificar CORS_ALLOWED_ORIGINS en settings.py
-   Asegurar que frontend URL está incluida
+3. ☐ Agregar filtros a GET /api/transactions/:
+   - ?type=income|expense
+   - ?category=<id>
+   - ?start_date=YYYY-MM-DD
+   - ?end_date=YYYY-MM-DD
+   - ?payment_method=<method>
+   - ?search=<query>
 
-════════════════════════════════════════════════════════════════
+
+PRIORIDAD MEDIA (Semana 3-4)
+─────────────────────────────
+4. ☐ Implementar Pinia stores:
+   - userStore.js (estado del usuario)
+   - transactionStore.js (estado de transacciones)
+   - categoryStore.js (estado de categorías)
+   - budgetStore.js (estado de presupuestos)
+   - uiStore.js (modales, notificaciones, tema)
+
+5. ☐ Agregar gráficos con Chart.js:
+   Command: npm install chart.js vue-chartjs
+   - Gráfico circular para gastos por categoría
+   - Gráfico de línea para evolución temporal
+   - Gráfico de barras para comparación mensual
+
+6. ☐ Implementar exportación de reportes:
+   - Exportar transacciones a CSV
+   - Generar reporte mensual en PDF
+   Command: npm install jspdf jspdf-autotable
+
+
+PRIORIDAD BAJA (Semana 5+)
+──────────────────────────
+7. ☐ Apple OAuth:
+   - Configurar Apple Developer Account
+   - Implementar endpoint /api/apple/
+   - Agregar botón "Continue with Apple" en frontend
+
+8. ☐ Refresh Token:
+   POST /api/refresh/
+   Body: { "refresh": "refresh_token" }
+   Response: { "access": "new_access_token" }
+
+9. ☐ Recuperación de contraseña:
+   POST /api/forgot-password/
+   POST /api/reset-password/
+
+10. ☐ Tests:
+    - Backend: pytest + pytest-django
+    - Frontend: Vitest + Vue Test Utils
+    - E2E: Cypress o Playwright
+
+11. ☐ Responsive design:
+    - Mobile-first approach
+    - Breakpoints para tablet y desktop
+    - Menú hamburguesa en mobile
+
+12. ☐ Dark mode:
+    - Toggle en UI
+    - Guardar preferencia en localStorage
+    - Aplicar tema globalmente
+
+13. ☐ Deployment:
+    - Backend: Heroku, Railway, o AWS
+    - Frontend: Vercel, Netlify, o AWS S3
+    - Database: AWS RDS, ElephantSQL, o Supabase
+
+
+═════════════════════════════════════════════════════════════════
+16. ESTRUCTURA RECOMENDADA PARA PINIA STORES
+═════════════════════════════════════════════════════════════════
+
+Ubicación: Frontend/src/stores/
+
+16.1 userStore.js
+─────────────────
+
+import { defineStore } from 'pinia'
+import axios from 'axios'
+
+export const useUserStore = defineStore('user', {
+  state: () => ({
+    user: null,
+    token: localStorage.getItem('token') || null,
+    isAuthenticated: !!localStorage.getItem('token'),
+  }),
+
+  getters: {
+    getUser: (state) => state.user,
+    isLoggedIn: (state) => state.isAuthenticated,
+  },
+
+  actions: {
+    async login(email, password) {
+      const response = await axios.post('/api/login/', { email, password })
+      this.token = response.data.token
+      this.user = response.data.user
+      this.isAuthenticated = true
+      localStorage.setItem('token', this.token)
+    },
+
+    async register(username, email, password) {
+      await axios.post('/api/register/', { username, email, password })
+    },
+
+    async googleAuth(googleToken) {
+      const response = await axios.post('/api/google/', { token: googleToken })
+      this.token = response.data.token
+      this.user = response.data.user
+      this.isAuthenticated = true
+      localStorage.setItem('token', this.token)
+      return response.data.isNewUser
+    },
+
+    logout() {
+      this.token = null
+      this.user = null
+      this.isAuthenticated = false
+      localStorage.removeItem('token')
+    },
+  },
+})
+
+
+16.2 transactionStore.js
+─────────────────────────
+
+import { defineStore } from 'pinia'
+import axios from 'axios'
+
+export const useTransactionStore = defineStore('transactions', {
+  state: () => ({
+    transactions: [],
+    loading: false,
+    error: null,
+    filters: {
+      type: null,
+      category: null,
+      startDate: null,
+      endDate: null,
+      search: '',
+    },
+  }),
+
+  getters: {
+    filteredTransactions(state) {
+      let result = state.transactions
+
+      if (state.filters.type) {
+        result = result.filter(t => t.type === state.filters.type)
+      }
+      if (state.filters.category) {
+        result = result.filter(t => t.category === state.filters.category)
+      }
+      if (state.filters.search) {
+        result = result.filter(t =>
+          t.description?.toLowerCase().includes(state.filters.search.toLowerCase())
+        )
+      }
+      // Add date filters...
+
+      return result
+    },
+
+    totalIncome(state) {
+      return state.transactions
+        .filter(t => t.type === 'income')
+        .reduce((sum, t) => sum + parseFloat(t.amount), 0)
+    },
+
+    totalExpense(state) {
+      return state.transactions
+        .filter(t => t.type === 'expense')
+        .reduce((sum, t) => sum + parseFloat(t.amount), 0)
+    },
+
+    balance() {
+      return this.totalIncome - this.totalExpense
+    },
+  },
+
+  actions: {
+    async fetchTransactions() {
+      this.loading = true
+      try {
+        const token = localStorage.getItem('token')
+        const response = await axios.get('/api/transactions/', {
+          headers: { Authorization: `Bearer ${token}` }
+        })
+        this.transactions = response.data
+      } catch (error) {
+        this.error = error.message
+      } finally {
+        this.loading = false
+      }
+    },
+
+    async addTransaction(data) {
+      const token = localStorage.getItem('token')
+      const response = await axios.post('/api/transactions/create/', data, {
+        headers: { Authorization: `Bearer ${token}` }
+      })
+      this.transactions.push(response.data.transaction)
+    },
+
+    async updateTransaction(id, data) {
+      const token = localStorage.getItem('token')
+      await axios.put(`/api/transactions/${id}/`, data, {
+        headers: { Authorization: `Bearer ${token}` }
+      })
+      await this.fetchTransactions()
+    },
+
+    async deleteTransaction(id) {
+      const token = localStorage.getItem('token')
+      await axios.delete(`/api/transactions/${id}/delete/`, {
+        headers: { Authorization: `Bearer ${token}` }
+      })
+      this.transactions = this.transactions.filter(t => t.id !== id)
+    },
+
+    setFilter(key, value) {
+      this.filters[key] = value
+    },
+
+    clearFilters() {
+      this.filters = {
+        type: null,
+        category: null,
+        startDate: null,
+        endDate: null,
+        search: '',
+      }
+    },
+  },
+})
+
+
+═════════════════════════════════════════════════════════════════
+17. HISTORIAL DE CAMBIOS IMPORTANTES
+═════════════════════════════════════════════════════════════════
+
+4 Marzo 2026 - IMPLEMENTACIÓN DE BUDGETS
+─────────────────────────────────────────
+  ✓ Creado modelo Budget con migraciones
+  ✓ Implementado BudgetSerializer con validaciones
+  ✓ Creados endpoints CRUD de Budget (GET, POST, PUT, DELETE)
+  ✓ Implementado componente Budgets.vue completamente funcional
+  ✓ Cálculo automático de gasto vs límite
+  ✓ Sistema de alertas visuales
+  ✓ Modal para crear/editar presupuestos
+  ✓ Auto-refresh cada 10s
+
+  FIXES:
+  ✓ Fix ImportError: Agregada importación de AccessToken en views.py
+  ✓ Fix AttributeError: Cambiado category_name a SerializerMethodField
+
+
+5 Marzo 2026 - ACTUALIZACIÓN DE TRANSACTIONS
+─────────────────────────────────────────────
+  ✓ Actualizado modelo Transaction con campos faltantes:
+    - transaction_date (renombrado de 'date')
+    - type (income/expense)
+    - payment_method
+    - is_recurring
+    - recurring_frequency
+    - notes
+  ✓ Actualizado TransactionSerializer con:
+    - category_name, category_icon, category_color (read-only)
+    - Validación de amount > 0
+  ✓ Implementado componente Transactions.vue completo
+  ✓ Agregados filtros: categoría, tipo, fechas, búsqueda
+  ✓ Formateo de montos con colores (+verde/-rojo)
+  ✓ Badges de categoría con iconos
+  ✓ Modal para crear/editar transacciones
+  ✓ Validaciones en formulario
+
+  DOCUMENTACIÓN:
+  ✓ Actualizada documentación completa
+  ✓ Corregidas inconsistencias Node.js vs Django
+  ✓ Agregada sección de Troubleshooting
+  ✓ Actualizado estado del proyecto (75% backend, 55% frontend)
+  ✓ Agregados próximos pasos recomendados
+
+
+═════════════════════════════════════════════════════════════════
+18. CONTACTO Y RECURSOS
+═════════════════════════════════════════════════════════════════
+
+DOCUMENTACIÓN OFICIAL
+──────────────────────
+  • Django: https://docs.djangoproject.com/
+  • Django REST Framework: https://www.django-rest-framework.org/
+  • Vue.js: https://vuejs.org/
+  • Vite: https://vitejs.dev/
+  • PostgreSQL: https://www.postgresql.org/docs/
+  • Docker: https://docs.docker.com/
+  • Pinia: https://pinia.vuejs.org/
+
+RECURSOS ÚTILES
+────────────────
+  • Django Best Practices: https://django-best-practices.readthedocs.io/
+  • Vue 3 Composition API: https://vuejs.org/guide/extras/composition-api-faq.html
+  • JWT Best Practices: https://auth0.com/blog/jwt-handbook/
+  • REST API Design: https://restfulapi.net/
+
+COMUNIDAD
+──────────
+  • Django Forum: https://forum.djangoproject.com/
+  • Vue Discord: https://discord.com/invite/vue
+  • Stack Overflow: https://stackoverflow.com/
+
+
+═════════════════════════════════════════════════════════════════
+                    FIN DE LA DOCUMENTACIÓN
+          Última actualización: 5 Marzo 2026
+═════════════════════════════════════════════════════════════════

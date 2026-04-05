@@ -20,12 +20,10 @@ class User(models.Model):
     
     @property
     def is_authenticated(self):
-        """Return True if the user is authenticated."""
         return True
     
     @property
     def is_active(self):
-        """Return True if the user is active."""
         return True
     
     def set_password(self, raw_password):
@@ -42,6 +40,7 @@ class User(models.Model):
         
     def __str__(self):
         return self.username
+
 
 class Category(models.Model):
     Type_CHOICES = [
@@ -62,7 +61,8 @@ class Category(models.Model):
     
     def __str__(self):
         return f"{self.name} ({self.type})"
-    
+
+
 class Transaction(models.Model):
     TYPE_CHOICES = [
         ('income', 'Income'),
@@ -96,6 +96,7 @@ class Transaction(models.Model):
         cat_name = self.category.name if self.category else 'Sin categoría'
         return f"{cat_name}: {self.amount} on {self.transaction_date}"
 
+
 class Budget(models.Model):
     PERIOD_CHOICES = [
         ('monthly', 'Monthly'),
@@ -122,3 +123,67 @@ class Budget(models.Model):
 
     def __str__(self):
         return f"{self.name} - {self.amount}"
+
+
+class Goal(models.Model):
+    PRIORITY_CHOICES = [
+        ('low', 'Low'),
+        ('medium', 'Medium'),
+        ('high', 'High'),
+    ]
+    STATUS_CHOICES = [
+        ('in_progress', 'In Progress'),
+        ('completed', 'Completed'),
+        ('paused', 'Paused'),
+    ]
+
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='goals')
+    category = models.ForeignKey(
+        Category, on_delete=models.SET_NULL, null=True, blank=True, related_name='goals'
+    )
+    name = models.CharField(max_length=255)
+    description = models.TextField(blank=True, null=True)
+    target_amount = models.DecimalField(max_digits=15, decimal_places=2)
+    target_date = models.DateField()
+    priority = models.CharField(max_length=10, choices=PRIORITY_CHOICES, default='medium')
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='in_progress')
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'goals'
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"{self.name} - {self.target_amount}"
+
+
+class Debt(models.Model):
+    STATUS_CHOICES = [
+        ('pending', 'Pending'),
+        ('in_progress', 'In Progress'),
+        ('paid', 'Paid'),
+    ]
+
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='debts')
+    category = models.ForeignKey(
+        Category, on_delete=models.SET_NULL, null=True, blank=True, related_name='debts'
+    )
+    name = models.CharField(max_length=255)
+    creditor_name = models.CharField(max_length=255, blank=True, null=True)
+    amount = models.DecimalField(max_digits=15, decimal_places=2)
+    interest_rate = models.DecimalField(max_digits=5, decimal_places=2, default=0)
+    months = models.IntegerField(default=0)
+    total_with_interest = models.DecimalField(max_digits=15, decimal_places=2)
+    due_date = models.DateField()
+    description = models.TextField(blank=True, null=True)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'debts'
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"{self.name} - {self.total_with_interest}"

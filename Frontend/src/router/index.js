@@ -36,6 +36,11 @@ const routes = [
         component: () => import('../components/Goals.vue'),
       },
       {
+        path: '/debts',
+        name: 'Debts',
+        component: () => import('../components/Debts.vue'),
+      },
+      {
         path: '/categories',
         name: 'Categories',
         component: () => import('../components/Categories.vue'),
@@ -44,7 +49,7 @@ const routes = [
         path: '/transactions',
         name: 'Transactions',
         component: () => import('../components/Transactions.vue'),
-      }
+      },
     ],
   },
 ]
@@ -54,4 +59,4 @@ const router = createRouter({
   routes,
 })
 
-export default router
+export default router     

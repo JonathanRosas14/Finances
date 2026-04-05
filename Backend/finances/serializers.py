@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import User, Category, Transaction, Budget
+from .models import User, Category, Transaction, Budget, Goal, Debt
 import re
 
 
@@ -98,7 +98,8 @@ class CategorySerializer(serializers.ModelSerializer):
             raise serializers.ValidationError('Ya existe una categoría con ese nombre')
         
         return value
-            
+
+
 class TransactionSerializer(serializers.ModelSerializer):
     category_id = serializers.IntegerField(required=False, allow_null=True, write_only=False)
     category_name = serializers.SerializerMethodField(read_only=True)
@@ -157,6 +158,7 @@ class TransactionSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError('El monto debe ser mayor a 0')
         return value
 
+
 class BudgetSerializer(serializers.ModelSerializer):
     category_name = serializers.SerializerMethodField(read_only=True)
 
@@ -192,3 +194,73 @@ class BudgetSerializer(serializers.ModelSerializer):
                 raise serializers.ValidationError('La fecha de fin debe ser posterior a la fecha de inicio')
         return data
 
+
+class GoalSerializer(serializers.ModelSerializer):
+    category_name = serializers.SerializerMethodField(read_only=True)
+    category_id   = serializers.IntegerField(required=False, allow_null=True, write_only=False)
+
+    class Meta:
+        model = Goal
+        fields = [
+            'id',
+            'name',
+            'description',
+            'target_amount',
+            'target_date',
+            'category_id',
+            'category_name',
+            'priority',
+            'status',
+            'created_at',
+        ]
+        read_only_fields = ['id', 'created_at', 'category_name']
+
+    def get_category_name(self, obj):
+        return obj.category.name if obj.category else None
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        data['category_id'] = instance.category.id if instance.category else None
+        return data
+
+    def validate_target_amount(self, value):
+        if value <= 0:
+            raise serializers.ValidationError('El monto objetivo debe ser mayor a 0')
+        return value
+
+
+class DebtSerializer(serializers.ModelSerializer):
+    category_name = serializers.SerializerMethodField(read_only=True)
+    category_id   = serializers.IntegerField(required=False, allow_null=True, write_only=False)
+
+    class Meta:
+        model = Debt
+        fields = [
+            'id',
+            'name',
+            'creditor_name',
+            'amount',
+            'interest_rate',
+            'months',
+            'total_with_interest',
+            'due_date',
+            'category_id',
+            'category_name',
+            'description',
+            'status',
+            'created_at',
+        ]
+        read_only_fields = ['id', 'created_at', 'category_name']
+
+    def get_category_name(self, obj):
+        return obj.category.name if obj.category else None
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        data['category_id'] = instance.category.id if instance.category else None
+        return data
+
+    def validate_amount(self, value):
+        if value <= 0:
+            raise serializers.ValidationError('El monto debe ser mayor a 0')
+        return value

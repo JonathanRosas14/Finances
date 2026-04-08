@@ -1,6 +1,6 @@
 ═════════════════════════════════════════════════════════════════
         DOCUMENTACIÓN DEL PROYECTO FINANCES_PRO
-        Última actualización: 5 Marzo 2026
+        Última actualización: 10 Marzo 2026
 ═════════════════════════════════════════════════════════════════
 
 DESCRIPCIÓN DEL PROYECTO
@@ -1956,103 +1956,296 @@ INFRAESTRUCTURA: 90% COMPLETO
 
 
 ═════════════════════════════════════════════════════════════════
-15. PRÓXIMOS PASOS RECOMENDADOS
+18. REFERENCIA COMPLETA DE ENDPOINTS API
 ═════════════════════════════════════════════════════════════════
 
-PRIORIDAD ALTA (Semana 1-2)
+Base URL: http://localhost:8000/api/
+
+AUTENTICACIÓN (Authentication)
+──────────────────────────────
+
+POST /register/
+  Descripción: Registrar nuevo usuario local
+  Body: {
+    "username": "usuario123",
+    "email": "usuario@gmail.com",
+    "password": "SecurePass123"
+  }
+  Response: { "message": "Usuario registrado exitosamente" }
+  Status: 201 Created
+
+POST /login/
+  Descripción: Iniciar sesión con credenciales locales
+  Body: {
+    "email": "usuario@gmail.com",
+    "password": "SecurePass123"
+  }
+  Response: {
+    "token": "eyJ0eXAiOiJKV1QiLCJhbGc...",
+    "refresh": "eyJ0eXAiOiJKV1QiLCJhbGc...",
+    "user": {
+      "id": 1,
+      "username": "usuario123",
+      "email": "usuario@gmail.com",
+      "provider": "local"
+    }
+  }
+  Status: 200 OK
+
+POST /google/
+  Descripción: Autenticar con Google OAuth2
+  Body: { "token": "GOOGLE_ID_TOKEN" }
+  Response: {
+    "token": "JWT_TOKEN",
+    "refresh": "REFRESH_TOKEN",
+    "user": { ... },
+    "isNewUser": true|false
+  }
+  Status: 200 OK
+
+
+CATEGORÍAS (Categories)
+───────────────────────
+
+GET /categories/
+  Descripción: Obtener todas las categorías del usuario
+  Headers: Authorization: Bearer {JWT_TOKEN}
+  Response: [
+    {
+      "id": 1,
+      "name": "Comida",
+      "icon": "🍔",
+      "color": "#FF6B6B",
+      "type": "expense",
+      "parent_id": null,
+      "created_at": "2026-03-10T10:30:00Z"
+    },
+    ...
+  ]
+  Status: 200 OK
+
+POST /categories/create/
+  Descripción: Crear una nueva categoría
+  Headers: Authorization: Bearer {JWT_TOKEN}
+  Body: {
+    "name": "Transporte",
+    "icon": "🚗",
+    "color": "#4ECDC4",
+    "type": "expense",
+    "parent_id": null
+  }
+  Response: { "id": 2, "name": "Transporte", ... }
+  Status: 201 Created
+
+PUT /categories/{category_id}/
+  Descripción: Actualizar una categoría
+  Headers: Authorization: Bearer {JWT_TOKEN}
+  Body: {
+    "name": "Transporte Actualizado",
+    "icon": "🚕",
+    "color": "#45B7D1"
+  }
+  Response: { "id": 2, "name": "Transporte Actualizado", ... }
+  Status: 200 OK
+
+DELETE /categories/{category_id}/delete/
+  Descripción: Eliminar una categoría
+  Headers: Authorization: Bearer {JWT_TOKEN}
+  Response: { "message": "Categoría eliminada correctamente" }
+  Status: 204 No Content
+
+
+TRANSACCIONES (Transactions)
 ────────────────────────────
-1. ☐ Implementar Dashboard.vue con:
-   - Balance total (ingresos - gastos)
-   - Resumen mensual
-   - Gráfico circular de gastos por categoría
-   - Gráfico de línea de evolución mensual
-   - Últimas transacciones
 
-2. ☐ Crear endpoint de estadísticas:
-   GET /api/dashboard/stats/
-   Response: {
-     "total_income": decimal,
-     "total_expense": decimal,
-     "balance": decimal,
-     "current_month_income": decimal,
-     "current_month_expense": decimal,
-     "expenses_by_category": [
-       {"category": "string", "amount": decimal, "percentage": float}
-     ],
-     "monthly_evolution": [
-       {"month": "YYYY-MM", "income": decimal, "expense": decimal}
-     ]
-   }
+GET /transactions/
+  Descripción: Obtener todas las transacciones del usuario
+  Headers: Authorization: Bearer {JWT_TOKEN}
+  Query params: ?type=expense&category_id=1&start_date=2026-03-01&end_date=2026-03-31
+  Response: [
+    {
+      "id": 1,
+      "amount": "45.50",
+      "transaction_date": "2026-03-10",
+      "description": "Almuerzo en restaurante",
+      "category_id": 1,
+      "category_name": "Comida",
+      "type": "expense",
+      "payment_method": "credit_card",
+      "is_recurring": false,
+      "recurring_frequency": null,
+      "notes": "Almuerzo con amigos",
+      "created_at": "2026-03-10T12:00:00Z"
+    },
+    ...
+  ]
+  Status: 200 OK
 
-3. ☐ Agregar filtros a GET /api/transactions/:
-   - ?type=income|expense
-   - ?category=<id>
-   - ?start_date=YYYY-MM-DD
-   - ?end_date=YYYY-MM-DD
-   - ?payment_method=<method>
-   - ?search=<query>
+POST /transactions/create/
+  Descripción: Crear una nueva transacción
+  Headers: Authorization: Bearer {JWT_TOKEN}
+  Body: {
+    "amount": "45.50",
+    "transaction_date": "2026-03-10",
+    "description": "Compra en supermercado",
+    "category_id": 1,
+    "type": "expense",
+    "payment_method": "credit_card",
+    "is_recurring": false,
+    "recurring_frequency": null,
+    "notes": "Compras semanales"
+  }
+  Response: { "transaction": { ... }, "message": "Transacción creada" }
+  Status: 201 Created
+
+PUT /transactions/{transaction_id}/
+  Descripción: Actualizar una transacción
+  Headers: Authorization: Bearer {JWT_TOKEN}
+  Body: { "description": "Nuevo descripción", ... }
+  Response: { ... }
+  Status: 200 OK
+
+DELETE /transactions/{transaction_id}/delete/
+  Descripción: Eliminar una transacción
+  Headers: Authorization: Bearer {JWT_TOKEN}
+  Response: { "message": "Transacción eliminada correctamente" }
+  Status: 204 No Content
 
 
-PRIORIDAD MEDIA (Semana 3-4)
-─────────────────────────────
-4. ☐ Implementar Pinia stores:
-   - userStore.js (estado del usuario)
-   - transactionStore.js (estado de transacciones)
-   - categoryStore.js (estado de categorías)
-   - budgetStore.js (estado de presupuestos)
-   - uiStore.js (modales, notificaciones, tema)
+PRESUPUESTOS (Budgets)
+──────────────────────
 
-5. ☐ Agregar gráficos con Chart.js:
-   Command: npm install chart.js vue-chartjs
-   - Gráfico circular para gastos por categoría
-   - Gráfico de línea para evolución temporal
-   - Gráfico de barras para comparación mensual
+GET /budgets/
+  Descripción: Obtener todos los presupuestos del usuario
+  Headers: Authorization: Bearer {JWT_TOKEN}
+  Response: [
+    {
+      "id": 1,
+      "name": "Presupuesto Mensual - Comida",
+      "amount": "500.00",
+      "period": "monthly",
+      "start_date": "2026-03-01",
+      "end_date": null,
+      "category_id": 1,
+      "alert_percentage": 80,
+      "is_active": true,
+      "description": "Límite mensual para gastos de comida",
+      "spent": "250.75",
+      "remaining": "249.25",
+      "percentage_used": 50,
+      "created_at": "2026-03-01T00:00:00Z"
+    },
+    ...
+  ]
+  Status: 200 OK
 
-6. ☐ Implementar exportación de reportes:
-   - Exportar transacciones a CSV
-   - Generar reporte mensual en PDF
-   Command: npm install jspdf jspdf-autotable
+POST /budgets/create/
+  Descripción: Crear un nuevo presupuesto
+  Headers: Authorization: Bearer {JWT_TOKEN}
+  Body: {
+    "name": "Presupuesto Entretenimiento",
+    "amount": "200.00",
+    "period": "monthly",
+    "start_date": "2026-03-01",
+    "category_id": 5,
+    "alert_percentage": 80,
+    "description": "Límite para gastos de entretenimiento"
+  }
+  Response: { ... }
+  Status: 201 Created
 
+PUT /budgets/{budget_id}/
+  Descripción: Actualizar un presupuesto
+  Headers: Authorization: Bearer {JWT_TOKEN}
+  Body: { "amount": "300.00", ... }
+  Response: { ... }
+  Status: 200 OK
 
-PRIORIDAD BAJA (Semana 5+)
-──────────────────────────
-7. ☐ Apple OAuth:
-   - Configurar Apple Developer Account
-   - Implementar endpoint /api/apple/
-   - Agregar botón "Continue with Apple" en frontend
-
-8. ☐ Refresh Token:
-   POST /api/refresh/
-   Body: { "refresh": "refresh_token" }
-   Response: { "access": "new_access_token" }
-
-9. ☐ Recuperación de contraseña:
-   POST /api/forgot-password/
-   POST /api/reset-password/
-
-10. ☐ Tests:
-    - Backend: pytest + pytest-django
-    - Frontend: Vitest + Vue Test Utils
-    - E2E: Cypress o Playwright
-
-11. ☐ Responsive design:
-    - Mobile-first approach
-    - Breakpoints para tablet y desktop
-    - Menú hamburguesa en mobile
-
-12. ☐ Dark mode:
-    - Toggle en UI
-    - Guardar preferencia en localStorage
-    - Aplicar tema globalmente
-
-13. ☐ Deployment:
-    - Backend: Heroku, Railway, o AWS
-    - Frontend: Vercel, Netlify, o AWS S3
-    - Database: AWS RDS, ElephantSQL, o Supabase
+DELETE /budgets/{budget_id}/delete/
+  Descripción: Eliminar un presupuesto
+  Headers: Authorization: Bearer {JWT_TOKEN}
+  Response: { "message": "Presupuesto eliminado correctamente" }
+  Status: 204 No Content
 
 
 ═════════════════════════════════════════════════════════════════
-16. ESTRUCTURA RECOMENDADA PARA PINIA STORES
+19. DESCRIPCIÓN DE MODELOS DE BASE DE DATOS
+═════════════════════════════════════════════════════════════════
+
+User (Tabla: users)
+───────────────────
+  • id: Integer [PRIMARY KEY]
+  • username: String(50) [UNIQUE]
+  • email: Email [UNIQUE]
+  • password: String(128) [BCRYPT HASHED]
+  • provider: String(20) - Valores: 'local', 'google', 'apple'
+  • provider_id: String(255) [NULL] - ID externo de OAuth
+  • created_at: DateTime [AUTO]
+  • updated_at: DateTime [AUTO]
+  
+  Métodos:
+    - set_password(raw_password): Encripta la contraseña con bcrypt
+    - check_password(raw_password): Verifica contraseña encriptada
+    - is_authenticated: Siempre True
+    - is_active: Siempre True
+
+Category (Tabla: categories)
+────────────────────────────
+  • id: Integer [PRIMARY KEY]
+  • user_id: Integer [FK → User]
+  • name: String(50) [UNIQUE PER USER]
+  • icon: String(50) - Default: '📦'
+  • color: String(7) - Color hex - Default: '#95A5A6'
+  • type: String(20) - Valores: 'income', 'expense'
+  • parent_id: Integer [NULL] - Para subcategorías
+  • created_at: DateTime [AUTO]
+  
+  Validaciones:
+    - (user, name, type) debe ser único
+    - icon debe ser un emoji o símbolo
+    - color debe ser formato hex válido
+
+Transaction (Tabla: transactions)
+─────────────────────────────────
+  • id: Integer [PRIMARY KEY]
+  • user_id: Integer [FK → User]
+  • category_id: Integer [FK → Category, NULL/BLANK]
+  • amount: Decimal(10,2) - Debe ser > 0
+  • transaction_date: Date
+  • description: String(255) [BLANK]
+  • type: String(20) - Valores: 'income', 'expense'
+  • payment_method: String(20) - Valores: 'cash', 'credit_card', 'debit_card', 'bank_transfer'
+  • is_recurring: Boolean [Default: False]
+  • recurring_frequency: String(50) [NULL] - ej: 'daily', 'weekly', 'monthly'
+  • notes: Text [BLANK]
+  • created_at: DateTime [AUTO]
+  • updated_at: DateTime [AUTO]
+  
+  Ordenamiento por defecto: -transaction_date (más recientes primero)
+
+Budget (Tabla: budgets)
+──────────────────────
+  • id: Integer [PRIMARY KEY]
+  • user_id: Integer [FK → User]
+  • category_id: Integer [FK → Category, NULL/BLANK]
+  • name: String(255)
+  • amount: Decimal(15,2)
+  • period: String(20) - Valores: 'monthly', 'quarterly', 'yearly'
+  • start_date: Date
+  • end_date: Date [NULL]
+  • alert_percentage: Integer [Default: 80]
+  • is_active: Boolean [Default: True]
+  • description: Text [NULL/BLANK]
+  • created_at: DateTime [AUTO]
+  • updated_at: DateTime [AUTO]
+  
+  Propiedades computadas:
+    - spent: Suma de transacciones en período
+    - remaining: amount - spent
+    - percentage_used: (spent / amount) * 100
+    - is_alert_triggered: percentage_used >= alert_percentage
+
+
 ═════════════════════════════════════════════════════════════════
 
 Ubicación: Frontend/src/stores/
@@ -2268,9 +2461,355 @@ export const useTransactionStore = defineStore('transactions', {
   ✓ Agregados próximos pasos recomendados
 
 
+10 Marzo 2026 - ESTADO ACTUAL COMPLETO DEL PROYECTO
+─────────────────────────────────────
+  ESTADO: 80% Backend completado | 65% Frontend completado
+  
+  BACKEND COMPLETADO:
+  ✓ Modelo User con 3 proveedores: local, google, apple
+  ✓ Modelo Category con soporte para income/expense
+  ✓ Modelo Transaction con 8 tipos de campos
+  ✓ Modelo Budget con períodos y alertas
+  ✓ Autenticación JWT completa (login, register, google auth)
+  ✓ Serializers con validaciones completas
+  ✓ 16 endpoints API funcionales:
+    - Authentication: /register/, /login/, /google/
+    - Categories: GET, POST, PUT, DELETE
+    - Transactions: GET, POST, PUT, DELETE
+    - Budgets: GET, POST, PUT, DELETE
+  ✓ Encriptación de contraseñas con bcrypt
+  ✓ Google OAuth2 implementado
+  ✓ CORS configurado para comunicación frontend-backend
+  
+  FRONTEND COMPLETADO:
+  ✓ Componente Home.vue (inicio)
+  ✓ Componente Login.vue (autenticación local)
+  ✓ Componente Register.vue (registro de usuarios)
+  ✓ Componente AuthSuccess.vue (confirmación OAuth)
+  ✓ Componente Dashboard.vue (resumen financiero)
+  ✓ Componente Categories.vue (gestión de categorías)
+  ✓ Componente Transactions.vue (gestor de transacciones)
+  ✓ Componente Budgets.vue (gestor de presupuestos)
+  ✓ Componente Goals.vue (metas financieras - preparado)
+  ✓ Componente Features.vue (características del app)
+  ✓ Componente About.vue (información del proyecto)
+  ✓ Componente Contact.vue (formulario de contacto)
+  ✓ Componente MainPage.vue (layout principal con menú)
+  ✓ Router configurado con 13 rutas
+  
+  DEPENDENCIAS INSTALADAS:
+  Backend:
+    - Django 5.0.1
+    - djangorestframework 3.14.0
+    - django-cors-headers 4.3.1
+    - djangorestframework-simplejwt 3.5.1
+    - bcrypt 4.1.2
+    - google-auth 2.27.0
+    - psycopg2-binary 2.9.9
+    - python-dotenv 1.0.0
+  
+  Frontend:
+    - Vue 3
+    - Vue Router 4
+    - Vite (build tool)
+    - Axios (HTTP client)
+
+
 ═════════════════════════════════════════════════════════════════
-18. CONTACTO Y RECURSOS
+21. PRÓXIMOS PASOS RECOMENDADOS (Prioridad)
 ═════════════════════════════════════════════════════════════════
+
+PRIORIDAD ALTA (Semana Actual)
+──────────────────────────────
+
+1. ✅ COMPLETADO: Backend completamente funcional
+   ✓ Autenticación JWT
+   ✓ Modelos User, Category, Transaction, Budget
+   ✓ 16 endpoints API funcionales
+   ✓ Validaciones completas
+   ✓ Google OAuth2
+
+2. ⚠️  EN PROGRESO: Frontend (65% completado)
+   ✓ Componentes de UI creados
+   ✓ Login/Register funcional
+   ✓ Dashboard básico
+   ✓ Transacciones, Categorías, Presupuestos (UI lista)
+   
+   PENDIENTE:
+   - Hook up completo de componentes al backend
+   - Manejo de errores en requests HTTP
+   - Loading states y spinners
+   - Validaciones en formularios
+   - Toast notifications de éxito/error
+   - Pinia Store para manejo de estado
+
+3. 📦 INSTALAR PINIA PARA ESTADO GLOBAL
+   Command: npm install pinia
+   Crear: Frontend/src/stores/ directory
+   Crear stores para: user, transactions, categories, budgets, ui
+   Ventajas:
+   - Estado compartido entre componentes
+   - Estado persistente en localStorage
+   - Manejo centralizado de API calls
+   - Debugging con devtools
+
+4. 🎨 MEJORAR UI/UX
+   - Agregar componentes Skeleton loaders
+   - Animaciones smooth de transiciones
+   - Responsive design (mobile, tablet, desktop)
+   - Dark mode support
+   - Validaciones en tiempo real
+   - Modales para confirmación
+
+5. 📊 AGREGAR GRÁFICOS
+   Command: npm install chart.js vue-chartjs
+   Gráficos necesarios:
+   - Gráfico circular de gastos por categoría
+   - Gráfico de línea para evolución temporal
+   - Gráfico de barras para comparación mensual
+   - Evolución del balance (income vs expenses)
+
+6. 🔧 IMPLEMENTAR MANEJO DE ERRORES
+   Backend:
+   - Middleware de error global
+   - Validaciones más robustas
+   - Custom error responses
+   
+   Frontend:
+   - Try-catch en todos los API calls
+   - Error boundaries en componentes
+   - User-friendly error messages
+   - Toast notifications
+
+PRIORIDAD MEDIA (Semana 2-3)
+───────────────────────────
+
+7. 📋 EXPORTACIÓN DE REPORTES
+   Command: npm install jspdf jspdf-autotable xlsx
+   Funcionalidad:
+   - Exportar transacciones a CSV
+   - Exportar transacciones a PDF
+   - Exportar reporte mensual en PDF
+   - Exportar presupuestos en Excel
+
+8. 🔐  SEGURIDAD ADICIONAL
+   - Refresh tokens automáticos
+   - CSRF protection
+   - Rate limiting en endpoints
+   - Validación de CORS
+   - Sanitización de inputs
+
+9. 🍎 APPLE OAUTH
+   - Configurar Apple Developer Account
+   - Implementar endpoint /api/apple/
+   - Agregar botón en login/register
+
+10. 🔄 MEJORAS EN AUTENTICACIÓN
+    - Recuperación de contraseña (forgot password)
+    - Cambio de contraseña
+    - Email/SMS verification
+    - Two-factor authentication (2FA)
+
+11. 📱 RESPONSIVE DESIGN
+    - Mobile-first approach
+    - Breakpoints: 320px, 768px, 1024px, 1440px
+    - Menú hamburguesa en mobile
+    - Touch-friendly inputs y buttons
+
+PRIORIDAD BAJA (Semana 4+)
+──────────────────────────
+
+12. 🧪 TESTING
+    Backend:
+    - pytest + pytest-django
+    - Test coverage min 70%
+    - Tests para modelos, serializers, views
+    
+    Frontend:
+    - Vitest + Vue Test Utils
+    - Tests para componentes
+    - E2E tests con Cypress o Playwright
+
+13. 🌙 DARK MODE
+    - Toggle en UI
+    - Guardar preferencia en localStorage
+    - Aplicar tema globalmente con CSS variables
+    - Transiciones smooth
+
+14. 📈 METAS FINANCIERAS (Goals)
+    - Crear modelo Goal en backend
+    - Serializer con validaciones
+    - Endpoints CRUD
+    - Componente Goals.vue
+    - Tracking de progreso
+
+15. 🚀 DEPLOYMENT
+    Backend options:
+    - Heroku (simplest para pruebas)
+    - Railway (alternativa económica)
+    - AWS EC2 + RDS
+    - DigitalOcean
+    - PythonAnywhere
+    
+    Frontend options:
+    - Vercel (mejor para Vite)
+    - Netlify
+    - AWS S3 + CloudFront
+    - GitHub Pages
+    
+    Database:
+    - PostgreSQL en cloud (AWS RDS, Render, etc)
+    - Supabase (PostgreSQL managed)
+    - ElephantSQL
+
+16. 📧 NOTIFICACIONES
+    - Email notifications para alertas de presupuesto
+    - Push notifications (optional)
+    - Se recomienda Celery + Redis para tareas background
+
+17. 💰 FUNCIONALIDADES AVANZADAS
+    - Sincronización bancaria (Plaid API)
+    - Multi-currency support
+    - Análisis predictivo (IA)
+    - Categorización automática
+    - Chatbot de finanzas
+
+18. 📱 APP MÓVIL (Futuro)
+    - React Native o Flutter
+    - Sincronización con backend
+    - Biometric authentication
+    - Offline support
+
+
+═════════════════════════════════════════════════════════════════
+22. GUÍA RÁPIDA: EJECUTAR EL PROYECTO
+═════════════════════════════════════════════════════════════════
+
+OPCIÓN 1: CON DOCKER COMPOSE (Recomendado)
+──────────────────────────────────────────
+
+1. Asegurar que Docker Desktop está ejecutándose
+2. En la raíz del proyecto:
+   docker-compose up
+
+3. Acceder en navegador:
+   - Frontend: http://localhost:5173
+   - Backend API: http://localhost:8000/api/
+   - Admin Django: http://localhost:8000/admin
+
+4. Para crear superusuario Django:
+   docker-compose exec backend python manage.py createsuperuser
+
+5. Para detener:
+   docker-compose down
+
+
+OPCIÓN 2: SIN DOCKER (Desarrollo local)
+──────────────────────────────────────
+
+Backend:
+  1. cd Backend
+  2. python3 -m venv venv
+  3. source venv/bin/activate  (o: venv\Scripts\activate en Windows)
+  4. pip install -r requirements.txt
+  5. python manage.py migrate
+  6. python manage.py runserver
+
+Frontend:
+  1. cd Frontend
+  2. npm install
+  3. npm run dev
+  
+Acceder:
+  - Frontend: http://localhost:5173
+  - Backend: http://localhost:8000
+
+
+VARIABLES DE ENTORNO NECESARIAS
+───────────────────────────────
+
+Backend (.env):
+  DEBUG=True
+  SECRET_KEY=your-secret-key-here
+  ALLOWED_HOSTS=localhost,127.0.0.1
+  DATABASE_URL=postgresql://user:password@localhost/finances_pro
+  GOOGLE_OAUTH_CLIENT_ID=your-google-client-id
+  CORS_ALLOWED_ORIGINS=http://localhost:5173
+
+Frontend (.env):
+  VITE_API_URL=http://localhost:8000/api
+  VITE_GOOGLE_CLIENT_ID=your-google-client-id
+
+
+═════════════════════════════════════════════════════════════════
+23. DEBUGGING Y TROUBLESHOOTING
+═════════════════════════════════════════════════════════════════
+
+ERROR: CORS Error (No 'Access-Control-Allow-Origin' header)
+──────────────────────────────────────────────────────────
+Solución:
+  1. Verificar que django-cors-headers esté instalado
+  2. Backend/core/settings.py incluir:
+     CORS_ALLOWED_ORIGINS = ["http://localhost:5173"]
+  3. Agregar 'corsheaders' en INSTALLED_APPS
+  4. Agregar middleware: 'corsheaders.middleware.CorsMiddleware'
+  5. Reiniciar servidor Django
+
+
+ERROR: 401 Unauthorized en requests autenticados
+─────────────────────────────────────────────────
+Solución:
+  1. Verificar que el token JWT esté en localStorage
+  2. Verificar que se envía header correctamente:
+     Authorization: Bearer {JWT_TOKEN}
+  3. Verificar que el token no ha expirado
+  4. Verificar que el usuario existe en BD
+  5. Ver logs: docker-compose logs backend
+
+
+ERROR: ModuleNotFoundError o dependencias faltantes
+────────────────────────────────────────────────────
+Solución Backend:
+  pip install -r requirements.txt
+  (o): docker-compose up --build
+
+Solución Frontend:
+  npm install
+  (o): docker-compose up --build
+
+
+ERROR: Conexión rechazada a la BD (port 5432)
+──────────────────────────────────────────────
+Solución sin Docker:
+  1. Instalar PostgreSQL
+  2. Crear BD: createdb finances_pro
+  3. Verificar credenciales en .env
+  4. Ejecutar migraciones: python manage.py migrate
+
+Solución con Docker:
+  1. Verificar que docker-compose.yml incluya servicio PostgreSQL
+  2. docker-compose down && docker-compose up
+
+
+ERROR: TypeError: Category is not JSON serializable
+────────────────────────────────────────────────────
+Solución:
+  Asegurar que los serializers incluyan el campo category_id
+  No serializar objetos de modelo directamente
+
+
+ERROR: "database doesn't have these tables"
+────────────────────────────────────────────
+Solución:
+  1. Backend/: python manage.py makemigrations
+  2. Backend/: python manage.py migrate
+  3. Si persiste: eliminar db.sqlite3 y repetir
+
+
+═════════════════════════════════════════════════════════════════
+
+24. CONTACTO Y RECURSOS
+─────────────────────────
 
 DOCUMENTACIÓN OFICIAL
 ──────────────────────
@@ -2278,7 +2817,14 @@ DOCUMENTACIÓN OFICIAL
   • Django REST Framework: https://www.django-rest-framework.org/
   • Vue.js: https://vuejs.org/
   • Vite: https://vitejs.dev/
-  • PostgreSQL: https://www.postgresql.org/docs/
+  • PostgreSQL: https://www.postgresql.org/docs/1.3 Impacto de la Problemática
+La ausencia de una plataforma especializada genera pérdida de ingresos para
+arrendadores locales, malas experiencias de movilidad para turistas, riesgos legales para
+ambas partes y falta de formalización del sector de alquiler turístico en Colombia.
+1.4 Solución Propuesta
+Una plataforma móvil de alquiler de vehículos sin conductor que digitaliza y
+profesionaliza el proceso completo: desde el registro y verificación de usuarios, hasta la
+firma de contratos digitales, pagos seguros y sistema de reputación bidireccional
   • Docker: https://docs.docker.com/
   • Pinia: https://pinia.vuejs.org/
 
@@ -2298,5 +2844,5 @@ COMUNIDAD
 
 ═════════════════════════════════════════════════════════════════
                     FIN DE LA DOCUMENTACIÓN
-          Última actualización: 5 Marzo 2026
+          Última actualización: 10 Marzo 2026
 ═════════════════════════════════════════════════════════════════

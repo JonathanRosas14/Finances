@@ -20,4 +20,15 @@ urlpatterns = [
     path('budgets/create/', views.create_budget, name='create_budget'),
     path('budgets/<int:budget_id>/', views.update_budget, name='update_budget'),
     path('budgets/<int:budget_id>/delete/', views.delete_budget, name='delete_budget'),
+
+    # Gersson le toca esto
+    path('goals/', views.get_goals, name='get_goals'),
+    path('goals/create/', views.create_goal, name='create_goal'),
+    path('goals/<int:goal_id>/', views.update_goal, name='update_goal'),
+    path('goals/<int:goal_id>/delete/', views.delete_goal, name='delete_goal'),
+
+    path('debts/', views.get_debts, name='get_debts'),
+    path('debts/create/', views.create_debt, name='create_debt'),
+    path('debts/<int:debt_id>/', views.update_debt, name  ='update_debt'),
+    path('debts/<int:debt_id>/delete/', views.delete_debt, name='delete_debt'),
 ]

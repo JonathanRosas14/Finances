@@ -122,3 +122,78 @@ class Budget(models.Model):
 
     def __str__(self):
         return f"{self.name} - {self.amount}"
+
+# Gersson le toca esto
+
+class Goal(models.Model):
+    PRIORITY_CHOICES = [
+        ('low', 'Low'),
+        ('medium', 'Medium'),
+        ('high', 'High'),
+    ]
+
+    STATUS_CHOICES = [
+        ('in_progress', 'In Progress'),
+        ('completed', 'Completed'),
+        ('on_hold', 'On Hold'),
+    ]
+
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='goals')
+    category = models.ForeignKey(Category, on_delete=models.SET_NULL, null=True, blank=True, related_name='goals')
+    name = models.CharField(max_length=255)
+    description = models.TextField(null=True, blank=True)
+    target_amount = models.DecimalField(max_digits=15, decimal_places=2)
+    target_date = models.DateField()
+    priority = models.CharField(max_length=20, choices=PRIORITY_CHOICES, default='medium')
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='in_progress')
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'goals'
+        ordering = ['-target_date']
+
+    def __str__(self):
+        return f"{self.name} - ${self.target_amount}"
+    
+class Debt(models.Model):
+    STATUS_CHOICES = [
+        ('pending', 'Pending'),
+        ('in_progress', 'In Progress'),
+        ('paid', 'Paid'),
+    ]
+
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='debts')  
+    category = models.ForeignKey(Category, on_delete=models.SET_NULL, null=True, blank=True, related_name='debts')
+    name = models.CharField(max_length=255)
+    creditor = models.CharField(max_length=255, null=True, blank=True)
+    total_amount = models.DecimalField(max_digits=15, decimal_places=2)
+    paid_amount = models.DecimalField(max_digits=15, decimal_places=2, default=0.00)
+    due_date = models.DateField()
+    interest_rate = models.DecimalField(max_digits=5, decimal_places=2, default=0.00)
+    months = models.IntegerField(default=1)
+    description = models.TextField(null=True, blank=True)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'debts'
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"{self.name} - ${self.total_amount}"
+    
+    @property
+    def total_with_interest(self):
+        """Calcula el total con intereses incluidos"""
+        interest = float(self.total_amount) * (float(self.interest_rate) / 100) * self.months
+        return float(self.total_amount) + interest
+    
+    @property
+    def remaining_amount(self):
+        """Calcula el monto pendiente"""
+        return self.total_with_interest - float(self.paid_amount)
+
+# Migracion: docker compose exec backend python manage.py makemigrations
+# Migracion: docker compose exec backend python manage.py migrate

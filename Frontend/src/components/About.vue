@@ -232,7 +232,7 @@
 
 <style scoped>
 /* ============================================ */
-/* ESTILOS GLOBALES Y CONTENEDOR PRINCIPAL */
+/* GLOBAL STYLES AND MAIN CONTAINER */
 /* ============================================ */
 
 * {
@@ -241,7 +241,7 @@
   box-sizing: border-box;
 }
 
-/* Contenedor principal de toda la página */
+/* Main container for the whole page */
 .home-container {
   width: 100%;
   min-height: 100vh;
@@ -249,10 +249,10 @@
 }
 
 /* ============================================ */
-/* ENCABEZADO (HEADER) */
+/* HEADER */
 /* ============================================ */
 
-/* Barra superior con logo, navegación y botones */
+/* Top bar with logo, navigation and buttons */
 header {
   width: 100%;
   height: 60px;
@@ -264,7 +264,7 @@ header {
   border-bottom: 1px solid #2e5c31;
 }
 
-/* Logo y texto "Finances Pro" */
+/* Logo and "Finances Pro" text */
 .logo {
   display: flex;
   align-items: center;
@@ -273,31 +273,31 @@ header {
   color: #ffffff;
 }
 
-/* Espaciado del texto del logo */
+/* Logo text spacing */
 .logo span {
   margin-left: 10px;
 }
 
-/* Contenedor del ícono del logo */
+/* Logo icon container */
 .logo-icon {
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
-/* Imagen del ícono del logo */
+/* Logo icon image */
 .logo-icon img {
   width: 50px;
   height: 50px;
 }
 
-/* Contenedor de los links de navegación */
+/* Navigation links container */
 .nav-link {
   display: flex;
   gap: 20px;
 }
 
-/* Estilos individuales de cada link (Features, About Us, Prices) */
+/* Individual link styles (Features, About Us, Prices) */
 .nav-item {
   color: #ffffff;
   text-decoration: none;
@@ -306,19 +306,19 @@ header {
   padding: 10px 15px;
 }
 
-/* Efecto hover en los links de navegación */
+/* Hover effect on navigation links */
 .nav-item:hover {
   background-color: #2e5c31;
   border-radius: 4px;
 }
 
-/* Contenedor de los botones (Login y Sign Up) */
+/* Buttons container (Login and Sign Up) */
 .header-botoms {
   display: flex;
   gap: 10px;
 }
 
-/* Botón Login - Estilo base */
+/* Login button - Base style */
 .btn-login {
   padding: 10px 50px;
   border: none;
@@ -333,7 +333,7 @@ header {
   justify-content: center;
 }
 
-/* Botón Sign Up - Estilo base */
+/* Sign Up button - Base style */
 .btn-signup {
   padding: 10px 40px;
   border: none;
@@ -348,33 +348,33 @@ header {
   justify-content: center;
 }
 
-/* Color base del botón Login */
+/* Login button base color */
 .btn-login {
   background-color: #2e5c31;
 }
 
-/* Efecto hover del botón Login */
+/* Login button hover effect */
 .btn-login:hover {
   background-color: #3acf41;
   color: #000000;
 }
 
-/* Color base del botón Sign Up */
+/* Sign Up button base color */
 .btn-signup {
   background-color: #3acf41;
 }
 
-/* Efecto hover del botón Sign Up */
+/* Sign Up button hover effect */
 .btn-signup:hover {
   background-color: #2e5c31;
   color: #ffffff;
 }
 
 /* ============================================ */
-/* SECCIÓN HERO (PRINCIPAL) */
+/* HERO SECTION (MAIN) */
 /* ============================================ */
 
-/* Contenedor principal de la sección hero */
+/* Main hero section container */
 .hero-section {
   display: flex;
   padding: 40px 60px;
@@ -410,7 +410,7 @@ header {
   color: #d1d5db;
 }
 
-/* Contenedor principal de la segunda sección */
+/* Main container for the second section */
 .second-section {
   display: flex;
   padding: 60px 80px;
@@ -640,7 +640,7 @@ header {
   color: #d1d5db;
 }
 
-/* Tarjeta final de llamada a la acción */
+/* Final call-to-action card */
 .card-section2 {
   display: flex;
   flex-direction: column;
@@ -655,13 +655,13 @@ header {
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
-/* Título de la tarjeta final */
+/* Final card title */
 .card-section2 h1 {
   font-size: 36px;
   font-weight: bold;
 }
 
-/* Descripción de la tarjeta final */
+/* Final card description */
 .card-section2 p {
   font-size: 18px;
   line-height: 1.5;
@@ -679,14 +679,14 @@ header {
   transition: background-color 0.3s;
 }
 
-/* Efecto hover del botón crear cuenta */
+/* Create account button hover effect */
 .btn-creat-account:hover {
   background-color: #2e5c31;
   color: #ffffff;
 }
 
 /* ============================================ */
-/* PIE DE PÁGINA (FOOTER) */
+/* FOOTER */
 /* ============================================ */
 
 .footer {
@@ -760,10 +760,10 @@ header {
 }
 
 /* ============================================ */
-/* MEDIA QUERIES - RESPONSIVIDAD */
+/* MEDIA QUERIES - RESPONSIVENESS */
 /* ============================================ */
 
-/* Pantallas grandes - Ajustes finos */
+/* Large screens - Fine tuning */
 @media (max-width: 1200px) {
   header {
     padding: 0 20px;
@@ -800,7 +800,7 @@ header {
   }
 }
 
-/* Tablets grandes y pantallas medianas */
+/* Large tablets and medium screens */
 @media (max-width: 992px) {
   header {
     padding: 0 15px;
@@ -913,7 +913,7 @@ header {
   }
 }
 
-/* Tablets pequeñas */
+/* Small tablets */
 @media (max-width: 768px) {
   header {
     height: 70px;
@@ -1042,7 +1042,7 @@ header {
   }
 }
 
-/* Dispositivos móviles - Pantallas medianas */
+/* Mobile devices - Medium screens */
 @media (max-width: 600px) {
   header {
     height: auto;
@@ -1272,7 +1272,7 @@ header {
   }
 }
 
-/* Dispositivos móviles muy pequeños */
+/* Very small mobile devices */
 @media (max-width: 400px) {
   .logo {
     font-size: 16px;

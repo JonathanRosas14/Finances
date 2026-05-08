@@ -67,7 +67,7 @@
               >
                 <td>{{ formatDate(transaction.transaction_date) }}</td>
                 <td>{{ transaction.description }}</td>
-                <td>{{ transaction.category_name || "Sin categoría" }}</td>
+                <td>{{ transaction.category_name || "Uncategorized" }}</td>
                 <td>{{ transaction.type }}</td>
                 <td>${{ transaction.amount }}</td>
                 <td>
@@ -198,28 +198,28 @@
       </div>
     </transition>
 
-    <!-- Modal de confirmación para delete -->
+    <!-- Delete confirmation modal -->
     <transition name="modal-fade">
       <div v-if="showDeleteConfirmModal" class="modal" @click="cancelDelete">
         <div class="modal-content" @click.stop style="max-width: 400px">
           <div class="modal-header">
-            <h2 style="color: #e74c3c">Eliminar Transacción</h2>
+            <h2 style="color: #e74c3c">Delete Transaction</h2>
             <button type="button" class="modal-close" @click="cancelDelete">
               ×
             </button>
           </div>
           <p class="modal-subtitle">
-            ¿Estás seguro de que deseas eliminar esta transacción?
+            Are you sure you want to delete this transaction?
           </p>
           <p style="padding: 0 24px; color: #666; font-size: 14px">
-            Esta acción no se puede deshacer.
+            This action cannot be undone.
           </p>
           <div class="form-actions" style="padding: 24px">
             <button type="button" @click="cancelDelete" class="btn-cancel">
-              Cancelar
+              Cancel
             </button>
             <button type="button" @click="confirmDelete" class="btn-delete">
-              Eliminar
+              Delete
             </button>
           </div>
         </div>
@@ -232,7 +232,7 @@
 import { ref, computed, onMounted } from "vue";
 import axios from "axios";
 
-// Estados
+// States
 const transactions = ref([]);
 const categories = ref([]);
 const showModal = ref(false);
@@ -240,11 +240,11 @@ const loading = ref(false);
 const isEditMode = ref(false);
 const editingId = ref(null);
 
-// Modal de confirmación para delete
+// Delete confirmation modal
 const showDeleteConfirmModal = ref(false);
 const deleteConfirmId = ref(null);
 
-// Filtros
+// Filters
 const search = ref("");
 const filterCategory = ref("");
 const filterType = ref("");
@@ -263,17 +263,17 @@ const form = ref({
   notes: "",
 });
 
-// Obtener token
+// Get token
 const getToken = () => {
   return localStorage.getItem("token");
 };
 
-// Cargar categorías
+// Load categories
 const loadCategories = async () => {
   try {
     const token = getToken();
     if (!token) {
-      console.error("No hay token de autenticación");
+      console.error("No authentication token");
       return;
     }
 
@@ -284,20 +284,20 @@ const loadCategories = async () => {
     });
 
     categories.value = response.data;
-    console.log("✅ Categorías cargadas:", categories.value.length);
+    console.log("✅ Categories loaded:", categories.value.length);
   } catch (error) {
-    console.error("❌ Error al cargar categorías:", error);
-    alert("Error al cargar las categorías");
+    console.error("❌ Error loading categories:", error);
+    alert("Error loading categories");
   }
 };
 
-// Cargar transacciones
+// Load transactions
 const loadTransactions = async () => {
   loading.value = true;
   try {
     const token = getToken();
     if (!token) {
-      console.error("No hay token de autenticación");
+      console.error("No authentication token");
       return;
     }
 
@@ -310,25 +310,25 @@ const loadTransactions = async () => {
     transactions.value = response.data;
     console.log("✅ Transacciones cargadas:", transactions.value.length);
   } catch (error) {
-    console.error("❌ Error al cargar transacciones:", error);
-    alert("Error al cargar las transacciones");
+    console.error("❌ Error loading transactions:", error);
+    alert("Error loading transactions");
   } finally {
     loading.value = false;
   }
 };
 
-// Transacciones filtradas
+// Filtered transactions
 const filteredTransactions = computed(() => {
   let result = transactions.value;
 
-  // Filtrar por búsqueda
+  // Filter by search
   if (search.value) {
     result = result.filter((t) =>
       t.description?.toLowerCase().includes(search.value.toLowerCase()),
     );
   }
 
-  // Filtrar por categoría
+  // Filter by category
   if (filterCategory.value) {
     result = result.filter((t) => {
       const category = categories.value.find((c) => c.id === t.category_id);
@@ -341,7 +341,7 @@ const filteredTransactions = computed(() => {
     result = result.filter((t) => t.type === filterType.value);
   }
 
-  // Filtrar por fecha
+  // Filter by date
   if (filterDate.value) {
     const now = new Date();
     const days = {
@@ -359,23 +359,23 @@ const filteredTransactions = computed(() => {
   return result;
 });
 
-// Obtener nombre de categoría
+// Get category name
 const getCategoryName = (categoryId) => {
   const category = categories.value.find((c) => c.id === categoryId);
-  return category ? category.name : "Sin categoría";
+  return category ? category.name : "Uncategorized";
 };
 
-// Formatear fecha
+// Format date
 const formatDate = (dateString) => {
   const date = new Date(dateString);
-  return date.toLocaleDateString("es-ES", {
+  return date.toLocaleDateString("en-US", {
     year: "numeric",
     month: "long",
     day: "numeric",
   });
 };
 
-// Formatear monto
+// Format amount
 const formatAmount = (amount, type) => {
   const formatted = parseFloat(amount).toFixed(2);
   const symbol = type === "income" ? "+" : "-";
@@ -383,7 +383,7 @@ const formatAmount = (amount, type) => {
   return { formatted: `${symbol} $${formatted}`, color };
 };
 
-// Abrir modal para crear
+// Open modal to create
 const openModal = () => {
   isEditMode.value = false;
   editingId.value = null;
@@ -401,12 +401,12 @@ const openModal = () => {
   showModal.value = true;
 };
 
-// Cerrar modal
+// Close modal
 const closeModel = () => {
   showModal.value = false;
 };
 
-// Agregar transacción
+// Add transaction
 const addTransaction = async () => {
   try {
     if (
@@ -414,7 +414,7 @@ const addTransaction = async () => {
       !form.value.amount ||
       !form.value.transaction_date
     ) {
-      alert("Por favor completa todos los campos obligatorios");
+      alert("Please fill in all required fields");
       return;
     }
 
@@ -432,19 +432,19 @@ const addTransaction = async () => {
       },
     );
 
-    console.log("✅ Transacción creada:", response.data);
+    console.log("✅ Transaction created:", response.data);
     await loadTransactions();
     closeModel();
-    alert("✅ Transacción creada exitosamente");
+    alert("✅ Transaction created successfully");
   } catch (error) {
-    console.error("❌ Error al crear transacción:", error);
-    alert(error.response?.data?.message || "Error al crear la transacción");
+    console.error("❌ Error creating transaction:", error);
+    alert(error.response?.data?.message || "Error creating transaction");
   } finally {
     loading.value = false;
   }
 };
 
-// Editar transacción
+// Edit transaction
 const editTransaction = async (id) => {
   const transaction = transactions.value.find((t) => t.id === id);
   if (!transaction) return;
@@ -465,7 +465,7 @@ const editTransaction = async (id) => {
   showModal.value = true;
 };
 
-// Actualizar transacción
+// Update transaction
 const updateTransaction = async () => {
   try {
     if (
@@ -473,7 +473,7 @@ const updateTransaction = async () => {
       !form.value.amount ||
       !form.value.transaction_date
     ) {
-      alert("Por favor completa todos los campos obligatorios");
+      alert("Please fill in all required fields");
       return;
     }
 
@@ -491,40 +491,40 @@ const updateTransaction = async () => {
       },
     );
 
-    console.log("✅ Transacción actualizada");
+    console.log("✅ Transaction updated");
     await loadTransactions();
     closeModel();
-    alert("✅ Transacción actualizada exitosamente");
+    alert("✅ Transaction updated successfully");
   } catch (error) {
-    console.error("❌ Error al actualizar transacción:", error);
+    console.error("❌ Error updating transaction:", error);
     alert(
-      error.response?.data?.message || "Error al actualizar la transacción",
+      error.response?.data?.message || "Error updating transaction",
     );
   } finally {
     loading.value = false;
   }
 };
 
-// Eliminar transacción
+// Delete transaction
 const deleteTransaction = async (id) => {
-  console.log("🗑️ Abriendo modal de confirmación para:", id);
+  console.log("🗑️ Opening confirmation modal for:", id);
   deleteConfirmId.value = id;
   showDeleteConfirmModal.value = true;
 };
 
-// Confirmar delete después del modal
+// Confirm delete after modal
 const confirmDelete = async () => {
   const id = deleteConfirmId.value;
   showDeleteConfirmModal.value = false;
   
-  console.log("🗑️ Iniciando delete de transacción:", id);
+  console.log("🗑️ Starting transaction delete:", id);
 
   try {
     const token = getToken();
-    console.log("🔑 Token obtenido");
+    console.log("🔑 Token obtained");
     
     const url = `http://localhost:8000/api/transactions/${id}/delete/`;
-    console.log("📤 Enviando DELETE a:", url);
+    console.log("📤 Sending DELETE to:", url);
 
     const response = await axios.delete(url, {
       headers: {
@@ -532,25 +532,25 @@ const confirmDelete = async () => {
       },
     });
     
-    console.log("✅ Respuesta del servidor:", response.data);
+    console.log("✅ Server response:", response.data);
     await loadTransactions();
-    alert("✅ Transacción eliminada exitosamente");
+    alert("✅ Transaction deleted successfully");
   } catch (error) {
-    console.error("❌ Error completo:", error);
+    console.error("❌ Full error:", error);
     console.error("❌ Status:", error.response?.status);
-    console.error("❌ Mensaje:", error.response?.data);
-    alert(error.response?.data?.message || "Error al eliminar la transacción");
+    console.error("❌ Message:", error.response?.data);
+    alert(error.response?.data?.message || "Error deleting transaction");
   }
 };
 
-// Cancelar delete
+// Cancel delete
 const cancelDelete = () => {
   showDeleteConfirmModal.value = false;
   deleteConfirmId.value = null;
-  console.log("❌ Delete cancelado por el usuario");
+  console.log("❌ Delete cancelled by user");
 };
 
-// Cargar datos al montar
+// Load data on mount
 onMounted(() => {
   loadCategories();
   loadTransactions();

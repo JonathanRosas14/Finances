@@ -93,7 +93,7 @@ class Transaction(models.Model):
         ordering = ['-transaction_date']
     
     def __str__(self):
-        cat_name = self.category.name if self.category else 'Sin categoría'
+        cat_name = self.category.name if self.category else 'Uncategorized'
         return f"{cat_name}: {self.amount} on {self.transaction_date}"
 
 

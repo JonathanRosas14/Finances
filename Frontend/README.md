@@ -1,44 +1,33 @@
-# .
+# Finances Pro Frontend
 
-This template should help get you started developing with Vue 3 in Vite.
+Frontend Vue 3 para Finances Pro.
 
-## Recommended IDE Setup
+## Inicio Rápido
 
-[VS Code](https://code.visualstudio.com/) + [Vue (Official)](https://marketplace.visualstudio.com/items?itemName=Vue.volar) (and disable Vetur).
-
-## Recommended Browser Setup
-
-- Chromium-based browsers (Chrome, Edge, Brave, etc.):
-  - [Vue.js devtools](https://chromewebstore.google.com/detail/vuejs-devtools/nhdogjmejiglipccpnnnanhbledajbpd)
-  - [Turn on Custom Object Formatter in Chrome DevTools](http://bit.ly/object-formatters)
-- Firefox:
-  - [Vue.js devtools](https://addons.mozilla.org/en-US/firefox/addon/vue-js-devtools/)
-  - [Turn on Custom Object Formatter in Firefox DevTools](https://fxdx.dev/firefox-devtools-custom-object-formatters/)
-
-## Customize configuration
-
-See [Vite Configuration Reference](https://vite.dev/config/).
-
-## Project Setup
-
-```sh
+```bash
 npm install
-```
-
-### Compile and Hot-Reload for Development
-
-```sh
 npm run dev
 ```
 
-### Compile and Minify for Production
+URL local:
 
-```sh
+```text
+http://localhost:5173
+```
+
+## Comandos
+
+```bash
+npm run dev
 npm run build
-```
-
-### Lint with [ESLint](https://eslint.org/)
-
-```sh
+npm run preview
 npm run lint
+npm run format
 ```
+
+## Documentación Completa
+
+- [README principal](../README.md)
+- [Guía frontend](../docs/FRONTEND.md)
+- [Instalación](../docs/SETUP.md)
+- [Sistema de diseño](../docs/DESIGN_SYSTEM.md)

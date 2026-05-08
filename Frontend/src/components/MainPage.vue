@@ -8,23 +8,23 @@
         <span>Finances Pro</span>
       </div>
       <div class="nav-links">
-        <!--Resumen-->
+        <!--Summary-->
         <router-link to="/dashboard" class="nav-link">Summary</router-link>
-        <!--Presupuestos-->
+        <!--Budgets-->
         <router-link to="/budgets" class="nav-link">Budgets</router-link>
-        <!--Metas-->
+        <!--Goals-->
         <router-link to="/goals" class="nav-link">Goals</router-link>
-        <!--Transacciones-->
+        <!--Transactions-->
         <router-link to="/transactions" class="nav-link"
           >Transactions</router-link
         >
-        <!--Deudas-->
+        <!--Debts-->
         <router-link to="/debts" class="nav-link">Debts</router-link>
-        <!--Categorías-->
+        <!--Categories-->
         <router-link to="/categories" class="nav-link">Categories</router-link>
-        <!--Reportes-->
+        <!--Reports-->
         <router-link to="/reports" class="nav-link">Reports</router-link>
-        <!--Configuraciones-->
+        <!--Settings-->
         <router-link to="/settings" class="nav-link">Settings</router-link>
       </div>
 

@@ -1,7 +1,7 @@
 <template>
   <div class="auth-success-container">
     <div class="loading">
-      <p>Autenticando...</p>
+      <p>Authenticating...</p>
     </div>
   </div>
 </template>
@@ -15,31 +15,31 @@ const route = useRoute();
 
 onMounted(async () => {
   try {
-    // Obtener el token de la URL
+    // Get the token from the URL
     const token = route.query.token;
 
     if (token) {
-      // Guardar el token en localStorage
+      // Save the token in localStorage
       localStorage.setItem("token", token);
 
-      // Decodificar el token para obtener la información del usuario
+      // Decode the token to get user information
       const parts = token.split(".");
       if (parts.length === 3) {
         const decoded = JSON.parse(atob(parts[1]));
-        // Guardar información del usuario
+        // Save user information
         localStorage.setItem("user", JSON.stringify(decoded));
       }
 
-      // Redireccionar a MainPage/Dashboard después de 500ms
+      // Redirect to MainPage/Dashboard after 500ms
       setTimeout(() => {
         router.push("/Dashboard");
       }, 500);
     } else {
-      // Si no hay token, redirigir a login
+      // If no token, redirect to login
       router.push("/login");
     }
   } catch (error) {
-    console.error("Error en autenticación:", error);
+    console.error("Error in authentication:", error);
     router.push("/login");
   }
 });

@@ -96,7 +96,7 @@
                 id="name"
                 v-model="form.name"
                 required
-                placeholder="e.g., Casa, Vacaciones"
+                placeholder="e.g., House, Vacation"
                 class="form-input"
               />
             </div>
@@ -215,7 +215,7 @@ const showNotification = (message, type = 'success') => {
   setTimeout(() => { notification.value.show = false }, 3500)
 }
 
-// ── Carga de datos ──────────────────────────────────────────────
+// ── Data loading ──────────────────────────────────────────────
 const loadCategories = async () => {
   try {
     const token = getToken()
@@ -225,7 +225,7 @@ const loadCategories = async () => {
     })
     categories.value = response.data
   } catch (error) {
-    console.error('Error al cargar categorías:', error)
+    console.error('Error loading categories:', error)
   }
 }
 
@@ -238,7 +238,7 @@ const loadGoals = async () => {
     })
     goals.value = response.data
   } catch (error) {
-    console.error('Error al cargar goals:', error)
+    console.error('Error loading goals:', error)
   }
 }
 
@@ -251,13 +251,13 @@ const loadTransactions = async () => {
     })
     transactions.value = response.data
   } catch (error) {
-    console.error('Error al cargar transacciones:', error)
+    console.error('Error loading transactions:', error)
   }
 }
 
-// ── Lógica de progreso ──────────────────────────────────────────
-// Suma todas las transacciones de tipo 'income' cuya categoría
-// coincida con la categoría asociada al goal.
+// ── Progress logic ──────────────────────────────────────────
+// Sum all income transactions whose category
+// matches the goal's associated category.
 const getGoalSaved = (goal) => {
   if (!goal.category_id) return 0
   return transactions.value
@@ -276,9 +276,9 @@ const getGoalProgress = (goal) => {
   return Math.min(Math.round((saved / target) * 100), 100)
 }
 
-// ── Formateo ────────────────────────────────────────────────────
+// ── Formatting ────────────────────────────────────────────────────
 const formatDate = (dateStr) => {
-  return new Date(dateStr).toLocaleDateString('es-ES', {
+  return new Date(dateStr).toLocaleDateString('en-US', {
     day: '2-digit',
     month: 'short',
     year: 'numeric',
@@ -323,10 +323,10 @@ const addGoal = async () => {
     )
     await loadGoals()
     closeModal()
-    showNotification('Meta guardada exitosamente')
+    showNotification('Goal saved successfully')
   } catch (error) {
     console.error('Error:', error)
-    alert(error.response?.data?.message || 'Error al crear goal')
+    alert(error.response?.data?.message || 'Error creating goal')
   }
 }
 
@@ -361,25 +361,25 @@ const updateGoal = async () => {
     )
     await loadGoals()
     closeModal()
-    showNotification('Meta actualizada exitosamente')
+    showNotification('Goal updated successfully')
   } catch (error) {
     console.error('Error:', error)
-    alert(error.response?.data?.message || 'Error al actualizar goal')
+    alert(error.response?.data?.message || 'Error updating goal')
   }
 }
 
 const deleteGoal = async (id) => {
-  if (!confirm('¿Estás seguro de eliminar este goal?')) return
+  if (!confirm('Are you sure you want to delete this goal?')) return
   try {
     const token = getToken()
     await axios.delete(`http://localhost:8000/api/goals/${id}/delete/`, {
       headers: { Authorization: `Bearer ${token}` },
     })
     await loadGoals()
-    showNotification('Meta eliminada exitosamente')
+    showNotification('Goal deleted successfully')
   } catch (error) {
     console.error('Error:', error)
-    alert(error.response?.data?.message || 'Error al eliminar goal')
+    alert(error.response?.data?.message || 'Error deleting goal')
   }
 }
 
@@ -474,7 +474,7 @@ onMounted(() => {
   margin-top: 50px;
 }
 
-/* ── Lista de goals (una columna ancha como en el diseño) ── */
+/* ── Goals list (wide single column as in the design) ── */
 .goals-list {
   display: flex;
   flex-direction: column;
@@ -496,7 +496,7 @@ onMounted(() => {
   transform: translateY(-1px);
 }
 
-/* ── Header de la card ── */
+/* ── Card header ── */
 .card-header {
   display: flex;
   justify-content: space-between;
@@ -519,7 +519,7 @@ onMounted(() => {
   margin: 0;
 }
 
-/* Badges de prioridad */
+/* Priority badges */
 .priority-badge {
   padding: 3px 10px;
   border-radius: 12px;
@@ -532,7 +532,7 @@ onMounted(() => {
 .priority-medium { background: #fff8e1; color: #f9a825; }
 .priority-high   { background: #fdecea; color: #c62828; }
 
-/* Badges de status */
+/* Status badges */
 .status-badge {
   padding: 3px 10px;
   border-radius: 12px;
@@ -545,7 +545,7 @@ onMounted(() => {
 .status-completed   { background: #e8f5e9; color: #2e7d32; }
 .status-paused      { background: #f5f5f5; color: #757575; }
 
-/* Menú dropdown */
+/* Dropdown menu */
 .menu-btn {
   background: none;
   border: none;
@@ -587,7 +587,7 @@ onMounted(() => {
 .menu-item:hover { background-color: #f5f5f5; }
 .menu-item.delete:hover { background-color: #ffe8e8; color: #e74c3c; }
 
-/* ── Descripción ── */
+/* ── Description ── */
 .card-description {
   font-size: 13px;
   color: #666;
@@ -636,7 +636,7 @@ onMounted(() => {
   color: #1a7f3a;
 }
 
-/* ── Montos ── */
+/* ── Amounts ── */
 .card-amounts {
   display: flex;
   align-items: center;
@@ -684,7 +684,7 @@ onMounted(() => {
   color: #888;
 }
 
-/* ── Notificación ── */
+/* ── Notification ── */
 .notification {
   position: fixed;
   top: 20px;

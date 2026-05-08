@@ -201,11 +201,11 @@ onMounted(() => {
   fetchData();
   setDefaultDates();
 
-  // Escuchar eventos de actualización de transacciones desde otros componentes
+  // Listen for transaction update events from other components
   const handleTransactionUpdated = async () => {
-    console.log("🔄 Reports: Se recibió evento transactionUpdated");
+    console.log("🔄 Reports: transactionUpdated event received");
     await fetchData();
-    console.log("✅ Reports: Datos recargados");
+    console.log("✅ Reports: Data reloaded");
   };
   window.addEventListener("transactionUpdated", handleTransactionUpdated);
 
@@ -240,18 +240,18 @@ const fetchData = async () => {
     console.log('📡 Reports: Fetching transactions from API...');
     
     const token = localStorage.getItem('token');
-    console.log('🔑 Token disponible:', !!token);
+    console.log('🔑 Token available:', !!token);
     
     const transactionsRes = await axios.get('http://localhost:8000/api/transactions', {
       headers: { Authorization: `Bearer ${token}` },
     });
-    console.log('✅ Transacciones recibidas:', transactionsRes.data);
+    console.log('✅ Transactions received:', transactionsRes.data);
     transactions.value = transactionsRes.data || [];
 
     const categoriesRes = await axios.get('http://localhost:8000/api/categories', {
       headers: { Authorization: `Bearer ${token}` },
     });
-    console.log('✅ Categorías recibidas:', categoriesRes.data);
+    console.log('✅ Categories received:', categoriesRes.data);
     categories.value = categoriesRes.data || [];
     loading.value = false;
   } catch (error) {

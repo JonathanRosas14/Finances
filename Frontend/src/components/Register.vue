@@ -14,7 +14,7 @@
 
     <div class="content-wrapper">
       <div class="left-side">
-        <img src="../assets/Imagen6Register.png" alt="Imagen Register" />
+        <img src="../assets/Imagen6Register.png" alt="Register Image" />
         <div class="text-overlay">
           <h2>Take control of your financial future</h2>
           <p>
@@ -31,12 +31,12 @@
             <router-link to="/login" class="login">Login</router-link>
           </p>
           <form @submit.prevent="handleRegister">
-            <!--Mensaje de error-->
+            <!--Error message-->
             <div v-if="errorMessage" class="error-message">
               {{ errorMessage }}
             </div>
 
-            <!--Mensaje de exito-->
+            <!--Success message-->
             <div v-if="successMessage" class="success-message">
               {{ successMessage }}
             </div>
@@ -85,12 +85,12 @@
               />
             </div>
 
-            <div class="terminos_condiciones">
+            <div class="terms_conditions">
               <input type="checkbox" id="terms" v-model="acceptedTerms" required />
               <label for="terms"> I accept the <a href="#">terms and conditions</a> </label>
             </div>
             <button type="submit" class="register-btn" :disabled="loading">
-              {{ loading ? 'Registando...' : 'Register' }}
+              {{ loading ? 'Registering...' : 'Register' }}
             </button>
             <div class="oauth-divider">or</div>
 
@@ -157,7 +157,7 @@ const handleGoogleCallback = async (response) => {
     localStorage.setItem("user", JSON.stringify(user));
     router.push("/Dashboard");
   } catch (error) {
-    errorMessage.value = "Error al registrarse con Google";
+    errorMessage.value = "Error registering with Google";
   }
 };
 

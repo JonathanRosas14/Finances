@@ -73,7 +73,7 @@
       </div>
     </div>
 
-    <!-- Modal para crear/editar presupuesto -->
+    <!-- Modal to create/edit budget -->
     <transition name="modal-fade">
       <div v-if="showModal" class="modal" @click="closeModal">
         <div class="modal-content" @click.stop>
@@ -227,7 +227,7 @@
 import { ref, computed, onMounted } from "vue";
 import axios from "axios";
 
-// Estados
+// States
 const budgets = ref([]);
 const categories = ref([]);
 const transactions = ref([]);
@@ -251,7 +251,7 @@ const form = ref({
 
 const getToken = () => localStorage.getItem("token");
 
-// Cargar categorías
+// Load categories
 const loadCategories = async () => {
   try {
     const token = getToken();
@@ -262,11 +262,11 @@ const loadCategories = async () => {
     });
     categories.value = response.data;
   } catch (error) {
-    console.error("Error al cargar categorías:", error);
+    console.error("Error loading categories:", error);
   }
 };
 
-// Cargar presupuestos
+// Load budgets
 const loadBudgets = async () => {
   try {
     const token = getToken();
@@ -277,11 +277,11 @@ const loadBudgets = async () => {
     });
     budgets.value = response.data;
   } catch (error) {
-    console.error("Error al cargar presupuestos:", error);
+    console.error("Error loading budgets:", error);
   }
 };
 
-// Cargar transacciones para calcular gasto
+// Load transactions to calculate spending
 const loadTransactions = async () => {
   try {
     const token = getToken();
@@ -292,11 +292,11 @@ const loadTransactions = async () => {
     });
     transactions.value = response.data;
   } catch (error) {
-    console.error("Error al cargar transacciones:", error);
+    console.error("Error loading transactions:", error);
   }
 };
 
-// Calcular gasto en un presupuesto
+// Calculate spending on a budget
 const getBudgetSpent = (budgetId) => {
   const budget = budgets.value.find((b) => b.id === budgetId);
   if (!budget || !transactions.value) return "0.00";
@@ -318,7 +318,7 @@ const getBudgetSpent = (budgetId) => {
   return spent.toFixed(2);
 };
 
-// Calcular porcentaje de progreso
+// Calculate progress percentage
 const getProgressPercentage = (budgetId) => {
   const budget = budgets.value.find((b) => b.id === budgetId);
   if (!budget) return 0;
@@ -329,19 +329,19 @@ const getProgressPercentage = (budgetId) => {
   return Math.min(Math.round(percentage), 100);
 };
 
-// Verificar si alerta está activa
+// Check if alert is active
 const isAlertActive = (budget) => {
   return getProgressPercentage(budget.id) >= budget.alert_percentage;
 };
 
-// Formatear rango de fechas
+// Format date range
 const formatDateRange = (startDate, endDate) => {
-  const start = new Date(startDate).toLocaleDateString("es-ES", {
+  const start = new Date(startDate).toLocaleDateString("en-US", {
     month: "short",
     day: "numeric",
   });
   const end = endDate
-    ? new Date(endDate).toLocaleDateString("es-ES", {
+    ? new Date(endDate).toLocaleDateString("en-US", {
         month: "short",
         day: "numeric",
         year: "numeric",
@@ -351,7 +351,7 @@ const formatDateRange = (startDate, endDate) => {
   return `${start} - ${end}`;
 };
 
-// Abrir modal
+// Open modal
 const openModal = () => {
   isEditMode.value = false;
   editingId.value = null;
@@ -369,21 +369,21 @@ const openModal = () => {
   showModal.value = true;
 };
 
-// Cerrar modal
+// Close modal
 const closeModal = () => {
   showModal.value = false;
 };
 
-// Abrir menú dropdown
+// Open dropdown menu
 const openMenu = (budgetId) => {
   activeMenu.value = activeMenu.value === budgetId ? null : budgetId;
 };
 
-// Crear presupuesto
+// Create budget
 const addBudget = async () => {
   try {
     if (!form.value.name || !form.value.amount || !form.value.start_date) {
-      alert("Por favor completa los campos requeridos");
+      alert("Please fill in required fields");
       return;
     }
 
@@ -401,14 +401,14 @@ const addBudget = async () => {
 
     await loadBudgets();
     closeModal();
-    alert("✅ Presupuesto creado exitosamente");
+    alert("✅ Budget created successfully");
   } catch (error) {
     console.error("Error:", error);
-    alert(error.response?.data?.message || "Error al crear presupuesto");
+    alert(error.response?.data?.message || "Error creating budget");
   }
 };
 
-// Editar presupuesto
+// Edit budget
 const editBudget = (id) => {
   const budget = budgets.value.find((b) => b.id === id);
   if (!budget) return;
@@ -420,7 +420,7 @@ const editBudget = (id) => {
   showModal.value = true;
 };
 
-// Actualizar presupuesto
+// Update budget
 const updateBudget = async () => {
   try {
     const token = getToken();
@@ -437,16 +437,16 @@ const updateBudget = async () => {
 
     await loadBudgets();
     closeModal();
-    alert("✅ Presupuesto actualizado exitosamente");
+    alert("✅ Budget updated successfully");
   } catch (error) {
     console.error("Error:", error);
-    alert(error.response?.data?.message || "Error al actualizar presupuesto");
+    alert(error.response?.data?.message || "Error updating budget");
   }
 };
 
-// Eliminar presupuesto
+// Delete budget
 const deleteBudget = async (id) => {
-  if (!confirm("¿Estás seguro de eliminar este presupuesto?")) return;
+  if (!confirm("Are you sure you want to delete this budget?")) return;
 
   try {
     const token = getToken();
@@ -455,10 +455,10 @@ const deleteBudget = async (id) => {
     });
 
     await loadBudgets();
-    alert("✅ Presupuesto eliminado exitosamente");
+    alert("✅ Budget deleted successfully");
   } catch (error) {
     console.error("Error:", error);
-    alert(error.response?.data?.message || "Error al eliminar presupuesto");
+    alert(error.response?.data?.message || "Error deleting budget");
   }
 };
 
@@ -467,12 +467,12 @@ onMounted(() => {
   loadBudgets();
   loadTransactions();
 
-  // Recargar transacciones cada 10 segundos para actualizar presupuestos
+  // Reload transactions every 10 seconds to update budgets
   const intervalId = setInterval(() => {
     loadTransactions();
   }, 10000);
 
-  // Recargar cuando el usuario vuelve a esta pestaña
+  // Reload when user returns to this tab
   const handleVisibilityChange = () => {
     if (!document.hidden) {
       loadTransactions();
@@ -481,7 +481,7 @@ onMounted(() => {
   };
   document.addEventListener("visibilitychange", handleVisibilityChange);
 
-  // Limpiar al desmontar el componente
+  // Cleanup on component unmount
   return () => {
     clearInterval(intervalId);
     document.removeEventListener("visibilitychange", handleVisibilityChange);

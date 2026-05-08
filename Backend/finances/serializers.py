@@ -8,53 +8,53 @@ class RegisterSerializer(serializers.Serializer):
         min_length=3,
         max_length=50,
         error_messages={
-            'min_length': 'El username debe tener al menos 3 caracteres.',
-            'max_length': 'El username no puede tener más de 50 caracteres.',
-            'required': 'El username es obligatorio.',
+            'min_length': 'Username must be at least 3 characters.',
+            'max_length': 'Username cannot exceed 50 characters.',
+            'required': 'Username is required.',
         }
     )
     email = serializers.EmailField(
         max_length=100,
         error_messages={
-            'invalid': 'Ingresa un email válido.',
-            'required': 'El email es obligatorio.',
+            'invalid': 'Enter a valid email.',
+            'required': 'Email is required.',
         }
     )
     password = serializers.CharField(
         min_length=8,
         max_length=255,
         error_messages={
-            'min_length': 'La contraseña debe tener al menos 8 caracteres.',
-            'required': 'La contraseña es obligatoria.',
+            'min_length': 'Password must be at least 8 characters.',
+            'required': 'Password is required.',
         }
     )
 
     def validate_username(self, value):
         if not re.match(r'^[a-zA-Z0-9_]+$', value):
             raise serializers.ValidationError(
-                'El username solo puede contener letras, números y guiones bajos.'
+                'Username can only contain letters, numbers, and underscores.'
             )
         if User.objects.filter(username=value).exists():
             raise serializers.ValidationError(
-                'Este username ya está en uso.'
+                'This username is already taken.'
             )
         return value
 
     def validate_email(self, value):
         if User.objects.filter(email=value).exists():
             raise serializers.ValidationError(
-                'Este email ya está registrado.'
+                'This email is already registered.'
             )
         return value.lower()
 
     def validate_password(self, value):
         if not re.search(r'[A-Z]', value):
             raise serializers.ValidationError(
-                'La contraseña debe tener al menos una letra mayúscula.'
+                'Password must have at least one uppercase letter.'
             )
         if not re.search(r'\d', value):
             raise serializers.ValidationError(
-                'La contraseña debe tener al menos un número.'
+                'Password must have at least one number.'
             )
         return value
 
@@ -62,13 +62,13 @@ class RegisterSerializer(serializers.Serializer):
 class LoginSerializer(serializers.Serializer):
     email = serializers.EmailField(
         error_messages={
-            'invalid': 'Ingresa un email válido.',
-            'required': 'El email es obligatorio.',
+            'invalid': 'Enter a valid email.',
+            'required': 'Email is required.',
         }
     )
     password = serializers.CharField(
         error_messages={
-            'required': 'La contraseña es obligatoria.',
+            'required': 'Password is required.',
         }
     )
 
@@ -95,7 +95,7 @@ class CategorySerializer(serializers.ModelSerializer):
             query = query.exclude(id=category_id)
         
         if query.exists():
-            raise serializers.ValidationError('Ya existe una categoría con ese nombre')
+            raise serializers.ValidationError('A category with that name already exists')
         
         return value
 
@@ -110,7 +110,7 @@ class TransactionSerializer(serializers.ModelSerializer):
         read_only_fields = ['id', 'created_at', 'category_name']
     
     def get_category_name(self, obj):
-        return obj.category.name if obj.category else 'Sin categoría'
+        return obj.category.name if obj.category else 'Uncategorized'
     
     def to_representation(self, instance):
         data = super().to_representation(instance)
@@ -125,7 +125,7 @@ class TransactionSerializer(serializers.ModelSerializer):
                 category = Category.objects.get(id=category_id, user=self.context['request'].user)
                 validated_data['category'] = category
             except Category.DoesNotExist:
-                raise serializers.ValidationError('Categoría no encontrada')
+                raise serializers.ValidationError('Category not found')
         
         return Transaction.objects.create(**validated_data)
     
@@ -138,7 +138,7 @@ class TransactionSerializer(serializers.ModelSerializer):
                     category = Category.objects.get(id=category_id, user=self.context['request'].user)
                     instance.category = category
                 except Category.DoesNotExist:
-                    raise serializers.ValidationError('Categoría no encontrada')
+                    raise serializers.ValidationError('Category not found')
             else:
                 instance.category = None
         
@@ -150,12 +150,12 @@ class TransactionSerializer(serializers.ModelSerializer):
     
     def validate_transaction_date(self, value):
         if value is None:
-            raise serializers.ValidationError('La fecha es obligatoria')
+            raise serializers.ValidationError('Date is required')
         return value
     
     def validate_amount(self, value):
         if value <= 0:
-            raise serializers.ValidationError('El monto debe ser mayor a 0')
+            raise serializers.ValidationError('Amount must be greater than 0')
         return value
 
 
@@ -185,13 +185,13 @@ class BudgetSerializer(serializers.ModelSerializer):
 
     def validate_amount(self, value):
         if value <= 0:
-            raise serializers.ValidationError('El monto del presupuesto debe ser mayor a 0')
+            raise serializers.ValidationError('Budget amount must be greater than 0')
         return value
     
     def validate(self, data):
         if data.get('end_date') and data.get('start_date'):
             if data['end_date'] < data['start_date']:
-                raise serializers.ValidationError('La fecha de fin debe ser posterior a la fecha de inicio')
+                raise serializers.ValidationError('End date must be after start date')
         return data
 
 
@@ -225,7 +225,7 @@ class GoalSerializer(serializers.ModelSerializer):
 
     def validate_target_amount(self, value):
         if value <= 0:
-            raise serializers.ValidationError('El monto objetivo debe ser mayor a 0')
+            raise serializers.ValidationError('Target amount must be greater than 0')
         return value
 
 
@@ -262,5 +262,5 @@ class DebtSerializer(serializers.ModelSerializer):
 
     def validate_amount(self, value):
         if value <= 0:
-            raise serializers.ValidationError('El monto debe ser mayor a 0')
+            raise serializers.ValidationError('Amount must be greater than 0')
         return value

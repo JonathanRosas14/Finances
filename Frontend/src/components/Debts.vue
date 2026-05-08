@@ -88,7 +88,7 @@
       </div>
     </div>
 
-    <!-- Notificación -->
+    <!-- Notification -->
     <transition name="notif-fade">
       <div v-if="notification.show" class="notification">
         <span>✓ {{ notification.message }}</span>
@@ -116,7 +116,7 @@
                 id="name"
                 v-model="form.name"
                 required
-                placeholder="e.g., Tarjeta de crédito"
+                placeholder="e.g., Credit card"
                 class="form-input"
               />
             </div>
@@ -128,7 +128,7 @@
                   type="text"
                   id="creditor_name"
                   v-model="form.creditor_name"
-                  placeholder="e.g., Bancolombia"
+                  placeholder="e.g., Bank name"
                   class="form-input"
                 />
               </div>
@@ -179,21 +179,21 @@
               </div>
             </div>
 
-            <!-- Preview del cálculo de interés compuesto -->
+            <!-- Compound interest preview -->
             <div v-if="calculatedTotal > 0" class="interest-preview">
               <div class="preview-row">
                 <span>Principal:</span>
-                <span>${{ parseFloat(form.amount || 0).toLocaleString('es-CO') }}</span>
+                <span>${{ parseFloat(form.amount || 0).toLocaleString('en-US') }}</span>
               </div>
               <div v-if="form.interest_rate > 0 && form.months > 0" class="preview-row">
-                <span>Interest ({{ form.interest_rate }}% × {{ form.months }} meses):</span>
+                <span>Interest ({{ form.interest_rate }}% × {{ form.months }} months):</span>
                 <span class="interest-value">
-                  +${{ (calculatedTotal - parseFloat(form.amount || 0)).toLocaleString('es-CO', { minimumFractionDigits: 2 }) }}
+                  +${{ (calculatedTotal - parseFloat(form.amount || 0)).toLocaleString('en-US', { minimumFractionDigits: 2 }) }}
                 </span>
               </div>
               <div class="preview-row preview-total">
                 <span>Total with interest:</span>
-                <span>${{ calculatedTotal.toLocaleString('es-CO', { minimumFractionDigits: 2 }) }}</span>
+                <span>${{ calculatedTotal.toLocaleString('en-US', { minimumFractionDigits: 2 }) }}</span>
               </div>
             </div>
 
@@ -289,8 +289,8 @@ const showNotification = (message) => {
   setTimeout(() => { notification.value.show = false }, 3500)
 }
 
-// ── Cálculo de interés compuesto ────────────────────────────────
-// Fórmula: total = monto * (1 + tasa/100) ^ meses
+// ── Compound interest calculation ────────────────────────────────
+// Formula: total = amount * (1 + rate/100) ^ months
 const calculatedTotal = computed(() => {
   const amount = parseFloat(form.value.amount) || 0
   const rate   = parseFloat(form.value.interest_rate) || 0
@@ -300,10 +300,10 @@ const calculatedTotal = computed(() => {
   return amount * Math.pow(1 + rate / 100, months)
 })
 
-// Disparado en cada cambio de input para mantener el preview vivo
+// Triggered on each input change to keep preview alive
 const recalculate = () => { /* reactivo automáticamente via computed */ }
 
-// ── Carga de datos ──────────────────────────────────────────────
+// ── Data loading ──────────────────────────────────────────────
 const loadCategories = async () => {
   try {
     const token = getToken()
@@ -313,7 +313,7 @@ const loadCategories = async () => {
     })
     categories.value = response.data
   } catch (error) {
-    console.error('Error al cargar categorías:', error)
+    console.error('Error loading categories:', error)
   }
 }
 
@@ -326,7 +326,7 @@ const loadDebts = async () => {
     })
     debts.value = response.data
   } catch (error) {
-    console.error('Error al cargar deudas:', error)
+    console.error('Error loading debts:', error)
   }
 }
 
@@ -339,12 +339,12 @@ const loadTransactions = async () => {
     })
     transactions.value = response.data
   } catch (error) {
-    console.error('Error al cargar transacciones:', error)
+    console.error('Error loading transactions:', error)
   }
 }
 
-// ── Lógica de progreso de deuda ─────────────────────────────────
-// Suma transacciones de tipo 'expense' (pagos) de la categoría asociada
+// ── Debt progress logic ─────────────────────────────────
+// Sum expense transactions from the associated category
 const getDebtPaid = (debt) => {
   if (!debt.category_id) return 0
   return transactions.value
@@ -363,10 +363,10 @@ const getDebtProgress = (debt) => {
   return Math.min(Math.round((paid / total) * 100), 100)
 }
 
-// ── Formateo ────────────────────────────────────────────────────
+// ── Formatting ────────────────────────────────────────────────────
 const formatDate = (dateStr) => {
   if (!dateStr) return '—'
-  return new Date(dateStr).toLocaleDateString('es-ES', {
+  return new Date(dateStr).toLocaleDateString('en-US', {
     day: '2-digit',
     month: 'short',
     year: 'numeric',
@@ -406,7 +406,7 @@ const addDebt = async () => {
     const payload = {
       ...form.value,
       category_id: form.value.category_id || null,
-      // Enviamos el total calculado para que el backend lo guarde
+      // Send the calculated total for the backend to save
       total_with_interest: calculatedTotal.value,
     }
     await axios.post('http://localhost:8000/api/debts/create/', payload, {
@@ -414,10 +414,10 @@ const addDebt = async () => {
     })
     await loadDebts()
     closeModal()
-    showNotification('Deuda creada exitosamente')
+    showNotification('Debt created successfully')
   } catch (error) {
     console.error('Error:', error)
-    alert(error.response?.data?.message || 'Error al crear deuda')
+    alert(error.response?.data?.message || 'Error creating debt')
   }
 }
 
@@ -454,25 +454,25 @@ const updateDebt = async () => {
     })
     await loadDebts()
     closeModal()
-    showNotification('Deuda actualizada exitosamente')
+    showNotification('Debt updated successfully')
   } catch (error) {
     console.error('Error:', error)
-    alert(error.response?.data?.message || 'Error al actualizar deuda')
+    alert(error.response?.data?.message || 'Error updating debt')
   }
 }
 
 const deleteDebt = async (id) => {
-  if (!confirm('¿Estás seguro de eliminar esta deuda?')) return
+  if (!confirm('Are you sure you want to delete this debt?')) return
   try {
     const token = getToken()
     await axios.delete(`http://localhost:8000/api/debts/${id}/delete/`, {
       headers: { Authorization: `Bearer ${token}` },
     })
     await loadDebts()
-    showNotification('Deuda eliminada exitosamente')
+    showNotification('Debt deleted successfully')
   } catch (error) {
     console.error('Error:', error)
-    alert(error.response?.data?.message || 'Error al eliminar deuda')
+    alert(error.response?.data?.message || 'Error deleting debt')
   }
 }
 
@@ -567,7 +567,7 @@ onMounted(() => {
   margin-top: 50px;
 }
 
-/* ── Grid de cards (igual que budgets) ── */
+/* ── Card grid (same as budgets) ── */
 .debts-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
@@ -663,7 +663,7 @@ onMounted(() => {
 .menu-item:hover { background-color: #f5f5f5; }
 .menu-item.delete:hover { background-color: #ffe8e8; color: #e74c3c; }
 
-/* ── Montos ── */
+/* ── Amounts ── */
 .card-amounts {
   display: flex;
   justify-content: space-between;
@@ -696,7 +696,7 @@ onMounted(() => {
   color: #333;
 }
 
-/* ── Progreso ── */
+/* ── Progress ── */
 .card-progress {
   margin: 10px 0 14px;
 }
@@ -728,7 +728,7 @@ onMounted(() => {
   color: #1a7f3a;
 }
 
-/* ── Detalles ── */
+/* ── Details ── */
 .card-details {
   border-top: 1px solid #f0f0f0;
   padding-top: 12px;
@@ -782,7 +782,7 @@ onMounted(() => {
   font-style: italic;
 }
 
-/* ── Notificación ── */
+/* ── Notification ── */
 .notification {
   position: fixed;
   top: 20px;
@@ -899,7 +899,7 @@ onMounted(() => {
   padding: 24px;
 }
 
-/* ── Preview de interés compuesto ── */
+/* ── Compound interest preview ── */
 .interest-preview {
   background: linear-gradient(135deg, #f0faf4 0%, #e8f5e9 100%);
   border: 1px solid #c8e6c9;

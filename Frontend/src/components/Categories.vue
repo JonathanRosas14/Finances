@@ -49,12 +49,12 @@
       <div v-if="showDeleteConfirmModal" class="modal-delete" @click="cancelDeleteCategory">
         <div class="modal-delete-content" @click.stop>
           <div class="modal-delete-header">
-            <h2>Eliminar Categoría</h2>
-            <p>¿Estás seguro de que deseas eliminar esta categoría?</p>
+            <h2>Delete Category</h2>
+            <p>Are you sure you want to delete this category?</p>
           </div>
           <div class="modal-delete-buttons">
-            <button @click="cancelDeleteCategory" class="btn-cancel">Cancelar</button>
-            <button @click="confirmDeleteCategory" class="btn-delete">Eliminar</button>
+            <button @click="cancelDeleteCategory" class="btn-cancel">Cancel</button>
+            <button @click="confirmDeleteCategory" class="btn-delete">Delete</button>
           </div>
         </div>
       </div>
@@ -141,28 +141,28 @@ const categories = ref([]);
 const showModal = ref(false);
 const loading = ref(false);
 const availableColors = ref([
-  "#00ACEE", // Azul
-  "#FF8C42", // Naranja
-  "#FF1493", // Rosa
-  "#9B59B6", // Púrpura
-  "#4169E1", // Azul Marino
-  "#20B2AA", // Verde Azulado
-  "#FFB347", // Naranja claro
+  "#00ACEE", // Blue
+  "#FF8C42", // Orange
+  "#FF1493", // Pink
+  "#9B59B6", // Purple
+  "#4169E1", // Navy
+  "#20B2AA", // Teal
+  "#FFB347", // Light Orange
 ]);
 
 const availableIcons = ref([
-  "🏪", // Supermercado
-  "🍽️", // Restaurante
-  "🎬", // Cine
-  "🏥", // Salud
-  "🚗", // Transporte
-  "🏠", // Casa
-  "👕", // Ropa
-  "📚", // Educación
-  "✈️", // Viajes
-  "🎮", // Entretenimiento
-  "💼", // Trabajo
-  "🎁", // Regalos
+  "🏪", // Supermarket
+  "🍽️", // Restaurant
+  "🎬", // Cinema
+  "🏥", // Health
+  "🚗", // Transport
+  "🏠", // Home
+  "👕", // Clothing
+  "📚", // Education
+  "✈️", // Travel
+  "🎮", // Entertainment
+  "💼", // Work
+  "🎁", // Gifts
 ]);
 
 const categoryForm = ref({
@@ -253,7 +253,7 @@ const fetchCategories = async () => {
 };
 
 const deleteCategory = (categoryId) => {
-  console.log("🗑️ Abriendo modal para eliminar categoría...");
+  console.log("🗑️ Opening modal to delete category...");
   deleteConfirmId.value = categoryId;
   showDeleteConfirmModal.value = true;
 };
@@ -263,7 +263,7 @@ const confirmDeleteCategory = async () => {
   showDeleteConfirmModal.value = false;
 
   try {
-    console.log("🔑 Token obtenido, enviando DELETE...");
+    console.log("🔑 Token obtained, sending DELETE...");
     const token = localStorage.getItem("token");
 
     const response = await fetch(
@@ -280,7 +280,7 @@ const confirmDeleteCategory = async () => {
       throw new Error("Error deleting category");
     }
 
-    console.log("✅ Categoría eliminada exitosamente");
+    console.log("✅ Category deleted successfully");
     categories.value = categories.value.filter((c) => c.id !== categoryId);
   } catch (error) {
     console.error("Error deleting category:", error);
@@ -289,7 +289,7 @@ const confirmDeleteCategory = async () => {
 };
 
 const cancelDeleteCategory = () => {
-  console.log("❌ Eliminación cancelada");
+  console.log("❌ Deletion cancelled");
   showDeleteConfirmModal.value = false;
   deleteConfirmId.value = null;
 };

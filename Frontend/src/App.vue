@@ -1,9 +1,12 @@
 <template>
   <div id="app">
     <router-view />
+    <ConfirmDialogHost />
   </div>
 </template>
-<script setup></script>
+<script setup>
+import ConfirmDialogHost from './components/ConfirmDialogHost.vue'
+</script>
 
 <style scoped>
 * {

@@ -50,11 +50,11 @@
         <div class="modal-delete-content" @click.stop>
           <div class="modal-delete-header">
             <h2>Delete Category</h2>
-            <p>Are you sure you want to delete this category?</p>
+            <p>Are you sure you want to delete this category? This action cannot be undone.</p>
           </div>
           <div class="modal-delete-buttons">
-            <button @click="cancelDeleteCategory" class="btn-cancel">Cancel</button>
-            <button @click="confirmDeleteCategory" class="btn-delete">Delete</button>
+            <button type="button" @click="cancelDeleteCategory" class="close">Cancel</button>
+            <button type="button" @click="confirmDeleteCategory" class="submit" style="background-color: #e74c3c; box-shadow: 0 2px 8px rgba(231, 76, 60, 0.2);">Delete</button>
           </div>
         </div>
       </div>
@@ -457,28 +457,42 @@ onMounted(() => {
   transform: scale(1.1);
 }
 
+/* Modal Styles */
+.modal-fade-enter-active,
+.modal-fade-leave-active {
+  transition: opacity 0.3s ease;
+}
+
+.modal-fade-enter-from,
+.modal-fade-leave-to {
+  opacity: 0;
+}
+
 .modal {
   position: fixed;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  background-color: rgba(0, 0, 0, 0.5);
+  background-color: rgba(0, 0, 0, 0.55);
   display: flex;
   justify-content: center;
   align-items: center;
   z-index: 1000;
+  backdrop-filter: blur(2px);
 }
 
 .modal-content {
-  background-color: white;
+  background-color: #ffffff;
   border-radius: 12px;
-  padding: 40px;
-  max-width: 650px;
   width: 90%;
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
-  max-height: 90vh;
-  overflow-y: auto;
+  max-width: 650px;
+  padding: 40px;
+  box-shadow:
+    0 10px 40px rgba(0, 0, 0, 0.15),
+    0 0 0 1px rgba(0, 0, 0, 0.05);
+  overflow: hidden;
+  animation: slideUp 0.3s ease;
 }
 
 .modal-content h2 {
@@ -727,40 +741,6 @@ onMounted(() => {
   justify-content: center;
 }
 
-.btn-cancel,
-.btn-delete {
-  padding: 12px 28px;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 15px;
-  font-weight: 600;
-  transition: all 0.3s ease;
-  min-width: 120px;
-}
-
-.btn-cancel {
-  background-color: #e8ebe8;
-  color: #333;
-}
-
-.btn-cancel:hover {
-  background-color: #dce0dc;
-  transform: translateY(-2px);
-}
-
-.btn-delete {
-  background-color: #e74c3c;
-  color: white;
-  box-shadow: 0 2px 8px rgba(231, 76, 60, 0.2);
-}
-
-.btn-delete:hover {
-  background-color: #c0392b;
-  box-shadow: 0 4px 12px rgba(231, 76, 60, 0.3);
-  transform: translateY(-2px);
-}
-
 @keyframes slideUp {
   from {
     opacity: 0;
@@ -780,5 +760,19 @@ onMounted(() => {
 .modal-fade-enter-from,
 .modal-fade-leave-to {
   opacity: 0;
+}
+
+.modal-close {
+  background: none;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+  color: #999;
+  padding: 0;
+  line-height: 1;
+}
+
+.modal-close:hover {
+  color: #333;
 }
 </style>

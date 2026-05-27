@@ -181,6 +181,59 @@
         </div>
       </div>
     </transition>
+
+    <!-- Delete confirmation modal -->
+    <transition name="modal-fade">
+      <div v-if="showDeleteConfirmModal" class="modal" @click="cancelDelete">
+        <div class="modal-content delete-modal" @click.stop>
+          <div class="modal-header">
+            <h2>Delete Goal</h2>
+            <button type="button" class="modal-close" @click="cancelDelete">
+              ×
+            </button>
+          </div>
+          <p class="modal-subtitle">
+            Are you sure you want to delete this goal?
+          </p>
+          <p style="text-align: center; color: #666; font-size: 14px; margin: 0;">
+            This action cannot be undone.
+          </p>
+          <div class="form-actions">
+            <button type="button" @click="cancelDelete" class="btn-cancel">
+              Cancel
+            </button>
+            <button type="button" @click="confirmDelete" class="btn-delete">
+              Delete
+            </button>
+          </div>
+        </div>
+      </div>
+    </transition>
+
+    <!-- Create confirmation modal -->
+    <transition name="modal-fade">
+      <div v-if="showCreateConfirmModal" class="modal" @click="cancelCreateGoal">
+        <div class="modal-content confirm-modal" @click.stop>
+          <div class="modal-header">
+            <h2>Create Goal</h2>
+            <button type="button" class="modal-close" @click="cancelCreateGoal">
+              ×
+            </button>
+          </div>
+          <p class="modal-subtitle">
+            Are you sure you want to create this goal?
+          </p>
+          <div class="form-actions">
+            <button type="button" @click="cancelCreateGoal" class="btn-cancel">
+              Cancel
+            </button>
+            <button type="button" @click="confirmCreateGoal" class="btn-delete">
+              Create
+            </button>
+          </div>
+        </div>
+      </div>
+    </transition>
   </div>
 </template>
 
@@ -197,6 +250,9 @@ const editingId = ref(null)
 const activeMenu = ref(null)
 
 const notification = ref({ show: false, message: '', type: 'success' })
+const showDeleteConfirmModal = ref(false)
+const showCreateConfirmModal = ref(false)
+const goalToDelete = ref(null)
 
 const form = ref({
   name: '',
@@ -310,7 +366,11 @@ const openMenu = (id) => {
 }
 
 // ── CRUD ────────────────────────────────────────────────────────
-const addGoal = async () => {
+const addGoal = () => {
+  showCreateConfirmModal.value = true
+}
+
+const confirmCreateGoal = async () => {
   try {
     const token = getToken()
     await axios.post(
@@ -323,11 +383,17 @@ const addGoal = async () => {
     )
     await loadGoals()
     closeModal()
+    showCreateConfirmModal.value = false
     showNotification('Goal saved successfully')
   } catch (error) {
     console.error('Error:', error)
-    alert(error.response?.data?.message || 'Error creating goal')
+    showCreateConfirmModal.value = false
+    showNotification(error.response?.data?.message || 'Error creating goal', 'error')
   }
+}
+
+const cancelCreateGoal = () => {
+  showCreateConfirmModal.value = false
 }
 
 const editGoal = (id) => {
@@ -364,23 +430,35 @@ const updateGoal = async () => {
     showNotification('Goal updated successfully')
   } catch (error) {
     console.error('Error:', error)
-    alert(error.response?.data?.message || 'Error updating goal')
+    showNotification(error.response?.data?.message || 'Error updating goal', 'error')
   }
 }
 
-const deleteGoal = async (id) => {
-  if (!confirm('Are you sure you want to delete this goal?')) return
+const deleteGoal = (id) => {
+  goalToDelete.value = id
+  showDeleteConfirmModal.value = true
+}
+
+const confirmDelete = async () => {
   try {
     const token = getToken()
-    await axios.delete(`http://localhost:8000/api/goals/${id}/delete/`, {
+    await axios.delete(`http://localhost:8000/api/goals/${goalToDelete.value}/delete/`, {
       headers: { Authorization: `Bearer ${token}` },
     })
     await loadGoals()
+    showDeleteConfirmModal.value = false
+    goalToDelete.value = null
     showNotification('Goal deleted successfully')
   } catch (error) {
     console.error('Error:', error)
-    alert(error.response?.data?.message || 'Error deleting goal')
+    showDeleteConfirmModal.value = false
+    showNotification(error.response?.data?.message || 'Error deleting goal', 'error')
   }
+}
+
+const cancelDelete = () => {
+  showDeleteConfirmModal.value = false
+  goalToDelete.value = null
 }
 
 onMounted(() => {
@@ -717,6 +795,112 @@ onMounted(() => {
 .notif-fade-enter-from,
 .notif-fade-leave-to { opacity: 0; transform: translateY(-10px); }
 
+.notification.error {
+  background: #ffebee;
+  color: #c62828;
+  border: 1px solid #ef9a9a;
+  box-shadow: 0 4px 16px rgba(198, 40, 40, 0.15);
+}
+
+/* Delete modal */
+.delete-modal {
+  max-width: 520px;
+  padding: 0;
+}
+
+.delete-modal .modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 24px 24px 16px;
+  border-bottom: 1px solid #f0f0f0;
+  position: sticky;
+  top: 0;
+  background: #fff;
+  z-index: 1;
+}
+
+.delete-modal .modal-header h2 {
+  font-size: 20px;
+  font-weight: 600;
+  color: #e74c3c;
+  margin: 0;
+}
+
+.delete-modal .modal-subtitle {
+  text-align: center;
+  padding: 16px 24px 8px;
+  font-size: 16px;
+  color: #333;
+}
+
+.delete-modal .form-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  margin-top: 16px;
+  padding: 16px 24px 24px;
+  border-top: 1px solid #f0f0f0;
+}
+
+/* Confirm modal */
+.confirm-modal {
+  max-width: 520px;
+  padding: 0;
+}
+
+.confirm-modal .modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 24px 24px 16px;
+  border-bottom: 1px solid #f0f0f0;
+  position: sticky;
+  top: 0;
+  background: #fff;
+  z-index: 1;
+}
+
+.confirm-modal .modal-header h2 {
+  font-size: 20px;
+  font-weight: 600;
+  color: #1a7f3a;
+  margin: 0;
+}
+
+.confirm-modal .modal-subtitle {
+  text-align: center;
+  padding: 16px 24px 8px;
+  font-size: 16px;
+  color: #333;
+}
+
+.confirm-modal .form-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  margin-top: 16px;
+  padding: 16px 24px 24px;
+  border-top: 1px solid #f0f0f0;
+}
+
+.confirm-modal .btn-delete {
+  padding: 10px 20px;
+  font-size: 14px;
+  font-weight: 500;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  background-color: #1a7f3a;
+  color: #ffffff;
+}
+
+.confirm-modal .btn-delete:hover {
+  background-color: #166f33;
+  box-shadow: 0 4px 12px rgba(26, 127, 58, 0.25);
+}
+
 /* ── Modal ── */
 .modal-fade-enter-active,
 .modal-fade-leave-active { transition: opacity 0.3s ease; }
@@ -871,4 +1055,31 @@ textarea.form-input {
   box-shadow: 0 4px 12px rgba(26, 127, 58, 0.25);
 }
 .btn-submit:active { transform: scale(0.98); }
+
+.btn-delete {
+  background-color: #e74c3c;
+  color: #ffffff;
+  padding: 10px 20px;
+  font-size: 14px;
+  font-weight: 500;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-delete:hover {
+  background-color: #c0392b;
+  box-shadow: 0 4px 12px rgba(231, 76, 60, 0.25);
+}
+
+.btn-delete:active { transform: scale(0.98); }
+
+.modal-subtitle {
+  text-align: center;
+  padding: 0 24px;
+  margin-top: 16px;
+  font-size: 16px;
+  color: #333;
+}
 </style>

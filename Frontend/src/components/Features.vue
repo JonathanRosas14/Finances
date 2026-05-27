@@ -9,9 +9,9 @@
         <span>Finances Pro</span>
       </div>
       <div class="nav-link">
-        <router-link to="/features" class="nav-item">Features</router-link>
-        <router-link to="/about" class="nav-item">About Us</router-link>
-        <router-link to="/contact" class="nav-item">Contact</router-link>
+        <router-link to="/features" class="nav-item" :class="{ active: route.path === '/features' }">Features</router-link>
+        <router-link to="/about" class="nav-item" :class="{ active: route.path === '/about' }">About Us</router-link>
+        <router-link to="/contact" class="nav-item" :class="{ active: route.path === '/contact' }">Contact</router-link>
       </div>
 
       <div class="header-botoms">
@@ -319,7 +319,9 @@
 </template>
 
 <script setup>
-// No script logic needed for this component
+import { useRoute } from 'vue-router'
+
+const route = useRoute()
 </script>
 
 <style scoped>
@@ -394,14 +396,16 @@ header {
   color: #ffffff;
   text-decoration: none;
   font-size: 18px;
-  transition: color 0.3s;
+  transition: color 0.3s, background-color 0.3s;
   padding: 10px 15px;
+  background: transparent;
+  border-radius: 4px;
 }
 
-/* Hover effect on navigation links */
-.nav-item:hover {
+/* Hover and active effect on navigation links */
+.nav-item:hover,
+.nav-item.active {
   background-color: #2e5c31;
-  border-radius: 4px;
 }
 
 /* Buttons container (Login and Sign Up) */

@@ -8,9 +8,9 @@
         <span>Finances Pro</span>
       </div>
       <div class="nav-link">
-        <router-link to="/features" class="nav-item">Features</router-link>
-        <router-link to="/about" class="nav-item">About Us</router-link>
-        <router-link to="/contact" class="nav-item">Contact</router-link>
+        <router-link to="/features" class="nav-item" :class="{ active: route.path === '/features' }">Features</router-link>
+        <router-link to="/about" class="nav-item" :class="{ active: route.path === '/about' }">About Us</router-link>
+        <router-link to="/contact" class="nav-item" :class="{ active: route.path === '/contact' }">Contact</router-link>
       </div>
 
       <div class="header-botoms">
@@ -120,17 +120,17 @@
         </p>
       </div>
       <div class="cards">
-        <div class="card">
+        <div class="team-card">
           <img src="../assets/Imagen3.png" alt="Persona 1" />
           <h3>Jonathan Rosas</h3>
           <p>CEO & Founder</p>
         </div>
-        <div class="card">
+        <div class="team-card">
           <img src="../assets/Imagen4.png" alt="Persona 2" />
-          <h3>Heidy Rios</h3>
+          <h3>Gersson Valencia</h3>
           <p>CTO & Co-Founder</p>
         </div>
-        <div class="card">
+        <div class="team-card">
           <img src="../assets/Imagen5.png" alt="Persona 3" />
           <h3>Ana Rosas</h3>
           <p>Marketing Director</p>
@@ -228,7 +228,11 @@
   </div>
 </template>
 
-<script setup></script>
+<script setup>
+import { useRoute } from 'vue-router'
+
+const route = useRoute()
+</script>
 
 <style scoped>
 /* ============================================ */
@@ -302,14 +306,16 @@ header {
   color: #ffffff;
   text-decoration: none;
   font-size: 18px;
-  transition: color 0.3s;
+  transition: color 0.3s, background-color 0.3s;
   padding: 10px 15px;
+  background: transparent;
+  border-radius: 4px;
 }
 
-/* Hover effect on navigation links */
-.nav-item:hover {
+/* Hover and active effect on navigation links */
+.nav-item:hover,
+.nav-item.active {
   background-color: #2e5c31;
-  border-radius: 4px;
 }
 
 /* Buttons container (Login and Sign Up) */
@@ -517,6 +523,7 @@ header {
   align-items: center;
   justify-content: center;
   width: 100%;
+  background-color: #112218;
 }
 
 .info3-secction {
@@ -545,7 +552,7 @@ header {
   flex-wrap: wrap;
 }
 
-.card {
+.team-card {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -556,26 +563,26 @@ header {
   background-color: #1a3a1e;
 }
 
-.card img {
+.team-card img {
   width: 100%;
   height: 280px;
   object-fit: cover;
   display: block;
 }
 
-.card h3 {
+.team-card h3 {
   font-size: 20px;
   margin-top: 16px;
   color: #ffffff;
 }
 
-.card p {
+.team-card p {
   font-size: 16px;
   color: #3acf41;
   margin-bottom: 16px;
 }
 
-.card:hover {
+.team-card:hover {
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
   transform: translateY(-5px);
   transition: all 0.3s ease;
@@ -1000,7 +1007,7 @@ header {
     flex-wrap: wrap;
   }
 
-  .card {
+  .team-card {
     width: 100%;
     max-width: 250px;
   }
@@ -1177,16 +1184,16 @@ header {
     align-items: center;
   }
 
-  .card {
+  .team-card {
     width: 100%;
     max-width: 220px;
   }
 
-  .card h3 {
+  .team-card h3 {
     font-size: 16px;
   }
 
-  .card p {
+  .team-card p {
     font-size: 14px;
   }
 

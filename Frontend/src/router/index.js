@@ -17,7 +17,7 @@ const routes = [
   { path: '/register', name: 'Register', component: Register },
   { path: '/auth-success', name: 'AuthSuccess', component: AuthSuccess },
   {
-    path: '/Dashboard',
+    path: '/dashboard',
     component: MainPage,
     children: [
       {

@@ -87,7 +87,7 @@ const handleGoogleCallback = async (response) => {
     const { token, user } = result.data;
     localStorage.setItem("token", token);
     localStorage.setItem("user", JSON.stringify(user));
-    router.push("/Dashboard");
+    router.push("/dashboard");
   } catch (error) {
     errorMessage.value = "Error logging in with Google";
   }
@@ -103,7 +103,7 @@ const handleLogin = async () => {
     const { token, user } = response.data;
     localStorage.setItem("token", token);
     localStorage.setItem("user", JSON.stringify(user));
-    router.push("/Dashboard");
+    router.push("/dashboard");
   } catch (error) {
     errorMessage.value =
       error.response?.data?.message || "Error logging in";

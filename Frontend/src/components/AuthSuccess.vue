@@ -32,7 +32,7 @@ onMounted(async () => {
 
       // Redirect to MainPage/Dashboard after 500ms
       setTimeout(() => {
-        router.push("/Dashboard");
+        router.push("/dashboard");
       }, 500);
     } else {
       // If no token, redirect to login

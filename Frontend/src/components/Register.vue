@@ -85,9 +85,9 @@
               />
             </div>
 
-            <div class="terms_conditions">
+            <div class="terminos_condiciones">
               <input type="checkbox" id="terms" v-model="acceptedTerms" required />
-              <label for="terms"> I accept the <a href="#">terms and conditions</a> </label>
+              <label for="terms">I accept the <a href="#">terms and conditions</a></label>
             </div>
             <button type="submit" class="register-btn" :disabled="loading">
               {{ loading ? 'Registering...' : 'Register' }}
@@ -128,7 +128,7 @@ onMounted(() => {
   const token = route.query.token;
   if (token) {
     localStorage.setItem("token", token);
-    router.push("/Dashboard");
+    router.push("/dashboard");
   }
 
   window.google.accounts.id.initialize({
@@ -155,7 +155,7 @@ const handleGoogleCallback = async (response) => {
     const { token, user } = result.data;
     localStorage.setItem("token", token);
     localStorage.setItem("user", JSON.stringify(user));
-    router.push("/Dashboard");
+    router.push("/dashboard");
   } catch (error) {
     errorMessage.value = "Error registering with Google";
   }

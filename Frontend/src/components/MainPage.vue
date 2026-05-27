@@ -9,42 +9,60 @@
       </div>
       <div class="nav-links">
         <!--Summary-->
-        <router-link to="/dashboard" class="nav-link">Summary</router-link>
+        <router-link to="/dashboard" class="nav-link" :class="{ active: activeRoutePath === '/dashboard' }">Summary</router-link>
         <!--Budgets-->
-        <router-link to="/budgets" class="nav-link">Budgets</router-link>
+        <router-link to="/budgets" class="nav-link" :class="{ active: activeRoutePath === '/budgets' }">Budgets</router-link>
         <!--Goals-->
-        <router-link to="/goals" class="nav-link">Goals</router-link>
+        <router-link to="/goals" class="nav-link" :class="{ active: activeRoutePath === '/goals' }">Goals</router-link>
         <!--Transactions-->
-        <router-link to="/transactions" class="nav-link"
-          >Transactions</router-link
-        >
+        <router-link to="/transactions" class="nav-link" :class="{ active: activeRoutePath === '/transactions' }">Transactions</router-link>
         <!--Debts-->
-        <router-link to="/debts" class="nav-link">Debts</router-link>
+        <router-link to="/debts" class="nav-link" :class="{ active: activeRoutePath === '/debts' }">Debts</router-link>
         <!--Categories-->
-        <router-link to="/categories" class="nav-link">Categories</router-link>
+        <router-link to="/categories" class="nav-link" :class="{ active: activeRoutePath === '/categories' }">Categories</router-link>
         <!--Reports-->
-        <router-link to="/reports" class="nav-link">Reports</router-link>
+        <router-link to="/reports" class="nav-link" :class="{ active: activeRoutePath === '/reports' }">Reports</router-link>
         <!--Settings-->
-        <router-link to="/settings" class="nav-link">Settings</router-link>
+        <router-link to="/settings" class="nav-link" :class="{ active: activeRoutePath === '/settings' }">Settings</router-link>
       </div>
 
       <div class="log-out">
-        <button @click="handleLogout" class="logout-btn">Log Out</button>
+        <button @click="showLogoutModal = true" class="logout-btn">Log Out</button>
       </div>
     </nav>
 
     <section class="main-content">
       <router-view />
     </section>
+
+    <transition name="modal-fade">
+      <div v-if="showLogoutModal" class="modal" @click="showLogoutModal = false">
+        <div class="modal-content confirm-modal" @click.stop>
+          <div class="modal-header">
+            <h2>Confirm Log Out</h2>
+            <button type="button" class="modal-close" @click="showLogoutModal = false">×</button>
+          </div>
+          <p class="modal-subtitle">Are you sure you want to log out?</p>
+          <div class="form-actions">
+            <button type="button" @click="handleLogout" class="btn-logout-confirm">Yes, Log Out</button>
+            <button type="button" @click="showLogoutModal = false" class="btn-cancel">Cancel</button>
+          </div>
+        </div>
+      </div>
+    </transition>
   </div>
 </template>
 <script setup>
-import { ref, onMounted } from "vue";
-import { useRouter } from "vue-router";
+import { ref, computed, onMounted } from "vue";
+import { useRouter, useRoute } from "vue-router";
 
+const showLogoutModal = ref(false);
 const user = ref({});
 const loading = ref(true);
 const router = useRouter();
+const route = useRoute();
+
+const activeRoutePath = computed(() => route.path)
 
 onMounted(() => {
   const savedUser = localStorage.getItem("user");
@@ -132,6 +150,12 @@ const handleLogout = () => {
   color: #1a7f3a;
 }
 
+.nav-link.active {
+  background: #e8f5e9;
+  color: #1a7f3a;
+  font-weight: 600;
+}
+
 .log-out {
   margin-top: auto;
 }
@@ -147,8 +171,8 @@ const handleLogout = () => {
 }
 
 .logout-btn:hover {
-  background-color: #ef5350;
-  color: #ffffff;
+  background-color: #ffebee !important;
+  color: #c62828 !important;
 }
 
 .main-content {
@@ -156,5 +180,107 @@ const handleLogout = () => {
   padding: 20px;
   overflow-y: auto;
   background-color: #fafbfa;
+}
+
+.modal-fade-enter-active,
+.modal-fade-leave-active { transition: opacity 0.3s ease; }
+.modal-fade-enter-from,
+.modal-fade-leave-to { opacity: 0; }
+
+.modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background: #fff;
+  border-radius: 16px;
+  padding: 32px;
+  width: 90%;
+  max-width: 420px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+}
+
+.confirm-modal .modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.confirm-modal .modal-header h2 {
+  font-size: 20px;
+  color: #1a1a2e;
+  margin: 0;
+}
+
+.modal-close {
+  background: none;
+  border: none;
+  font-size: 24px;
+  color: #999;
+  cursor: pointer;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: 0.2s;
+}
+
+.modal-close:hover {
+  background: #f5f5f5;
+  color: #333;
+}
+
+.confirm-modal .modal-subtitle {
+  font-size: 15px;
+  color: #666;
+  margin-bottom: 24px;
+  line-height: 1.5;
+}
+
+.confirm-modal .form-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+}
+
+.confirm-modal .btn-logout-confirm {
+  padding: 10px 20px;
+  background: #c62828;
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.confirm-modal .btn-logout-confirm:hover {
+  background: #b71c1c;
+}
+
+.confirm-modal .btn-cancel {
+  padding: 10px 20px;
+  background: #f5f5f5;
+  color: #333;
+  border: none;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.confirm-modal .btn-cancel:hover {
+  background: #e0e0e0;
 }
 </style>

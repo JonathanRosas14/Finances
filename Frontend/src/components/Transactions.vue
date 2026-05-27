@@ -201,9 +201,9 @@
     <!-- Delete confirmation modal -->
     <transition name="modal-fade">
       <div v-if="showDeleteConfirmModal" class="modal" @click="cancelDelete">
-        <div class="modal-content" @click.stop style="max-width: 400px">
+        <div class="modal-content delete-modal" @click.stop>
           <div class="modal-header">
-            <h2 style="color: #e74c3c">Delete Transaction</h2>
+            <h2>Delete Transaction</h2>
             <button type="button" class="modal-close" @click="cancelDelete">
               ×
             </button>
@@ -211,10 +211,10 @@
           <p class="modal-subtitle">
             Are you sure you want to delete this transaction?
           </p>
-          <p style="padding: 0 24px; color: #666; font-size: 14px">
+          <p style="text-align: center; color: #666; font-size: 14px; margin: 0;">
             This action cannot be undone.
           </p>
-          <div class="form-actions" style="padding: 24px">
+          <div class="form-actions">
             <button type="button" @click="cancelDelete" class="btn-cancel">
               Cancel
             </button>
@@ -223,6 +223,39 @@
             </button>
           </div>
         </div>
+      </div>
+    </transition>
+
+    <!-- Create confirmation modal -->
+    <transition name="modal-fade">
+      <div v-if="showCreateConfirmModal" class="modal" @click="cancelCreateTransaction">
+        <div class="modal-content confirm-modal" @click.stop>
+          <div class="modal-header">
+            <h2>Create Transaction</h2>
+            <button type="button" class="modal-close" @click="cancelCreateTransaction">
+              ×
+            </button>
+          </div>
+          <p class="modal-subtitle">
+            Are you sure you want to create this transaction?
+          </p>
+          <div class="form-actions">
+            <button type="button" @click="cancelCreateTransaction" class="btn-cancel">
+              Cancel
+            </button>
+            <button type="button" @click="confirmCreateTransaction" class="btn-delete">
+              Create
+            </button>
+          </div>
+        </div>
+      </div>
+    </transition>
+
+    <!-- Notification -->
+    <transition name="notif-fade">
+      <div v-if="notification.show" class="notification" :class="notification.type">
+        <span>✓ {{ notification.message }}</span>
+        <button @click="notification.show = false" class="notif-close">×</button>
       </div>
     </transition>
   </div>
@@ -242,7 +275,9 @@ const editingId = ref(null);
 
 // Delete confirmation modal
 const showDeleteConfirmModal = ref(false);
+const showCreateConfirmModal = ref(false);
 const deleteConfirmId = ref(null);
+const notification = ref({ show: false, message: '', type: 'success' });
 
 // Filters
 const search = ref("");
@@ -268,6 +303,11 @@ const getToken = () => {
   return localStorage.getItem("token");
 };
 
+const showNotification = (message, type = 'success') => {
+  notification.value = { show: true, message, type }
+  setTimeout(() => { notification.value.show = false }, 3500)
+}
+
 // Load categories
 const loadCategories = async () => {
   try {
@@ -287,7 +327,7 @@ const loadCategories = async () => {
     console.log("✅ Categories loaded:", categories.value.length);
   } catch (error) {
     console.error("❌ Error loading categories:", error);
-    alert("Error loading categories");
+    showNotification('Error loading categories', 'error')
   }
 };
 
@@ -311,7 +351,7 @@ const loadTransactions = async () => {
     console.log("✅ Transacciones cargadas:", transactions.value.length);
   } catch (error) {
     console.error("❌ Error loading transactions:", error);
-    alert("Error loading transactions");
+    showNotification('Error loading transactions', 'error')
   } finally {
     loading.value = false;
   }
@@ -407,21 +447,24 @@ const closeModel = () => {
 };
 
 // Add transaction
-const addTransaction = async () => {
-  try {
-    if (
-      !form.value.category_id ||
-      !form.value.amount ||
-      !form.value.transaction_date
-    ) {
-      alert("Please fill in all required fields");
-      return;
-    }
+const addTransaction = () => {
+  if (
+    !form.value.category_id ||
+    !form.value.amount ||
+    !form.value.transaction_date
+  ) {
+    showNotification('Please fill in all required fields', 'error')
+    return
+  }
+  showCreateConfirmModal.value = true
+}
 
+const confirmCreateTransaction = async () => {
+  try {
     loading.value = true;
     const token = getToken();
 
-    const response = await axios.post(
+    await axios.post(
       "http://localhost:8000/api/transactions/create/",
       form.value,
       {
@@ -432,17 +475,22 @@ const addTransaction = async () => {
       },
     );
 
-    console.log("✅ Transaction created:", response.data);
     await loadTransactions();
     closeModel();
-    alert("✅ Transaction created successfully");
+    showCreateConfirmModal.value = false;
+    showNotification('Transaction created successfully')
   } catch (error) {
     console.error("❌ Error creating transaction:", error);
-    alert(error.response?.data?.message || "Error creating transaction");
+    showCreateConfirmModal.value = false;
+    showNotification(error.response?.data?.message || 'Error creating transaction', 'error')
   } finally {
     loading.value = false;
   }
-};
+}
+
+const cancelCreateTransaction = () => {
+  showCreateConfirmModal.value = false
+}
 
 // Edit transaction
 const editTransaction = async (id) => {
@@ -473,7 +521,7 @@ const updateTransaction = async () => {
       !form.value.amount ||
       !form.value.transaction_date
     ) {
-      alert("Please fill in all required fields");
+      showNotification('Please fill in all required fields', 'error')
       return;
     }
 
@@ -494,12 +542,10 @@ const updateTransaction = async () => {
     console.log("✅ Transaction updated");
     await loadTransactions();
     closeModel();
-    alert("✅ Transaction updated successfully");
+    showNotification('Transaction updated successfully')
   } catch (error) {
     console.error("❌ Error updating transaction:", error);
-    alert(
-      error.response?.data?.message || "Error updating transaction",
-    );
+    showNotification(error.response?.data?.message || 'Error updating transaction', 'error')
   } finally {
     loading.value = false;
   }
@@ -534,12 +580,14 @@ const confirmDelete = async () => {
     
     console.log("✅ Server response:", response.data);
     await loadTransactions();
-    alert("✅ Transaction deleted successfully");
+    showDeleteConfirmModal.value = false;
+    showNotification('Transaction deleted successfully')
   } catch (error) {
     console.error("❌ Full error:", error);
     console.error("❌ Status:", error.response?.status);
     console.error("❌ Message:", error.response?.data);
-    alert(error.response?.data?.message || "Error deleting transaction");
+    showDeleteConfirmModal.value = false;
+    showNotification(error.response?.data?.message || 'Error deleting transaction', 'error')
   }
 };
 
@@ -721,7 +769,7 @@ onMounted(() => {
 }
 .edit-btn,
 .delete-btn {
-  padding: 6px 12px;
+  padding: 5px 10px;
   font-size: 12px;
   font-weight: 500;
   border: none;
@@ -729,6 +777,8 @@ onMounted(() => {
   cursor: pointer;
   transition: all 0.2s ease;
   margin-right: 6px;
+  min-width: 55px;
+  text-align: center;
 }
 .edit-btn {
   background-color: #1a7f3a;
@@ -834,10 +884,10 @@ onMounted(() => {
 }
 
 .modal-subtitle {
-  padding: 0 24px 12px;
-  color: #666;
-  font-size: 13px;
-  margin: 0;
+  text-align: center;
+  padding: 0 24px;
+  font-size: 16px;
+  color: #333;
 }
 
 .transaction-form {
@@ -972,5 +1022,206 @@ onMounted(() => {
 
 .btn-delete:active {
   transform: scale(0.98);
+}
+
+.delete-modal {
+  max-width: 520px;
+  padding: 0;
+}
+
+.delete-modal .modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 24px 24px 16px;
+  border-bottom: 1px solid #f0f0f0;
+  position: sticky;
+  top: 0;
+  background: #fff;
+  z-index: 1;
+}
+
+.delete-modal .modal-header h2 {
+  font-size: 20px;
+  font-weight: 600;
+  color: #e74c3c;
+  margin: 0;
+}
+
+.delete-modal .modal-subtitle {
+  text-align: center;
+  padding: 16px 24px 8px;
+  font-size: 16px;
+  color: #333;
+}
+
+.delete-modal .form-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  margin-top: 16px;
+  padding: 16px 24px 24px;
+  border-top: 1px solid #f0f0f0;
+}
+
+.delete-modal .btn-cancel {
+  padding: 10px 20px;
+  font-size: 14px;
+  font-weight: 500;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  background-color: #f5f5f5;
+  color: #333;
+}
+
+.delete-modal .btn-cancel:hover {
+  background-color: #e8e8e8;
+}
+
+.delete-modal .btn-delete {
+  padding: 10px 20px;
+  font-size: 14px;
+  font-weight: 500;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  background-color: #e74c3c;
+  color: #ffffff;
+}
+
+.delete-modal .btn-delete:hover {
+  background-color: #c0392b;
+  box-shadow: 0 4px 12px rgba(231, 76, 60, 0.25);
+}
+
+.delete-modal .btn-delete:active {
+  transform: scale(0.98);
+}
+
+.confirm-modal {
+  max-width: 520px;
+  padding: 0;
+}
+
+.confirm-modal .modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 24px 24px 16px;
+  border-bottom: 1px solid #f0f0f0;
+  position: sticky;
+  top: 0;
+  background: #fff;
+  z-index: 1;
+}
+
+.confirm-modal .modal-header h2 {
+  font-size: 20px;
+  font-weight: 600;
+  color: #1a7f3a;
+  margin: 0;
+}
+
+.confirm-modal .modal-subtitle {
+  text-align: center;
+  padding: 16px 24px 8px;
+  font-size: 16px;
+  color: #333;
+}
+
+.confirm-modal .form-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  margin-top: 16px;
+  padding: 16px 24px 24px;
+  border-top: 1px solid #f0f0f0;
+}
+
+.confirm-modal .btn-cancel {
+  padding: 10px 20px;
+  font-size: 14px;
+  font-weight: 500;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  background-color: #f5f5f5;
+  color: #333;
+}
+
+.confirm-modal .btn-cancel:hover {
+  background-color: #e8e8e8;
+}
+
+.confirm-modal .btn-delete {
+  padding: 10px 20px;
+  font-size: 14px;
+  font-weight: 500;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  background-color: #1a7f3a;
+  color: #ffffff;
+}
+
+.confirm-modal .btn-delete:hover {
+  background-color: #166f33;
+  box-shadow: 0 4px 12px rgba(26, 127, 58, 0.25);
+}
+
+.confirm-modal .btn-delete:active {
+  transform: scale(0.98);
+}
+
+/* Notification */
+.notification {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  background: #e8f5e9;
+  color: #1a7f3a;
+  border: 1px solid #a5d6a7;
+  border-radius: 10px;
+  padding: 14px 20px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 14px;
+  font-weight: 500;
+  box-shadow: 0 4px 16px rgba(26, 127, 58, 0.15);
+  z-index: 2000;
+}
+
+.notification.error {
+  background: #ffebee;
+  color: #c62828;
+  border: 1px solid #ef9a9a;
+  box-shadow: 0 4px 16px rgba(198, 40, 40, 0.15);
+}
+
+.notif-close {
+  background: none;
+  border: none;
+  font-size: 20px;
+  cursor: pointer;
+  color: inherit;
+  padding: 0;
+  line-height: 1;
+}
+
+.notif-fade-enter-active,
+.notif-fade-leave-active {
+  transition: all 0.3s ease;
+}
+
+.notif-fade-enter-from,
+.notif-fade-leave-to {
+  opacity: 0;
+  transform: translateX(20px);
 }
 </style>

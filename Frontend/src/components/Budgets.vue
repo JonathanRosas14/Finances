@@ -504,7 +504,7 @@ const updateBudget = async () => {
   try {
     const token = getToken();
     await api.put(
-      \`/api/budgets/${editingId.value}`,
+      `/api/budgets/${editingId.value}`,
       form.value,
       {
         headers: {
@@ -532,7 +532,7 @@ const deleteBudget = (id) => {
 const confirmDelete = async () => {
   try {
     const token = getToken();
-    await api.delete(\`/api/budgets/${budgetToDelete.value}/delete/\`, {
+    await api.delete(`/api/budgets/${budgetToDelete.value}/delete/`, {
       headers: { Authorization: `Bearer ${token}` },
     });
     await loadBudgets();

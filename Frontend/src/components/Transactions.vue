@@ -529,7 +529,7 @@ const updateTransaction = async () => {
     const token = getToken();
 
     await api.put(
-      \`/api/transactions/${editingId.value}/`,
+      `/api/transactions/${editingId.value}/`,
       form.value,
       {
         headers: {
@@ -569,7 +569,7 @@ const confirmDelete = async () => {
     const token = getToken();
     console.log("🔑 Token obtained");
     
-    const url = \`/api/transactions/${id}/delete/\`;
+    const url = `/api/transactions/${id}/delete/`;
     console.log("📤 Sending DELETE to:", url);
 
     const response = await api.delete(url, {

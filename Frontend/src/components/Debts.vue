@@ -5,23 +5,23 @@
     </header>
     <div class="debts-content">
       <div class="button-group">
-        <button @click="openModal()" class="btn-primary">+ create debt</button>
+        <button @click="openModal()" class="btn-create">+ Create Debt</button>
       </div>
 
       <div v-if="debts.length === 0" class="empty-state">
-        <p>No debts found. Start by creating a new debt.</p>
+        <p>No debts registered. Create your first debt.</p>
       </div>
 
       <div v-else class="debts-grid">
         <div
-          v-for="debt in filteredDebts"
+          v-for="debt in debts"
           :key="debt.id"
           class="debt-card"
         >
           <div class="card-header">
             <div class="card-title-section">
               <h3>{{ debt.name }}</h3>
-              <span class="creditor-badge">{{ debt.creditor || "General" }}</span>
+              <span v-if="debt.creditor_name" class="creditor-badge">{{ debt.creditor_name }}</span>
             </div>
             <button @click="openMenu(debt.id)" class="menu-btn">⋮</button>
             <div
@@ -29,43 +29,55 @@
               class="dropdown-menu"
               @click.stop
             >
-              <button @click="editDebt(debt.id)" class="menu-item">
-                Edit
-              </button>
-              <button @click="deleteDebt(debt.id)" class="menu-item delete">
-                Delete
-              </button>
+              <button @click="editDebt(debt.id)" class="menu-item">Edit</button>
+              <button @click="deleteDebt(debt.id)" class="menu-item delete">Delete</button>
+            </div>
+          </div>
+
+          <div class="card-amounts">
+            <div class="amount-row">
+              <span class="label">Paid:</span>
+              <span class="paid-amount">${{ getDebtPaid(debt).toFixed(2) }}</span>
+            </div>
+            <div class="amount-row">
+              <span class="label">Total:</span>
+              <span class="total-amount">${{ parseFloat(debt.total_with_interest).toFixed(2) }}</span>
             </div>
           </div>
 
           <div class="card-progress">
-            <div class="progress-info">
-              <span class="paid">Paid: ${{ parseFloat(debt.paid_amount_calculated).toFixed(2) }}</span>
-              <span class="total">Total: ${{ parseFloat(debt.total_with_interest).toFixed(2) }}</span>
-            </div>
             <div class="progress-bar">
               <div
                 class="progress-fill"
-                :style="{ width: getProgressPercent(debt) + '%' }"
+                :style="{ width: getDebtProgress(debt) + '%' }"
+                :class="{ 'progress-complete': getDebtProgress(debt) >= 100 }"
               ></div>
             </div>
-            <div class="progress-percentage">
-              {{ getProgressPercent(debt) }}%
-            </div>
+            <div class="progress-percentage">{{ getDebtProgress(debt) }}%</div>
           </div>
 
           <div class="card-details">
-            <div class="detail-item">
-              <span class="label">Status:</span>
-              <span :class="['status-badge', debt.status]">{{ debt.status }}</span>
+            <div class="detail-row">
+              <span class="detail-label">Status:</span>
+              <span class="status-badge" :class="'status-' + debt.status.toLowerCase()">
+                {{ debt.status.toUpperCase() }}
+              </span>
             </div>
-            <div class="detail-item">
-              <span class="label">Due Date:</span>
-              <span>{{ formatDate(debt.due_date) }}</span>
+            <div class="detail-row">
+              <span class="detail-label">Due Date:</span>
+              <span class="detail-value">{{ formatDate(debt.due_date) }}</span>
             </div>
-            <div v-if="debt.interest_rate" class="detail-item">
-              <span class="label">Interest:</span>
-              <span>{{ debt.interest_rate }}%</span>
+            <div class="detail-row">
+              <span class="detail-label">Interest:</span>
+              <span class="detail-value">{{ debt.interest_rate }}%</span>
+            </div>
+            <div v-if="debt.months > 0" class="detail-row">
+              <span class="detail-label">Months:</span>
+              <span class="detail-value">{{ debt.months }}</span>
+            </div>
+            <div v-if="debt.category_name" class="detail-row">
+              <span class="detail-label">Category:</span>
+              <span class="category-tag">{{ debt.category_name }}</span>
             </div>
           </div>
 
@@ -76,22 +88,27 @@
       </div>
     </div>
 
-    <!-- Modal para crear/editar deuda -->
+    <!-- Notification -->
+    <transition name="notif-fade">
+      <div v-if="notification.show" class="notification">
+        <span>✓ {{ notification.message }}</span>
+        <button @click="notification.show = false" class="notif-close">×</button>
+      </div>
+    </transition>
+
+    <!-- Modal crear/editar deuda -->
     <transition name="modal-fade">
       <div v-if="showModal" class="modal" @click="closeModal">
         <div class="modal-content" @click.stop>
           <div class="modal-header">
-            <h2>{{ isEditMode ? "Edit Debt" : "Create Debt" }}</h2>
-            <button type="button" class="modal-close" @click="closeModal">
-              ×
-            </button>
+            <div>
+              <h2>{{ isEditMode ? 'Edit Debt' : 'Create Debt' }}</h2>
+              <p class="modal-subtitle">Manage your debts and track payments</p>
+            </div>
+            <button type="button" class="modal-close" @click="closeModal">×</button>
           </div>
-          <p class="modal-subtitle">Manage your debts and track payments</p>
 
-          <form
-            @submit.prevent="isEditMode ? updateDebt() : addDebt()"
-            class="debt-form"
-          >
+          <form @submit.prevent="isEditMode ? updateDebt() : addDebt()" class="debt-form">
             <div class="form-group">
               <label for="name">Debt Name *</label>
               <input
@@ -99,99 +116,110 @@
                 id="name"
                 v-model="form.name"
                 required
-                placeholder="e.g., Car Loan, Credit Card"
+                placeholder="e.g., Credit card"
                 class="form-input"
               />
             </div>
 
             <div class="form-row">
               <div class="form-group">
-                <label for="creditor">Creditor Name</label>
+                <label for="creditor_name">Creditor Name</label>
                 <input
                   type="text"
-                  id="creditor"
-                  v-model="form.creditor"
-                  placeholder="e.g., Bank ABC, Company XYZ"
+                  id="creditor_name"
+                  v-model="form.creditor_name"
+                  placeholder="e.g., Bank name"
                   class="form-input"
                 />
               </div>
               <div class="form-group">
-                <label for="interest-rate">Interest Rate (%)</label>
+                <label for="interest_rate">Interest Rate (%)</label>
                 <input
                   type="number"
-                  id="interest-rate"
+                  id="interest_rate"
                   v-model="form.interest_rate"
                   step="0.01"
-                  placeholder="0.00"
+                  min="0"
+                  placeholder="0"
                   class="form-input"
+                  @input="recalculate"
                 />
               </div>
             </div>
 
             <div class="form-row">
               <div class="form-group">
-                <label for="total-amount">Total Amount *</label>
+                <label for="amount">Total Amount *</label>
                 <div class="amount-input-wrapper">
                   <span class="currency">$</span>
                   <input
                     type="number"
-                    id="total-amount"
-                    v-model="form.total_amount"
+                    id="amount"
+                    v-model="form.amount"
                     step="0.01"
+                    min="0.01"
                     required
-                    placeholder="0.00"
+                    placeholder="0"
                     class="form-input"
+                    @input="recalculate"
                   />
                 </div>
               </div>
               <div class="form-group">
-                <label for="due-date">Due Date *</label>
+                <label for="months">Months</label>
+                <input
+                  type="number"
+                  id="months"
+                  v-model="form.months"
+                  min="0"
+                  placeholder="0"
+                  class="form-input"
+                  @input="recalculate"
+                />
+              </div>
+            </div>
+
+            <!-- Compound interest preview -->
+            <div v-if="calculatedTotal > 0" class="interest-preview">
+              <div class="preview-row">
+                <span>Principal:</span>
+                <span>${{ parseFloat(form.amount || 0).toLocaleString('en-US') }}</span>
+              </div>
+              <div v-if="form.interest_rate > 0 && form.months > 0" class="preview-row">
+                <span>Interest ({{ form.interest_rate }}% × {{ form.months }} months):</span>
+                <span class="interest-value">
+                  +${{ (calculatedTotal - parseFloat(form.amount || 0)).toLocaleString('en-US', { minimumFractionDigits: 2 }) }}
+                </span>
+              </div>
+              <div class="preview-row preview-total">
+                <span>Total with interest:</span>
+                <span>${{ calculatedTotal.toLocaleString('en-US', { minimumFractionDigits: 2 }) }}</span>
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label for="due_date">Due Date *</label>
                 <input
                   type="date"
-                  id="due-date"
+                  id="due_date"
                   v-model="form.due_date"
                   required
                   class="form-input"
                 />
               </div>
-            </div>
-
-            <div class="form-group">
-              <label for="category">Category</label>
-              <select
-                id="category"
-                v-model="form.category"
-                class="form-input"
-              >
-                <option :value="null">General Debt</option>
-                <option
-                  v-for="category in categories"
-                  :key="category.id"
-                  :value="category.id"
-                >
-                  {{ category.name }}
-                </option>
-              </select>
-            </div>
-
-            <div class="form-row">
               <div class="form-group">
-                <label for="months">Months *</label>
-                <input
-                  type="number"
-                  id="months"
-                  v-model="form.months"
-                  min="1"
-                  required
-                  placeholder="Number of months"
-                  class="form-input"
-                />
-              </div>
-              <div class="form-group" v-if="form.total_amount && form.interest_rate && form.months">
-                <label>Total with Interest</label>
-                <div class="amount-display">
-                  ${{ calculateTotalWithInterest() }}
-                </div>
+                <label for="category">Category</label>
+                <select id="category" v-model="form.category_id" class="form-input">
+                  <option value="">General Debt</option>
+                  <option
+                    v-for="category in categories"
+                    :key="category.id"
+                    :value="category.id"
+                  >
+                    {{ category.name }}
+                  </option>
+                </select>
               </div>
             </div>
 
@@ -216,14 +244,65 @@
             </div>
 
             <div class="form-actions">
-              <button type="button" @click="closeModal" class="btn-cancel">
-                Cancel
-              </button>
+              <button type="button" @click="closeModal" class="btn-cancel">Cancel</button>
               <button type="submit" class="btn-submit">
-                {{ isEditMode ? "Update" : "Create" }}
+                {{ isEditMode ? 'Update' : 'Create' }}
               </button>
             </div>
           </form>
+        </div>
+      </div>
+    </transition>
+
+    <!-- Delete confirmation modal -->
+    <transition name="modal-fade">
+      <div v-if="showDeleteConfirmModal" class="modal" @click="cancelDelete">
+        <div class="modal-content delete-modal" @click.stop>
+          <div class="modal-header">
+            <h2>Delete Debt</h2>
+            <button type="button" class="modal-close" @click="cancelDelete">
+              ×
+            </button>
+          </div>
+          <p class="modal-subtitle">
+            Are you sure you want to delete this debt?
+          </p>
+          <p style="text-align: center; color: #666; font-size: 14px; margin: 0;">
+            This action cannot be undone.
+          </p>
+          <div class="form-actions">
+            <button type="button" @click="cancelDelete" class="btn-cancel">
+              Cancel
+            </button>
+            <button type="button" @click="confirmDelete" class="btn-delete">
+              Delete
+            </button>
+          </div>
+        </div>
+      </div>
+    </transition>
+
+    <!-- Create confirmation modal -->
+    <transition name="modal-fade">
+      <div v-if="showCreateConfirmModal" class="modal" @click="cancelCreateDebt">
+        <div class="modal-content confirm-modal" @click.stop>
+          <div class="modal-header">
+            <h2>Create Debt</h2>
+            <button type="button" class="modal-close" @click="cancelCreateDebt">
+              ×
+            </button>
+          </div>
+          <p class="modal-subtitle">
+            Are you sure you want to create this debt?
+          </p>
+          <div class="form-actions">
+            <button type="button" @click="cancelCreateDebt" class="btn-cancel">
+              Cancel
+            </button>
+            <button type="button" @click="confirmCreateDebt" class="btn-delete">
+              Create
+            </button>
+          </div>
         </div>
       </div>
     </transition>
@@ -231,264 +310,271 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted } from "vue";
-import axios from "axios";
+import { ref, computed, onMounted } from 'vue'
+import api from '../lib/api'
 
-// Estado
-const debts = ref([]);
-const categories = ref([]);
-const showModal = ref(false);
-const loading = ref(false);
-const isEditMode = ref(false);
-const editingId = ref(null);
-const activeMenu = ref(null);
+const debts = ref([])
+const categories = ref([])
+const transactions = ref([])
+const showModal = ref(false)
+const showDeleteConfirmModal = ref(false)
+const showCreateConfirmModal = ref(false)
+const debtToDelete = ref(null)
+const isEditMode = ref(false)
+const editingId = ref(null)
+const activeMenu = ref(null)
 
-// Filtros
-const search = ref("");
-const filterStatus = ref("");
+const notification = ref({ show: false, message: '', type: 'success' })
 
-// Formulario
 const form = ref({
-  name: "",
-  creditor: "",
-  total_amount: "",
-  paid_amount: 0,
-  due_date: "",
+  name: '',
+  creditor_name: '',
+  amount: '',
   interest_rate: 0,
-  months: 1,
-  category: null,
-  description: "",
-  status: "pending",
-});
+  months: 0,
+  due_date: '',
+  category_id: '',
+  description: '',
+  status: 'pending',
+})
 
-// Obtener token
-const getToken = () => {
-  return localStorage.getItem("token");
-};
+const getToken = () => localStorage.getItem('token')
 
-// Obtener headers
-const getHeaders = () => {
-  return {
-    Authorization: `Bearer ${getToken()}`,
-  };
-};
+const showNotification = (message, type = 'success') => {
+  notification.value = { show: true, message, type }
+  setTimeout(() => { notification.value.show = false }, 3500)
+}
 
-// Cargar categorías
+// ── Compound interest calculation ────────────────────────────────
+// Formula: total = amount * (1 + rate/100) ^ months
+const calculatedTotal = computed(() => {
+  const amount = parseFloat(form.value.amount) || 0
+  const rate   = parseFloat(form.value.interest_rate) || 0
+  const months = parseInt(form.value.months) || 0
+  if (amount <= 0) return 0
+  if (rate <= 0 || months <= 0) return amount
+  return amount * Math.pow(1 + rate / 100, months)
+})
+
+// Triggered on each input change to keep preview alive
+const recalculate = () => { /* reactivo automáticamente via computed */ }
+
+// ── Data loading ──────────────────────────────────────────────
 const loadCategories = async () => {
   try {
-    const response = await axios.get("http://localhost:8000/api/categories", {
-      headers: getHeaders(),
-    });
-    categories.value = response.data;
+    const token = getToken()
+    if (!token) return
+    const response = await api.get('/api/categories/', {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+    categories.value = response.data
   } catch (error) {
-    console.error("Error loading categories:", error);
+    console.error('Error loading categories:', error)
   }
-};
+}
 
-// Cargar deudas
 const loadDebts = async () => {
   try {
-    const response = await axios.get("http://localhost:8000/api/debts", {
-      headers: getHeaders(),
-    });
-    debts.value = response.data;
+    const token = getToken()
+    if (!token) return
+    const response = await api.get('/api/debts/', {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+    debts.value = response.data
   } catch (error) {
-    console.error("Error loading debts:", error);
+    console.error('Error loading debts:', error)
   }
-};
+}
 
-// Deudas filtradas
-const filteredDebts = computed(() => {
-  return debts.value.filter((debt) => {
-    const matchesSearch =
-      debt.name.toLowerCase().includes(search.value.toLowerCase()) ||
-      (debt.creditor &&
-        debt.creditor.toLowerCase().includes(search.value.toLowerCase()));
+const loadTransactions = async () => {
+  try {
+    const token = getToken()
+    if (!token) return
+    const response = await api.get('/api/transactions/', {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+    transactions.value = response.data
+  } catch (error) {
+    console.error('Error loading transactions:', error)
+  }
+}
 
-    const matchesStatus =
-      !filterStatus.value || debt.status === filterStatus.value;
+// ── Debt progress logic ─────────────────────────────────
+// Sum expense transactions from the associated category
+const getDebtPaid = (debt) => {
+  if (!debt.category_id) return 0
+  return transactions.value
+    .filter(
+      (t) =>
+        t.category_id === debt.category_id &&
+        t.type === 'expense'
+    )
+    .reduce((sum, t) => sum + parseFloat(t.amount), 0)
+}
 
-    return matchesSearch && matchesStatus;
-  });
-});
+const getDebtProgress = (debt) => {
+  const paid  = getDebtPaid(debt)
+  const total = parseFloat(debt.total_with_interest)
+  if (!total) return 0
+  return Math.min(Math.round((paid / total) * 100), 100)
+}
 
-// Abrir/cerrar menú
-const openMenu = (debtId) => {
-  activeMenu.value = activeMenu.value === debtId ? null : debtId;
-};
+// ── Formatting ────────────────────────────────────────────────────
+const formatDate = (dateStr) => {
+  if (!dateStr) return '—'
+  return new Date(dateStr).toLocaleDateString('en-US', {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
+  })
+}
 
-// Abrir modal
+// ── Modal ───────────────────────────────────────────────────────
 const openModal = () => {
-  isEditMode.value = false;
-  editingId.value = null;
+  isEditMode.value = false
+  editingId.value = null
   form.value = {
-    name: "",
-    creditor: "",
-    total_amount: "",
-    paid_amount: 0,
-    due_date: "",
+    name: '',
+    creditor_name: '',
+    amount: '',
     interest_rate: 0,
-    months: 1,
-    category: null,
-    description: "",
-    status: "pending",
-  };
-  showModal.value = true;
-};
+    months: 0,
+    due_date: '',
+    category_id: '',
+    description: '',
+    status: 'pending',
+  }
+  showModal.value = true
+}
 
-// Cerrar modal
 const closeModal = () => {
-  showModal.value = false;
-  isEditMode.value = false;
-  editingId.value = null;
-};
+  showModal.value = false
+}
 
-// Editar deuda
-const editDebt = async (debtId) => {
+const openMenu = (id) => {
+  activeMenu.value = activeMenu.value === id ? null : id
+}
+
+// ── CRUD ────────────────────────────────────────────────────────
+const addDebt = () => {
+  showCreateConfirmModal.value = true
+}
+
+const confirmCreateDebt = async () => {
   try {
-    const debtToEdit = debts.value.find((d) => d.id === debtId);
-    if (debtToEdit) {
-      editingId.value = debtId;
-      form.value = { ...debtToEdit };
-      isEditMode.value = true;
-      showModal.value = true;
+    const token = getToken()
+    const payload = {
+      ...form.value,
+      category_id: form.value.category_id || null,
+      total_with_interest: calculatedTotal.value,
     }
+    await api.post('/api/debts/create/', payload, {
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+    })
+    await loadDebts()
+    closeModal()
+    showCreateConfirmModal.value = false
+    showNotification('Debt created successfully')
   } catch (error) {
-    console.error("Error editing debt:", error);
+    console.error('Error:', error)
+    showCreateConfirmModal.value = false
+    showNotification(error.response?.data?.message || 'Error creating debt', 'error')
   }
-};
+}
 
-// Agregar deuda
-const addDebt = async () => {
-  try {
-    if (!form.value.name || !form.value.total_amount || !form.value.due_date) {
-      alert("Por favor completa los campos requeridos");
-      return;
-    }
+const cancelCreateDebt = () => {
+  showCreateConfirmModal.value = false
+}
 
-    const token = getToken();
-    await axios.post("http://localhost:8000/api/debts/create/", form.value, {
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-    });
-    
-    await loadDebts();
-    closeModal();
-    alert("✅ Deuda creada exitosamente");
-  } catch (error) {
-    console.error("Error:", error);
-    alert(error.response?.data?.message || "Error al crear deuda");
+const editDebt = (id) => {
+  const debt = debts.value.find((d) => d.id === id)
+  if (!debt) return
+  isEditMode.value = true
+  editingId.value = id
+  form.value = {
+    name: debt.name,
+    creditor_name: debt.creditor_name || '',
+    amount: debt.amount,
+    interest_rate: debt.interest_rate || 0,
+    months: debt.months || 0,
+    due_date: debt.due_date,
+    category_id: debt.category_id || '',
+    description: debt.description || '',
+    status: debt.status,
   }
-};
+  activeMenu.value = null
+  showModal.value = true
+}
 
-// Actualizar deuda
 const updateDebt = async () => {
   try {
-    const token = getToken();
-    await axios.put(
-      `http://localhost:8000/api/debts/${editingId.value}/`,
-      form.value,
-      {
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-      }
-    );
-    
-    await loadDebts();
-    closeModal();
-    alert("✅ Deuda actualizada exitosamente");
+    const token = getToken()
+    const payload = {
+      ...form.value,
+      category_id: form.value.category_id || null,
+      total_with_interest: calculatedTotal.value,
+    }
+    await api.put(`/api/debts/${editingId.value}/`, payload, {
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+    })
+    await loadDebts()
+    closeModal()
+    showNotification('Debt updated successfully')
   } catch (error) {
-    console.error("Error:", error);
-    alert(error.response?.data?.message || "Error al actualizar deuda");
+    console.error('Error:', error)
+    showNotification(error.response?.data?.message || 'Error updating debt', 'error')
   }
-};
+}
 
-// Eliminar deuda
-const deleteDebt = async (debtId) => {
-  if (!confirm("¿Estás seguro de eliminar esta deuda?")) return;
+const deleteDebt = (id) => {
+  debtToDelete.value = id
+  showDeleteConfirmModal.value = true
+}
 
+const confirmDelete = async () => {
   try {
-    const token = getToken();
-    await axios.delete(`http://localhost:8000/api/debts/${debtId}/delete/`, {
+    const token = getToken()
+    await api.delete(`/api/debts/${debtToDelete.value}/delete/`, {
       headers: { Authorization: `Bearer ${token}` },
-    });
-    
-    await loadDebts();
-    alert("✅ Deuda eliminada exitosamente");
+    })
+    await loadDebts()
+    showDeleteConfirmModal.value = false
+    debtToDelete.value = null
+    showNotification('Debt deleted successfully')
   } catch (error) {
-    console.error("Error:", error);
-    alert(error.response?.data?.message || "Error al eliminar deuda");
+    console.error('Error:', error)
+    showDeleteConfirmModal.value = false
+    showNotification(error.response?.data?.message || 'Error deleting debt', 'error')
   }
-};
+}
 
-// Calcular porcentaje de progreso
-const getProgressPercent = (debt) => {
-  if (!debt.total_with_interest) return 0;
-  return Math.min(
-    Math.round((debt.paid_amount_calculated / debt.total_with_interest) * 100),
-    100,
-  );
-};
+const cancelDelete = () => {
+  showDeleteConfirmModal.value = false
+  debtToDelete.value = null
+}
 
-// Calcular el total con intereses
-const calculateTotalWithInterest = () => {
-  const total = parseFloat(form.value.total_amount) || 0;
-  const rate = parseFloat(form.value.interest_rate) || 0;
-  const months = parseInt(form.value.months) || 1;
-  
-  const interest = total * (rate / 100) * months;
-  return (total + interest).toFixed(2);
-};
-
-// Formatear fecha
-const formatDate = (dateString) => {
-  const options = { year: "numeric", month: "short", day: "numeric" };
-  return new Date(dateString).toLocaleDateString("es-ES", options);
-};
-
-// Ciclo de vida
 onMounted(() => {
-  loadCategories();
-  loadDebts();
+  loadCategories()
+  loadDebts()
+  loadTransactions()
 
-  // Recargar deudas cada 3 segundos para actualizar progreso automáticamente
   const intervalId = setInterval(() => {
-    loadDebts();
-  }, 3000);
+    loadTransactions()
+  }, 10000)
 
-  // Recargar cuando el usuario vuelve a esta pestaña
-  const handleFocus = () => {
-    console.log("👀 Debts: enfoco la ventana");
-    loadDebts();
-  };
-  window.addEventListener("focus", handleFocus);
-
-  // Escuchar eventos de actualización de transacciones desde otros componentes
-  const handleTransactionUpdated = async () => {
-    console.log("🔥 Debts: Se recibió evento transactionUpdated");
-    await loadDebts();
-    console.log("🗘 Debts: Datos recargados");
-  };
-  window.addEventListener("transactionUpdated", handleTransactionUpdated);
-
-  // Escuchar eventos propios de deudas
-  const handleDebtUpdated = async () => {
-    console.log("🔥 Debts: Se recibió evento debtUpdated");
-    await loadDebts();
-  };
-  window.addEventListener("debtUpdated", handleDebtUpdated);
+  const handleVisibilityChange = () => {
+    if (!document.hidden) {
+      loadTransactions()
+      loadDebts()
+    }
+  }
+  document.addEventListener('visibilitychange', handleVisibilityChange)
 
   return () => {
-    clearInterval(intervalId);
-    window.removeEventListener("focus", handleFocus);
-    window.removeEventListener("transactionUpdated", handleTransactionUpdated);
-    window.removeEventListener("debtUpdated", handleDebtUpdated);
-  };
-});
+    clearInterval(intervalId)
+    document.removeEventListener('visibilitychange', handleVisibilityChange)
+  }
+})
 </script>
 
 <style scoped>
@@ -525,12 +611,11 @@ onMounted(() => {
   flex: 1;
   overflow-y: auto;
   padding: 20px;
+  background-color: #fafafa;
 }
 
 .button-group {
-  display: flex;
-  margin-bottom: 20px;
-  gap: 10px;
+  margin-bottom: 24px;
 }
 
 .btn-create {
@@ -552,81 +637,66 @@ onMounted(() => {
   transform: translateY(-2px);
 }
 
-.btn-primary {
-  background-color: #1a7f3a;
-  color: #ffffff;
-  border: none;
-  padding: 12px 24px;
-  font-size: 15px;
-  font-weight: 500;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  box-shadow: 0 2px 8px rgba(26, 127, 58, 0.2);
-}
-
-.btn-primary:hover {
-  background-color: #166f33;
-  box-shadow: 0 4px 12px rgba(26, 127, 58, 0.3);
-  transform: translateY(-2px);
-}
-
 .empty-state {
   text-align: center;
-  padding: 60px 20px;
-  color: #666;
+  color: #888;
+  font-size: 18px;
+  margin-top: 50px;
 }
 
-.empty-state p {
-  font-size: 16px;
-}
-
+/* ── Card grid (same as budgets) ── */
 .debts-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
   gap: 20px;
 }
 
 .debt-card {
-  background: white;
-  border: 1px solid #e0e8e0;
-  border-radius: 8px;
+  background-color: #ffffff;
+  border-radius: 12px;
   padding: 20px;
-  transition: box-shadow 0.3s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  border: 1px solid #f0f0f0;
+  transition: all 0.2s ease;
+  position: relative;
 }
 
 .debt-card:hover {
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+  transform: translateY(-2px);
 }
 
+/* ── Card header ── */
 .card-header {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  margin-bottom: 15px;
+  margin-bottom: 14px;
   position: relative;
 }
 
 .card-title-section {
   display: flex;
   align-items: center;
-  gap: 10px;
-  flex: 1;
+  gap: 8px;
+  flex-wrap: wrap;
 }
 
-.card-title-section h3 {
-  font-size: 18px;
-  color: #1a1a1a;
+.card-header h3 {
+  font-size: 16px;
+  font-weight: 700;
+  color: #222;
   margin: 0;
 }
 
 .creditor-badge {
-  background-color: #e8f5e9;
-  color: #1a7f3a;
-  padding: 4px 12px;
-  border-radius: 20px;
-  font-size: 12px;
-  font-weight: 600;
+  background: #e3f2fd;
+  color: #1565c0;
+  padding: 3px 10px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
 }
 
 .menu-btn {
@@ -635,360 +705,356 @@ onMounted(() => {
   font-size: 20px;
   color: #999;
   cursor: pointer;
-  padding: 0;
-  transition: color 0.3s ease;
+  padding: 4px 8px;
+  transition: all 0.2s ease;
 }
 
-.menu-btn:hover {
-  color: #1a7f3a;
-}
+.menu-btn:hover { color: #333; }
 
 .dropdown-menu {
   position: absolute;
   top: 30px;
   right: 0;
-  background: white;
-  border: 1px solid #e0e8e0;
-  border-radius: 6px;
-  padding: 8px 0;
-  min-width: 150px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  background-color: #ffffff;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  min-width: 120px;
   z-index: 10;
 }
 
 .menu-item {
-  background: none;
-  border: none;
+  display: block;
   width: 100%;
-  text-align: left;
+  border: none;
   padding: 10px 16px;
+  text-align: left;
+  background: none;
   cursor: pointer;
   font-size: 14px;
-  transition: background-color 0.3s ease;
+  color: #333;
+  transition: all 0.2s ease;
 }
 
-.menu-item:hover {
-  background-color: #f5f5f5;
-}
+.menu-item:first-child { border-bottom: 1px solid #f0f0f0; }
+.menu-item:hover { background-color: #f5f5f5; }
+.menu-item.delete:hover { background-color: #ffe8e8; color: #e74c3c; }
 
-.menu-item.delete {
-  color: #d32f2f;
-}
-
-.card-progress {
-  margin-bottom: 15px;
-}
-
-.progress-info {
+/* ── Amounts ── */
+.card-amounts {
   display: flex;
   justify-content: space-between;
-  font-size: 13px;
-  margin-bottom: 8px;
+  margin-bottom: 10px;
 }
 
-.progress-info .paid {
-  color: #1a7f3a;
+.amount-row {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.label {
+  font-size: 11px;
+  color: #999;
+  text-transform: uppercase;
   font-weight: 600;
+  letter-spacing: 0.5px;
 }
 
-.progress-info .total {
-  color: #666;
+.paid-amount {
+  font-size: 14px;
+  font-weight: 700;
+  color: #1a7f3a;
+}
+
+.total-amount {
+  font-size: 14px;
+  font-weight: 700;
+  color: #333;
+}
+
+/* ── Progress ── */
+.card-progress {
+  margin: 10px 0 14px;
 }
 
 .progress-bar {
   width: 100%;
   height: 8px;
-  background-color: #e8f5e9;
-  border-radius: 10px;
+  background-color: #e8e8e8;
+  border-radius: 4px;
   overflow: hidden;
-  margin-bottom: 8px;
+  margin-bottom: 4px;
 }
 
 .progress-fill {
   height: 100%;
-  background: linear-gradient(90deg, #1a7f3a, #2db856);
-  border-radius: 10px;
-  transition: width 0.3s ease;
+  background: linear-gradient(90deg, #1a7f3a 0%, #16a34a 100%);
+  transition: width 0.5s ease;
+  border-radius: 4px;
+}
+
+.progress-fill.progress-complete {
+  background: linear-gradient(90deg, #16a34a 0%, #4caf50 100%);
 }
 
 .progress-percentage {
   text-align: right;
   font-size: 13px;
-  font-weight: 600;
+  font-weight: 700;
   color: #1a7f3a;
 }
 
+/* ── Details ── */
 .card-details {
+  border-top: 1px solid #f0f0f0;
+  padding-top: 12px;
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  margin-bottom: 10px;
-  padding: 10px 0;
-  border-top: 1px solid #f0f0f0;
-  border-bottom: 1px solid #f0f0f0;
+  gap: 6px;
 }
 
-.detail-item {
+.detail-row {
   display: flex;
   justify-content: space-between;
   align-items: center;
   font-size: 13px;
 }
 
-.detail-item .label {
-  color: #666;
+.detail-label {
+  color: #888;
+  font-weight: 500;
+}
+
+.detail-value {
+  color: #333;
   font-weight: 600;
 }
 
 .status-badge {
-  display: inline-block;
-  padding: 4px 12px;
-  border-radius: 20px;
+  padding: 3px 10px;
+  border-radius: 12px;
   font-size: 11px;
-  font-weight: 600;
-  text-transform: uppercase;
-}
-
-.status-badge.pending {
-  background-color: #fff3cd;
-  color: #856404;
-}
-
-.status-badge.in_progress {
-  background-color: #cfe2ff;
-  color: #084298;
-}
-
-.status-badge.paid {
-  background-color: #d1e7dd;
-  color: #0f5132;
-}
-
-.card-description {
-  font-size: 13px;
-  color: #666;
-  margin-top: 10px;
-  padding: 10px;
-  background-color: #f9f9f9;
-  border-radius: 4px;
-  border-left: 3px solid #1a7f3a;
-}
-
-.debts-table thead {
-  background-color: #f0f8f0;
-  border-bottom: 2px solid #d0e0d0;
-}
-
-.debts-table th {
-  padding: 15px;
-  text-align: left;
-  font-weight: 600;
-  color: #1a7f3a;
-  font-size: 13px;
-  text-transform: uppercase;
+  font-weight: 700;
   letter-spacing: 0.5px;
 }
 
-.debts-table td {
-  padding: 12px 15px;
-  border-bottom: 1px solid #f0f0f0;
-  font-size: 14px;
-  color: #333;
-}
+.status-pending     { background: #fff8e1; color: #f9a825; }
+.status-in_progress { background: #e3f2fd; color: #1565c0; }
+.status-paid        { background: #e8f5e9; color: #2e7d32; }
 
-.debts-table tbody tr:hover {
-  background-color: #f9fff9;
-}
-
-.progress-bar {
-  width: 100px;
-  height: 6px;
-  background-color: #e0e0e0;
-  border-radius: 3px;
-  overflow: hidden;
-  margin-bottom: 5px;
-}
-
-.progress-fill {
-  height: 100%;
-  background-color: #1a7f3a;
-  transition: width 0.3s ease;
-}
-
-.progress-text {
-  font-size: 12px;
-  color: #666;
-  font-weight: 500;
-}
-
-.status-badge {
-  display: inline-block;
-  padding: 4px 12px;
+.category-tag {
+  background: #e8f5e9;
+  color: #1a7f3a;
+  padding: 3px 10px;
   border-radius: 12px;
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 600;
-  text-transform: uppercase;
 }
 
-.status-badge.pending {
-  background-color: #fff3cd;
-  color: #856404;
-}
-
-.status-badge.in_progress {
-  background-color: #cfe2ff;
-  color: #084298;
-}
-
-.status-badge.paid {
-  background-color: #d1e7dd;
-  color: #0f5132;
-}
-
-.edit-btn,
-.delete-btn {
-  padding: 6px 10px;
-  margin: 0 2px;
+.card-description {
   font-size: 12px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  background-color: white;
+  color: #888;
+  margin-top: 10px;
+  font-style: italic;
 }
 
-.edit-btn {
-  color: #0066cc;
-  border-color: #0066cc;
-}
-
-.edit-btn:hover {
-  background-color: #0066cc;
-  color: white;
-}
-
-.delete-btn {
-  color: #ffffff;
-  background-color: #dc3545;
-  border-color: #dc3545;
-  border: none;
-  padding: 8px 16px;
-  font-size: 13px;
+/* ── Notification ── */
+.notification {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  background: #e8f5e9;
+  color: #1a7f3a;
+  border: 1px solid #a5d6a7;
+  border-radius: 10px;
+  padding: 14px 20px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 14px;
   font-weight: 500;
-  border-radius: 6px;
+  box-shadow: 0 4px 16px rgba(26, 127, 58, 0.15);
+  z-index: 2000;
+}
+
+.notif-close {
+  background: none;
+  border: none;
+  font-size: 20px;
   cursor: pointer;
-  transition: all 0.2s ease;
-  box-shadow: 0 2px 6px rgba(220, 53, 69, 0.2);
+  color: #1a7f3a;
+  line-height: 1;
 }
 
-.delete-btn:hover {
-  background-color: #c82333;
-  border-color: #c82333;
-  box-shadow: 0 4px 12px rgba(220, 53, 69, 0.3);
-  transform: translateY(-1px);
-}
+.notif-fade-enter-active,
+.notif-fade-leave-active { transition: all 0.3s ease; }
+.notif-fade-enter-from,
+.notif-fade-leave-to { opacity: 0; transform: translateY(-10px); }
 
-/* Modal Styles */
+/* ── Modal ── */
+.modal-fade-enter-active,
+.modal-fade-leave-active { transition: opacity 0.3s ease; }
+.modal-fade-enter-from,
+.modal-fade-leave-to { opacity: 0; }
+
 .modal {
   position: fixed;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  background-color: rgba(0, 0, 0, 0.5);
+  background-color: rgba(0, 0, 0, 0.55);
   display: flex;
-  align-items: center;
   justify-content: center;
+  align-items: center;
   z-index: 1000;
+  backdrop-filter: blur(2px);
 }
 
 .modal-content {
-  background-color: white;
-  border-radius: 8px;
-  padding: 30px;
-  max-width: 600px;
+  background-color: #ffffff;
+  border-radius: 12px;
   width: 90%;
+  max-width: 560px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(0, 0, 0, 0.05);
+  overflow: hidden;
+  animation: slideUp 0.3s ease;
   max-height: 90vh;
   overflow-y: auto;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
 
 .modal-header {
   display: flex;
   justify-content: space-between;
-  align-items: center;
-  margin-bottom: 10px;
+  align-items: flex-start;
+  padding: 24px 24px 12px;
+  border-bottom: 1px solid #f0f0f0;
+  position: sticky;
+  top: 0;
+  background: #fff;
+  z-index: 1;
 }
 
 .modal-header h2 {
+  font-size: 20px;
+  font-weight: 600;
   color: #1a7f3a;
-  font-size: 22px;
+  margin: 0 0 4px;
+}
+
+.modal-subtitle {
+  font-size: 13px;
+  color: #888;
+  margin: 0;
 }
 
 .modal-close {
   background: none;
   border: none;
   font-size: 28px;
+  color: #999;
   cursor: pointer;
-  color: #666;
-  transition: color 0.3s ease;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
 }
 
-.modal-close:hover {
-  color: #000;
-}
-
-.modal-subtitle {
-  color: #666;
-  font-size: 14px;
-  margin-bottom: 20px;
-}
+.modal-close:hover { background-color: #f5f5f5; color: #333; }
 
 .debt-form {
-  display: flex;
-  flex-direction: column;
-  gap: 15px;
+  padding: 24px;
 }
 
-.form-group {
+/* ── Compound interest preview ── */
+.interest-preview {
+  background: linear-gradient(135deg, #f0faf4 0%, #e8f5e9 100%);
+  border: 1px solid #c8e6c9;
+  border-radius: 10px;
+  padding: 14px 16px;
+  margin-bottom: 16px;
   display: flex;
   flex-direction: column;
-  gap: 5px;
+  gap: 6px;
+}
+
+.preview-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+  color: #555;
+}
+
+.interest-value {
+  color: #e67e22;
+  font-weight: 600;
+}
+
+.preview-total {
+  border-top: 1px solid #c8e6c9;
+  padding-top: 8px;
+  margin-top: 4px;
+  font-weight: 700;
+  color: #1a7f3a;
+  font-size: 14px;
 }
 
 .form-row {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 15px;
+  gap: 12px;
+  margin-bottom: 16px;
 }
+
+.form-group {
+  margin-bottom: 16px;
+}
+
+.form-row .form-group { margin-bottom: 0; }
 
 .form-group label {
+  display: block;
+  margin-bottom: 6px;
+  font-weight: 500;
   color: #333;
-  font-weight: 600;
-  font-size: 14px;
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
-.form-input,
-input[type="text"],
-input[type="number"],
-input[type="date"],
-select,
-textarea {
+.form-input {
+  width: 100%;
   padding: 10px 12px;
-  border: 1px solid #ddd;
-  border-radius: 6px;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
   font-size: 14px;
   font-family: inherit;
-  transition: all 0.3s ease;
+  transition: all 0.2s ease;
+  background-color: #fafafa;
 }
 
-.form-input:focus,
-input:focus,
-select:focus,
-textarea:focus {
+.form-input:focus {
   outline: none;
   border-color: #1a7f3a;
+  background-color: #ffffff;
   box-shadow: 0 0 0 3px rgba(26, 127, 58, 0.1);
+}
+
+.form-input:hover { border-color: #d0d0d0; }
+
+textarea.form-input {
+  resize: vertical;
+  min-height: 80px;
 }
 
 .amount-input-wrapper {
@@ -1000,83 +1066,176 @@ textarea:focus {
 .currency {
   position: absolute;
   left: 12px;
-  color: #666;
-  font-weight: 600;
-}
-
-.amount-input-wrapper input {
-  padding-left: 25px;
-  width: 100%;
-}
-
-.amount-display {
-  padding: 10px 12px;
-  background-color: #f0f8f0;
-  border: 1px solid #1a7f3a;
-  border-radius: 6px;
+  color: #999;
+  font-weight: 500;
   font-size: 14px;
-  font-weight: 600;
-  color: #1a7f3a;
-  display: flex;
-  align-items: center;
+  pointer-events: none;
+}
+
+.amount-input-wrapper .form-input {
+  padding-left: 24px;
 }
 
 .form-actions {
   display: flex;
   gap: 10px;
   justify-content: flex-end;
-  margin-top: 20px;
+  margin-top: 24px;
+  padding-top: 16px;
+  border-top: 1px solid #f0f0f0;
 }
 
 .btn-cancel,
 .btn-submit {
   padding: 10px 20px;
-  border: none;
-  border-radius: 6px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s ease;
   font-size: 14px;
+  font-weight: 500;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
 }
 
-.btn-cancel {
-  background-color: #f0f0f0;
+.btn-cancel { background-color: #f5f5f5; color: #333; }
+.btn-cancel:hover { background-color: #e8e8e8; }
+
+.btn-submit { background-color: #1a7f3a; color: #ffffff; }
+.btn-submit:hover {
+  background-color: #166f33;
+  box-shadow: 0 4px 12px rgba(26, 127, 58, 0.25);
+}
+.btn-submit:active { transform: scale(0.98); }
+
+.btn-delete {
+  background-color: #e74c3c;
+  color: #ffffff;
+  padding: 10px 20px;
+  font-size: 14px;
+  font-weight: 500;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-delete:hover {
+  background-color: #c0392b;
+  box-shadow: 0 4px 12px rgba(231, 76, 60, 0.25);
+}
+
+.btn-delete:active { transform: scale(0.98); }
+
+.modal-subtitle {
+  text-align: center;
+  padding: 0 24px;
+  font-size: 16px;
   color: #333;
 }
 
-.btn-cancel:hover {
-  background-color: #e0e0e0;
+/* Notification error variant */
+.notification.error {
+  background: #ffebee;
+  color: #c62828;
+  border: 1px solid #ef9a9a;
+  box-shadow: 0 4px 16px rgba(198, 40, 40, 0.15);
 }
 
-.btn-submit {
+/* Delete modal */
+.delete-modal {
+  max-width: 520px;
+  padding: 0;
+}
+
+.delete-modal .modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 24px 24px 16px;
+  border-bottom: 1px solid #f0f0f0;
+  position: sticky;
+  top: 0;
+  background: #fff;
+  z-index: 1;
+}
+
+.delete-modal .modal-header h2 {
+  font-size: 20px;
+  font-weight: 600;
+  color: #e74c3c;
+  margin: 0;
+}
+
+.delete-modal .modal-subtitle {
+  text-align: center;
+  padding: 16px 24px 8px;
+  font-size: 16px;
+  color: #333;
+}
+
+.delete-modal .form-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  margin-top: 16px;
+  padding: 16px 24px 24px;
+  border-top: 1px solid #f0f0f0;
+}
+
+/* Confirm modal */
+.confirm-modal {
+  max-width: 520px;
+  padding: 0;
+}
+
+.confirm-modal .modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 24px 24px 16px;
+  border-bottom: 1px solid #f0f0f0;
+  position: sticky;
+  top: 0;
+  background: #fff;
+  z-index: 1;
+}
+
+.confirm-modal .modal-header h2 {
+  font-size: 20px;
+  font-weight: 600;
+  color: #1a7f3a;
+  margin: 0;
+}
+
+.confirm-modal .modal-subtitle {
+  text-align: center;
+  padding: 16px 24px 8px;
+  font-size: 16px;
+  color: #333;
+}
+
+.confirm-modal .form-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  margin-top: 16px;
+  padding: 16px 24px 24px;
+  border-top: 1px solid #f0f0f0;
+}
+
+.confirm-modal .btn-delete {
+  padding: 10px 20px;
+  font-size: 14px;
+  font-weight: 500;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
   background-color: #1a7f3a;
-  color: white;
+  color: #ffffff;
 }
 
-.btn-submit:hover {
-  background-color: #165f30;
-}
-
-/* Animation */
-.modal-fade-enter-active,
-.modal-fade-leave-active {
-  transition: opacity 0.3s ease;
-}
-
-.modal-fade-enter-from,
-.modal-fade-leave-to {
-  opacity: 0;
-}
-
-/* Responsive */
-@media (max-width: 768px) {
-  .debts-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .modal-content {
-    width: 95%;
-    padding: 20px;
-  }
+.confirm-modal .btn-delete:hover {
+  background-color: #166f33;
+  box-shadow: 0 4px 12px rgba(26, 127, 58, 0.25);
 }
 </style>

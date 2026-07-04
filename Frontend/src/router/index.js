@@ -17,7 +17,7 @@ const routes = [
   { path: '/register', name: 'Register', component: Register },
   { path: '/auth-success', name: 'AuthSuccess', component: AuthSuccess },
   {
-    path: '/Dashboard',
+    path: '/dashboard',
     component: MainPage,
     children: [
       {
@@ -36,6 +36,11 @@ const routes = [
         component: () => import('../components/Goals.vue'),
       },
       {
+        path: '/debts',
+        name: 'Debts',
+        component: () => import('../components/Debts.vue'),
+      },
+      {
         path: '/categories',
         name: 'Categories',
         component: () => import('../components/Categories.vue'),
@@ -46,9 +51,15 @@ const routes = [
         component: () => import('../components/Transactions.vue'),
       },
       {
-        path: '/debts',
-        name: 'Debts',
-        component: () => import('../components/Debts.vue')
+        path: '/reports',
+        name: 'Reports',
+        component: () => import('../components/Reports.vue'),
+
+      },
+      {
+        path: '/settings',
+        name: 'Settings',
+        component: () => import('../components/Settings.vue'),
       }
     ],
   },
@@ -59,4 +70,4 @@ const router = createRouter({
   routes,
 })
 
-export default router
+export default router     

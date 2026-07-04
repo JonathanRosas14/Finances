@@ -14,7 +14,7 @@
 
     <div class="content-wrapper">
       <div class="left-side">
-        <img src="../assets/Imagen6Register.png" alt="Imagen Register" />
+        <img src="../assets/Imagen6Register.png" alt="Register Image" />
         <div class="text-overlay">
           <h2>Take control of your financial future</h2>
           <p>
@@ -31,12 +31,12 @@
             <router-link to="/login" class="login">Login</router-link>
           </p>
           <form @submit.prevent="handleRegister">
-            <!--Mensaje de error-->
+            <!--Error message-->
             <div v-if="errorMessage" class="error-message">
               {{ errorMessage }}
             </div>
 
-            <!--Mensaje de exito-->
+            <!--Success message-->
             <div v-if="successMessage" class="success-message">
               {{ successMessage }}
             </div>
@@ -87,10 +87,10 @@
 
             <div class="terminos_condiciones">
               <input type="checkbox" id="terms" v-model="acceptedTerms" required />
-              <label for="terms"> I accept the <a href="#">terms and conditions</a> </label>
+              <label for="terms">I accept the <a href="#">terms and conditions</a></label>
             </div>
             <button type="submit" class="register-btn" :disabled="loading">
-              {{ loading ? 'Registando...' : 'Register' }}
+              {{ loading ? 'Registering...' : 'Register' }}
             </button>
             <div class="oauth-divider">or</div>
 
@@ -109,7 +109,7 @@
 
 <script setup>
 import { ref, onMounted } from "vue";
-import axios from "axios";
+import api from "../lib/api";
 import { useRoute, useRouter } from "vue-router";
 
 const route = useRoute();
@@ -128,11 +128,11 @@ onMounted(() => {
   const token = route.query.token;
   if (token) {
     localStorage.setItem("token", token);
-    router.push("/Dashboard");
+    router.push("/dashboard");
   }
 
   window.google.accounts.id.initialize({
-    client_id: "360602519490-kof8v9cb8ujs0ii4fs68jo4flsbvig6m.apps.googleusercontent.com",
+    client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID || "360602519490-kof8v9cb8ujs0ii4fs68jo4flsbvig6m.apps.googleusercontent.com",
     callback: handleGoogleCallback,
   });
 
@@ -149,15 +149,15 @@ onMounted(() => {
 
 const handleGoogleCallback = async (response) => {
   try {
-    const result = await axios.post("http://localhost:8000/api/google/", {
+    const result = await api.post("/api/google/", {
       token: response.credential,
     });
     const { token, user } = result.data;
     localStorage.setItem("token", token);
     localStorage.setItem("user", JSON.stringify(user));
-    router.push("/Dashboard");
+    router.push("/dashboard");
   } catch (error) {
-    errorMessage.value = "Error al registrarse con Google";
+    errorMessage.value = "Error registering with Google";
   }
 };
 
@@ -182,7 +182,7 @@ const handleRegister = async () => {
   loading.value = true;
 
   try {
-    const response = await axios.post("http://localhost:8000/api/register/", {
+    const response = await api.post("/api/register/", {
       username: username.value,
       email: email.value,
       password: password.value,

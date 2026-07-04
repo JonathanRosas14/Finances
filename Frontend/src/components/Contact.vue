@@ -8,9 +8,9 @@
         <span>Finances Pro</span>
       </div>
       <div class="nav-link">
-        <router-link to="/features" class="nav-item">Features</router-link>
-        <router-link to="/about" class="nav-item">About Us</router-link>
-        <router-link to="/contact" class="nav-item">Contact</router-link>
+        <router-link to="/features" class="nav-item" :class="{ active: route.path === '/features' }">Features</router-link>
+        <router-link to="/about" class="nav-item" :class="{ active: route.path === '/about' }">About Us</router-link>
+        <router-link to="/contact" class="nav-item" :class="{ active: route.path === '/contact' }">Contact</router-link>
       </div>
 
       <div class="header-botoms">
@@ -173,11 +173,15 @@
   </div>
 </template>
 
-<script setup></script>
+<script setup>
+import { useRoute } from 'vue-router'
+
+const route = useRoute()
+</script>
 
 <style scoped>
 /* ============================================ */
-/* ESTILOS GLOBALES Y CONTENEDOR PRINCIPAL */
+/* GLOBAL STYLES AND MAIN CONTAINER */
 /* ============================================ */
 
 * {
@@ -186,7 +190,7 @@
   box-sizing: border-box;
 }
 
-/* Contenedor principal de toda la página */
+/* Main container for the whole page */
 .home-container {
   width: 100%;
   min-height: 100vh;
@@ -194,10 +198,10 @@
 }
 
 /* ============================================ */
-/* ENCABEZADO (HEADER) */
+/* HEADER */
 /* ============================================ */
 
-/* Barra superior con logo, navegación y botones */
+/* Top bar with logo, navigation and buttons */
 header {
   width: 100%;
   height: 60px;
@@ -209,7 +213,7 @@ header {
   border-bottom: 1px solid #2e5c31;
 }
 
-/* Logo y texto "Finances Pro" */
+/* Logo and "Finances Pro" text */
 .logo {
   display: flex;
   align-items: center;
@@ -218,52 +222,54 @@ header {
   color: #ffffff;
 }
 
-/* Espaciado del texto del logo */
+/* Logo text spacing */
 .logo span {
   margin-left: 10px;
 }
 
-/* Contenedor del ícono del logo */
+/* Logo icon container */
 .logo-icon {
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
-/* Imagen del ícono del logo */
+/* Logo icon image */
 .logo-icon img {
   width: 50px;
   height: 50px;
 }
 
-/* Contenedor de los links de navegación */
+/* Navigation links container */
 .nav-link {
   display: flex;
   gap: 20px;
 }
 
-/* Estilos individuales de cada link (Features, About Us, Prices) */
+/* Individual link styles (Features, About Us, Prices) */
 .nav-item {
   color: #ffffff;
   text-decoration: none;
   font-size: 18px;
-  transition: color 0.3s;
+  transition: color 0.3s, background-color 0.3s;
   padding: 10px 15px;
-}
-
-/* Efecto hover en los links de navegación */
-.nav-item:hover {
-  background-color: #2e5c31;
+  background: transparent;
   border-radius: 4px;
 }
 
-/* Contenedor de los botones (Login y Sign Up) */
+/* Hover and active effect on navigation links */
+.nav-item:hover,
+.nav-item.active {
+  background-color: #2e5c31;
+}
+
+/* Buttons container (Login and Sign Up) */
 .header-botoms {
   display: flex;
   gap: 10px;
 }
 
-/* Botón Login - Estilo base */
+/* Login button - Base style */
 .btn-login {
   padding: 10px 50px;
   border: none;
@@ -278,7 +284,7 @@ header {
   justify-content: center;
 }
 
-/* Botón Sign Up - Estilo base */
+/* Sign Up button - Base style */
 .btn-signup {
   padding: 10px 40px;
   border: none;
@@ -293,23 +299,23 @@ header {
   justify-content: center;
 }
 
-/* Color base del botón Login */
+/* Login button base color */
 .btn-login {
   background-color: #2e5c31;
 }
 
-/* Efecto hover del botón Login */
+/* Login button hover effect */
 .btn-login:hover {
   background-color: #3acf41;
   color: #000000;
 }
 
-/* Color base del botón Sign Up */
+/* Sign Up button base color */
 .btn-signup {
   background-color: #3acf41;
 }
 
-/* Efecto hover del botón Sign Up */
+/* Sign Up button hover effect */
 .btn-signup:hover {
   background-color: #2e5c31;
   color: #ffffff;
@@ -542,7 +548,7 @@ button[type="submit"]:hover::before {
 }
 
 /* ============================================ */
-/* PIE DE PÁGINA (FOOTER) */
+/* FOOTER */
 /* ============================================ */
 
 .footer {

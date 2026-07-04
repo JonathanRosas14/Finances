@@ -34,13 +34,13 @@ def register(request):
 
         if not username or not email or not password:
             return Response(
-                {'message': 'Todos los campos son obligatorios'},
+                {'message': 'All fields are required'},
                 status=status.HTTP_400_BAD_REQUEST
             )
 
         if User.objects.filter(email=email).exists():
             return Response(
-                {'message': 'El usuario ya existe'},
+                {'message': 'User already exists'},
                 status=status.HTTP_409_CONFLICT
             )
 
@@ -53,11 +53,11 @@ def register(request):
         user.save()
 
         return Response(
-            {'message': 'Usuario registrado exitosamente'},
+            {'message': 'User registered successfully'},
             status=status.HTTP_201_CREATED
         )
     except Exception as e:
-        print(f"Error en register: {e}")
+        print(f"Error in register: {e}")
         return Response(
             {'message': str(e)},
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
@@ -73,7 +73,7 @@ def login(request):
 
         if not email or not password:
             return Response(
-                {'message': 'Todos los campos son obligatorios'},
+                {'message': 'All fields are required'},
                 status=status.HTTP_400_BAD_REQUEST
             )
 
@@ -81,13 +81,13 @@ def login(request):
             user = User.objects.get(email=email)
         except User.DoesNotExist:
             return Response(
-                {'message': 'Credenciales inválidas'},
+                {'message': 'Invalid credentials'},
                 status=status.HTTP_401_UNAUTHORIZED
             )
 
         if not user.password and user.provider == 'google':
             return Response(
-                {'message': "Esta cuenta fue creada con Google. Usa 'Continuar con Google'."},
+                {'message': "This account was created with Google. Use 'Continue with Google'."},
                 status=status.HTTP_401_UNAUTHORIZED
             )
 
@@ -96,7 +96,7 @@ def login(request):
             user.password.encode('utf-8')
         ):
             return Response(
-                {'message': 'Credenciales inválidas'},
+                {'message': 'Invalid credentials'},
                 status=status.HTTP_401_UNAUTHORIZED
             )
 
@@ -110,7 +110,7 @@ def login(request):
             }
         })
     except Exception as e:
-        print(f"Error en login: {e}")
+        print(f"Error in login: {e}")
         return Response(
             {'message': str(e)},
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
@@ -153,13 +153,15 @@ def google_auth(request):
             'isNewUser': created
         })
     except Exception as e:
-        print(f"Error en google_auth: {e}")
+        print(f"Error in google_auth: {e}")
         return Response(
             {'message': str(e)},
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
 
-# Obtener categorías del usuario
+
+# ── CATEGORIES ───────────────────────────────────────────────────
+
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def get_categories(request):
@@ -168,14 +170,13 @@ def get_categories(request):
         serializer = CategorySerializer(categories, many=True)
         return Response(serializer.data)
     except Exception as e:
-        print(f"Error en get_categories: {e}")
+        print(f"Error in get_categories: {e}")
         return Response(
             {'message': str(e)},
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
 
 
-# Crear categoría
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def create_category(request):
@@ -193,19 +194,18 @@ def create_category(request):
         category = serializer.save(user=request.user)
         
         return Response({
-            'message': 'Categoría creada exitosamente',
+            'message': 'Category created successfully',
             'category': CategorySerializer(category).data
         }, status=status.HTTP_201_CREATED)
         
     except Exception as e:
-        print(f"Error en create_category: {e}")
+        print(f"Error in create_category: {e}")
         return Response(
             {'message': str(e)},
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
 
 
-# Actualizar categoría
 @api_view(['PUT'])
 @permission_classes([IsAuthenticated])
 def update_category(request, category_id):
@@ -214,7 +214,7 @@ def update_category(request, category_id):
             category = Category.objects.get(id=category_id, user=request.user)
         except Category.DoesNotExist:
             return Response(
-                {'message': 'Categoría no encontrada'},
+                {'message': 'Category not found'},
                 status=status.HTTP_404_NOT_FOUND
             )
         
@@ -230,17 +230,16 @@ def update_category(request, category_id):
         
         serializer.save()
         
-        return Response({'message': 'Categoría actualizada exitosamente'})
+        return Response({'message': 'Category updated successfully'})
         
     except Exception as e:
-        print(f"Error en update_category: {e}")
+        print(f"Error in update_category: {e}")
         return Response(
             {'message': str(e)},
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
 
 
-# Eliminar categoría
 @api_view(['DELETE'])
 @permission_classes([IsAuthenticated])
 def delete_category(request, category_id):
@@ -249,22 +248,24 @@ def delete_category(request, category_id):
             category = Category.objects.get(id=category_id, user=request.user)
         except Category.DoesNotExist:
             return Response(
-                {'message': 'Categoría no encontrada'},
+                {'message': 'Category not found'},
                 status=status.HTTP_404_NOT_FOUND
             )
         
         category.delete()
         
-        return Response({'message': 'Categoría eliminada exitosamente'})
+        return Response({'message': 'Category deleted successfully'})
         
     except Exception as e:
-        print(f"Error en delete_category: {e}")
+        print(f"Error in delete_category: {e}")
         return Response(
             {'message': str(e)},
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
 
-#obterner transacciones del usuario
+
+# ── TRANSACTIONS ─────────────────────────────────────────────────
+
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def get_transactions(request):
@@ -273,12 +274,13 @@ def get_transactions(request):
         serializer = TransactionSerializer(transactions, many=True, context={'request': request})
         return Response(serializer.data)
     except Exception as e:
-        print(f"Error en get_transactions: {e}")
+        print(f"Error in get_transactions: {e}")
         return Response(
             {'message': str(e)},
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
-#crear transacción
+
+
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def create_transaction(request):
@@ -296,18 +298,18 @@ def create_transaction(request):
         transaction = serializer.save(user=request.user)
         
         return Response({
-            'message': 'Transacción creada exitosamente',
+            'message': 'Transaction created successfully',
             'transaction': TransactionSerializer(transaction, context={'request': request}).data
         }, status=status.HTTP_201_CREATED)
         
     except Exception as e:
-        print(f"Error en create_transaction: {e}")
+        print(f"Error in create_transaction: {e}")
         return Response(
             {'message': str(e)},
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
 
-#actualizar transacción
+
 @api_view(['PUT'])
 @permission_classes([IsAuthenticated])
 def update_transaction(request, transaction_id):
@@ -316,7 +318,7 @@ def update_transaction(request, transaction_id):
             transaction = Transaction.objects.get(id=transaction_id, user=request.user)
         except Transaction.DoesNotExist:
             return Response(
-                {'message': 'Transacción no encontrada'},
+                {'message': 'Transaction not found'},
                 status=status.HTTP_404_NOT_FOUND
             )
         
@@ -333,18 +335,18 @@ def update_transaction(request, transaction_id):
         serializer.save()
         
         return Response({
-            'message': 'Transacción actualizada exitosamente',
+            'message': 'Transaction updated successfully',
             'transaction': TransactionSerializer(serializer.instance, context={'request': request}).data
         })
         
     except Exception as e:
-        print(f"Error en update_transaction: {e}")
+        print(f"Error in update_transaction: {e}")
         return Response(
             {'message': str(e)},
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
 
-#eliminar transacción
+
 @api_view(['DELETE'])
 @permission_classes([IsAuthenticated])
 def delete_transaction(request, transaction_id):
@@ -353,22 +355,24 @@ def delete_transaction(request, transaction_id):
             transaction = Transaction.objects.get(id=transaction_id, user=request.user)
         except Transaction.DoesNotExist:
             return Response(
-                {'message': 'Transacción no encontrada'},
+                {'message': 'Transaction not found'},
                 status=status.HTTP_404_NOT_FOUND
             )
         
         transaction.delete()
         
-        return Response({'message': 'Transacción eliminada exitosamente'})
+        return Response({'message': 'Transaction deleted successfully'})
         
     except Exception as e:
-        print(f"Error en delete_transaction: {e}")
+        print(f"Error in delete_transaction: {e}")
         return Response(
             {'message': str(e)},
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
 
-# Obtener presupuestos del usuario
+
+# ── BUDGETS ──────────────────────────────────────────────────────
+
 @api_view(['GET'])
 @permission_classes([AllowAny])
 def get_budgets(request):
@@ -376,7 +380,7 @@ def get_budgets(request):
         auth_header = request.headers.get('Authorization', '')
         if not auth_header.startswith('Bearer '):
             return Response(
-                {'message': 'Token no proporcionado'},
+                {'message': 'Token not provided'},
                 status=status.HTTP_401_UNAUTHORIZED
             )
         
@@ -390,14 +394,13 @@ def get_budgets(request):
         
         return Response(serializer.data)
     except Exception as e:
-        print(f"❌ Error en get_budgets: {e}")
+        print(f"❌ Error in get_budgets: {e}")
         return Response(
             {'message': str(e)},
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
 
 
-# Crear presupuesto
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def create_budget(request):
@@ -405,7 +408,7 @@ def create_budget(request):
         auth_header = request.headers.get('Authorization', '')
         if not auth_header.startswith('Bearer '):
             return Response(
-                {'message': 'Token no proporcionado'},
+                {'message': 'Token not provided'},
                 status=status.HTTP_401_UNAUTHORIZED
             )
         
@@ -427,19 +430,18 @@ def create_budget(request):
         budget = serializer.save(user=user)
         
         return Response({
-            'message': 'Presupuesto creado exitosamente',
+            'message': 'Budget created successfully',
             'budget': BudgetSerializer(budget).data
         }, status=status.HTTP_201_CREATED)
         
     except Exception as e:
-        print(f"❌ Error en create_budget: {e}")
+        print(f"❌ Error in create_budget: {e}")
         return Response(
             {'message': str(e)},
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
 
 
-# Actualizar presupuesto
 @api_view(['PUT'])
 @permission_classes([AllowAny])
 def update_budget(request, budget_id):
@@ -447,7 +449,7 @@ def update_budget(request, budget_id):
         auth_header = request.headers.get('Authorization', '')
         if not auth_header.startswith('Bearer '):
             return Response(
-                {'message': 'Token no proporcionado'},
+                {'message': 'Token not provided'},
                 status=status.HTTP_401_UNAUTHORIZED
             )
         
@@ -460,7 +462,7 @@ def update_budget(request, budget_id):
             budget = Budget.objects.get(id=budget_id, user=user)
         except Budget.DoesNotExist:
             return Response(
-                {'message': 'Presupuesto no encontrado'},
+                {'message': 'Budget not found'},
                 status=status.HTTP_404_NOT_FOUND
             )
         
@@ -476,17 +478,16 @@ def update_budget(request, budget_id):
         
         serializer.save()
         
-        return Response({'message': 'Presupuesto actualizado exitosamente'})
+        return Response({'message': 'Budget updated successfully'})
         
     except Exception as e:
-        print(f"❌ Error en update_budget: {e}")
+        print(f"❌ Error in update_budget: {e}")
         return Response(
             {'message': str(e)},
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
 
 
-# Eliminar presupuesto
 @api_view(['DELETE'])
 @permission_classes([AllowAny])
 def delete_budget(request, budget_id):
@@ -494,7 +495,7 @@ def delete_budget(request, budget_id):
         auth_header = request.headers.get('Authorization', '')
         if not auth_header.startswith('Bearer '):
             return Response(
-                {'message': 'Token no proporcionado'},
+                {'message': 'Token not provided'},
                 status=status.HTTP_401_UNAUTHORIZED
             )
         
@@ -507,192 +508,179 @@ def delete_budget(request, budget_id):
             budget = Budget.objects.get(id=budget_id, user=user)
         except Budget.DoesNotExist:
             return Response(
-                {'message': 'Presupuesto no encontrado'},
+                {'message': 'Budget not found'},
                 status=status.HTTP_404_NOT_FOUND
             )
         
         budget.delete()
         
-        return Response({'message': 'Presupuesto eliminado exitosamente'})
+        return Response({'message': 'Budget deleted successfully'})
         
     except Exception as e:
-        print(f"❌ Error en delete_budget: {e}")
+        print(f"❌ Error in delete_budget: {e}")
         return Response(
             {'message': str(e)},
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
-# Gersson le toca esto
-# Obtener metas del usuario
+
+
+# ── GOALS ────────────────────────────────────────────────────────
+
 @api_view(['GET'])
 @permission_classes([AllowAny])
 def get_goals(request):
     try:
         auth_header = request.headers.get('Authorization', '')
         if not auth_header.startswith('Bearer '):
-            return Response(
-                {'message': 'Token no proporcionado'},
-                status=status.HTTP_401_UNAUTHORIZED
-            )
-        
+            return Response({'message': 'Token not provided'}, status=status.HTTP_401_UNAUTHORIZED)
+
         token = auth_header.split(' ')[1]
         access_token = AccessToken(token)
         user_id = access_token['id']
-        
         user = User.objects.get(id=user_id)
-        goals = Goal.objects.filter(user=user).select_related('category').order_by('-target_date')
+
+        goals = Goal.objects.filter(user=user).select_related('category').order_by('-created_at')
         serializer = GoalSerializer(goals, many=True)
-        
         return Response(serializer.data)
     except Exception as e:
-        print(f"❌ Error en get_goals: {e}")
-        return Response(
-            {'message': str(e)},
-            status=status.HTTP_500_INTERNAL_SERVER_ERROR
-        )
-    
-# Crear meta
+        print(f"❌ Error in get_goals: {e}")
+        return Response({'message': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def create_goal(request):
     try:
         auth_header = request.headers.get('Authorization', '')
         if not auth_header.startswith('Bearer '):
-            return Response(
-                {'message': 'Token no proporcionado'},
-                status=status.HTTP_401_UNAUTHORIZED
-            )
-        
+            return Response({'message': 'Token not provided'}, status=status.HTTP_401_UNAUTHORIZED)
+
         token = auth_header.split(' ')[1]
         access_token = AccessToken(token)
         user_id = access_token['id']
         user = User.objects.get(id=user_id)
-        
-        serializer = GoalSerializer(data=request.data)
-        
-        if not serializer.is_valid():
-            errors = serializer.errors
-            first_error = next(iter(errors.values()))[0]
-            return Response(
-                {'message': str(first_error)},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-        
-        goal = serializer.save(user=user)
-        
-        return Response({
-            'message': 'Meta creada exitosamente',
-            'goal': GoalSerializer(goal).data
-        }, status=status.HTTP_201_CREATED)
-        
-    except Exception as e:
-        print(f"❌ Error en create_goal: {e}")
-        return Response(
-            {'message': str(e)},
-            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+
+        data = request.data
+        category_id = data.get('category_id')
+        category = None
+        if category_id:
+            try:
+                category = Category.objects.get(id=category_id, user=user)
+            except Category.DoesNotExist:
+                return Response({'message': 'Category not found'}, status=status.HTTP_400_BAD_REQUEST)
+
+        goal = Goal.objects.create(
+            user=user,
+            category=category,
+            name=data['name'],
+            description=data.get('description', ''),
+            target_amount=data['target_amount'],
+            target_date=data['target_date'],
+            priority=data.get('priority', 'medium'),
+            status=data.get('status', 'in_progress'),
         )
 
-# Actualizar meta
+        return Response({
+            'message': 'Goal created successfully',
+            'goal': GoalSerializer(goal).data
+        }, status=status.HTTP_201_CREATED)
+    except Exception as e:
+        print(f"❌ Error in create_goal: {e}")
+        return Response({'message': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
 @api_view(['PUT'])
 @permission_classes([AllowAny])
 def update_goal(request, goal_id):
     try:
         auth_header = request.headers.get('Authorization', '')
         if not auth_header.startswith('Bearer '):
-            return Response(
-                {'message': 'Token no proporcionado'},
-                status=status.HTTP_401_UNAUTHORIZED
-            )
-        
+            return Response({'message': 'Token not provided'}, status=status.HTTP_401_UNAUTHORIZED)
+
         token = auth_header.split(' ')[1]
         access_token = AccessToken(token)
         user_id = access_token['id']
         user = User.objects.get(id=user_id)
-        
+
         try:
             goal = Goal.objects.get(id=goal_id, user=user)
         except Goal.DoesNotExist:
-            return Response(
-                {'message': 'Meta no encontrada'},
-                status=status.HTTP_404_NOT_FOUND
-            )
-        
-        serializer = GoalSerializer(goal, data=request.data, partial=True)
-        
-        if not serializer.is_valid():
-            errors = serializer.errors
-            first_error = next(iter(errors.values()))[0]
-            return Response(
-                {'message': str(first_error)},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-        
-        serializer.save()
-        
-        return Response({'message': 'Meta actualizada exitosamente'})
-        
+            return Response({'message': 'Goal not found'}, status=status.HTTP_404_NOT_FOUND)
+
+        data = request.data
+        category_id = data.get('category_id')
+        if category_id:
+            try:
+                goal.category = Category.objects.get(id=category_id, user=user)
+            except Category.DoesNotExist:
+                return Response({'message': 'Category not found'}, status=status.HTTP_400_BAD_REQUEST)
+        else:
+            goal.category = None
+
+        goal.name          = data.get('name', goal.name)
+        goal.description   = data.get('description', goal.description)
+        goal.target_amount = data.get('target_amount', goal.target_amount)
+        goal.target_date   = data.get('target_date', goal.target_date)
+        goal.priority      = data.get('priority', goal.priority)
+        goal.status        = data.get('status', goal.status)
+        goal.save()
+
+        return Response({
+            'message': 'Goal updated successfully',
+            'goal': GoalSerializer(goal).data
+        })
     except Exception as e:
-        print(f"❌ Error en update_goal: {e}")
-        return Response(
-            {'message': str(e)},
-            status=status.HTTP_500_INTERNAL_SERVER_ERROR
-        )
-    
-# Eliminar meta
+        print(f"❌ Error in update_goal: {e}")
+        return Response({'message': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
 @api_view(['DELETE'])
 @permission_classes([AllowAny])
 def delete_goal(request, goal_id):
     try:
         auth_header = request.headers.get('Authorization', '')
         if not auth_header.startswith('Bearer '):
-            return Response(
-                {'message': 'Token no proporcionado'},
-                status=status.HTTP_401_UNAUTHORIZED
-            )
-        
+            return Response({'message': 'Token not provided'}, status=status.HTTP_401_UNAUTHORIZED)
+
         token = auth_header.split(' ')[1]
         access_token = AccessToken(token)
         user_id = access_token['id']
         user = User.objects.get(id=user_id)
-        
+
         try:
             goal = Goal.objects.get(id=goal_id, user=user)
         except Goal.DoesNotExist:
-            return Response(
-                {'message': 'Meta no encontrada'},
-                status=status.HTTP_404_NOT_FOUND
-            )
-        
-        goal.delete()
-        
-        return Response({'message': 'Meta eliminada exitosamente'})
-        
-    except Exception as e:
-        print(f"❌ Error en delete_goal: {e}")
-        return Response(
-            {'message': str(e)},
-            status=status.HTTP_500_INTERNAL_SERVER_ERROR
-        )
+            return Response({'message': 'Goal not found'}, status=status.HTTP_404_NOT_FOUND)
 
-# DEBTS
+        goal.delete()
+        return Response({'message': 'Goal deleted successfully'})
+    except Exception as e:
+        print(f"❌ Error in delete_goal: {e}")
+        return Response({'message': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+# ── DEBTS ────────────────────────────────────────────────────────
 
 @api_view(['GET'])
 @permission_classes([AllowAny])
 def get_debts(request):
     try:
         auth_header = request.headers.get('Authorization', '')
-        if not auth_header:
-            return Response({'error': 'No se proporcionó token'}, status=401)
-        
+        if not auth_header.startswith('Bearer '):
+            return Response({'message': 'Token not provided'}, status=status.HTTP_401_UNAUTHORIZED)
+
         token = auth_header.split(' ')[1]
         access_token = AccessToken(token)
         user_id = access_token['id']
         user = User.objects.get(id=user_id)
-        
-        debts = Debt.objects.filter(user=user)
+
+        debts = Debt.objects.filter(user=user).select_related('category').order_by('-created_at')
         serializer = DebtSerializer(debts, many=True)
-        return Response(serializer.data, status=200)
+        return Response(serializer.data)
     except Exception as e:
-        return Response({'error': str(e)}, status=500)
+        print(f"❌ Error in get_debts: {e}")
+        return Response({'message': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
@@ -700,39 +688,57 @@ def create_debt(request):
     try:
         auth_header = request.headers.get('Authorization', '')
         if not auth_header.startswith('Bearer '):
-            return Response(
-                {'message': 'Token no proporcionado'},
-                status=status.HTTP_401_UNAUTHORIZED
-            )
-        
+            return Response({'message': 'Token not provided'}, status=status.HTTP_401_UNAUTHORIZED)
+
         token = auth_header.split(' ')[1]
         access_token = AccessToken(token)
         user_id = access_token['id']
         user = User.objects.get(id=user_id)
-        
-        serializer = DebtSerializer(data=request.data)
-        
-        if not serializer.is_valid():
-            errors = serializer.errors
-            first_error = next(iter(errors.values()))[0]
-            return Response(
-                {'message': str(first_error)},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-        
-        debt = serializer.save(user=user)
-        
+
+        data = request.data
+        category_id = data.get('category_id')
+        category = None
+        if category_id:
+            try:
+                category = Category.objects.get(id=category_id, user=user)
+            except Category.DoesNotExist:
+                return Response({'message': 'Category not found'}, status=status.HTTP_400_BAD_REQUEST)
+
+        amount        = float(data['amount'])
+        interest_rate = float(data.get('interest_rate', 0))
+        months        = int(data.get('months', 0))
+
+        # Compound interest calculation: total = amount * (1 + rate/100) ^ months
+        if interest_rate > 0 and months > 0:
+            total_with_interest = amount * ((1 + interest_rate / 100) ** months)
+        else:
+            total_with_interest = amount
+
+        # If the frontend sends the total already calculated, use it
+        total_with_interest = float(data.get('total_with_interest', total_with_interest))
+
+        debt = Debt.objects.create(
+            user=user,
+            category=category,
+            name=data['name'],
+            creditor_name=data.get('creditor_name', ''),
+            amount=amount,
+            interest_rate=interest_rate,
+            months=months,
+            total_with_interest=total_with_interest,
+            due_date=data['due_date'],
+            description=data.get('description', ''),
+            status=data.get('status', 'pending'),
+        )
+
         return Response({
-            'message': 'Deuda creada exitosamente',
+            'message': 'Debt created successfully',
             'debt': DebtSerializer(debt).data
         }, status=status.HTTP_201_CREATED)
-        
     except Exception as e:
-        print(f"❌ Error en create_debt: {e}")
-        return Response(
-            {'message': str(e)},
-            status=status.HTTP_500_INTERNAL_SERVER_ERROR
-        )
+        print(f"❌ Error in create_debt: {e}")
+        return Response({'message': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
 
 @api_view(['PUT'])
 @permission_classes([AllowAny])
@@ -740,47 +746,58 @@ def update_debt(request, debt_id):
     try:
         auth_header = request.headers.get('Authorization', '')
         if not auth_header.startswith('Bearer '):
-            return Response(
-                {'message': 'Token no proporcionado'},
-                status=status.HTTP_401_UNAUTHORIZED
-            )
-        
+            return Response({'message': 'Token not provided'}, status=status.HTTP_401_UNAUTHORIZED)
+
         token = auth_header.split(' ')[1]
         access_token = AccessToken(token)
         user_id = access_token['id']
         user = User.objects.get(id=user_id)
-        
+
         try:
             debt = Debt.objects.get(id=debt_id, user=user)
         except Debt.DoesNotExist:
-            return Response(
-                {'message': 'Deuda no encontrada'},
-                status=status.HTTP_404_NOT_FOUND
-            )
-        
-        serializer = DebtSerializer(debt, data=request.data, partial=True)
-        
-        if not serializer.is_valid():
-            errors = serializer.errors
-            first_error = next(iter(errors.values()))[0]
-            return Response(
-                {'message': str(first_error)},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-        
-        serializer.save()
-        
+            return Response({'message': 'Debt not found'}, status=status.HTTP_404_NOT_FOUND)
+
+        data = request.data
+        category_id = data.get('category_id')
+        if category_id:
+            try:
+                debt.category = Category.objects.get(id=category_id, user=user)
+            except Category.DoesNotExist:
+                return Response({'message': 'Category not found'}, status=status.HTTP_400_BAD_REQUEST)
+        else:
+            debt.category = None
+
+        amount        = float(data.get('amount', debt.amount))
+        interest_rate = float(data.get('interest_rate', debt.interest_rate))
+        months        = int(data.get('months', debt.months))
+
+        if interest_rate > 0 and months > 0:
+            total_with_interest = amount * ((1 + interest_rate / 100) ** months)
+        else:
+            total_with_interest = amount
+
+        total_with_interest = float(data.get('total_with_interest', total_with_interest))
+
+        debt.name                = data.get('name', debt.name)
+        debt.creditor_name       = data.get('creditor_name', debt.creditor_name)
+        debt.amount              = amount
+        debt.interest_rate       = interest_rate
+        debt.months              = months
+        debt.total_with_interest = total_with_interest
+        debt.due_date            = data.get('due_date', debt.due_date)
+        debt.description         = data.get('description', debt.description)
+        debt.status              = data.get('status', debt.status)
+        debt.save()
+
         return Response({
-            'message': 'Deuda actualizada exitosamente',
+            'message': 'Debt updated successfully',
             'debt': DebtSerializer(debt).data
-        }, status=status.HTTP_200_OK)
-        
+        })
     except Exception as e:
-        print(f"❌ Error en update_debt: {e}")
-        return Response(
-            {'message': str(e)},
-            status=status.HTTP_500_INTERNAL_SERVER_ERROR
-        )
+        print(f"❌ Error in update_debt: {e}")
+        return Response({'message': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
 
 @api_view(['DELETE'])
 @permission_classes([AllowAny])
@@ -788,34 +805,20 @@ def delete_debt(request, debt_id):
     try:
         auth_header = request.headers.get('Authorization', '')
         if not auth_header.startswith('Bearer '):
-            return Response(
-                {'message': 'Token no proporcionado'},
-                status=status.HTTP_401_UNAUTHORIZED
-            )
-        
+            return Response({'message': 'Token not provided'}, status=status.HTTP_401_UNAUTHORIZED)
+
         token = auth_header.split(' ')[1]
         access_token = AccessToken(token)
         user_id = access_token['id']
         user = User.objects.get(id=user_id)
-        
+
         try:
             debt = Debt.objects.get(id=debt_id, user=user)
         except Debt.DoesNotExist:
-            return Response(
-                {'message': 'Deuda no encontrada'},
-                status=status.HTTP_404_NOT_FOUND
-            )
-        
+            return Response({'message': 'Debt not found'}, status=status.HTTP_404_NOT_FOUND)
+
         debt.delete()
-        return Response(
-            {'message': 'Deuda eliminada exitosamente'},
-            status=status.HTTP_200_OK
-        )
+        return Response({'message': 'Debt deleted successfully'})
     except Exception as e:
-        print(f"❌ Error en delete_debt: {e}")
-        return Response(
-            {'message': str(e)},
-            status=status.HTTP_500_INTERNAL_SERVER_ERROR
-        )
-    except Exception as e:
-        return Response({'error': str(e)}, status=500)
+        print(f"❌ Error in delete_debt: {e}")
+        return Response({'message': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

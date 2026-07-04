@@ -8,9 +8,9 @@
         <span>Finances Pro</span>
       </div>
       <div class="nav-link">
-        <router-link to="/features" class="nav-item">Features</router-link>
-        <router-link to="/about" class="nav-item">About Us</router-link>
-        <router-link to="/contact" class="nav-item">Contact</router-link>
+        <router-link to="/features" class="nav-item" :class="{ active: route.path === '/features' }">Features</router-link>
+        <router-link to="/about" class="nav-item" :class="{ active: route.path === '/about' }">About Us</router-link>
+        <router-link to="/contact" class="nav-item" :class="{ active: route.path === '/contact' }">Contact</router-link>
       </div>
 
       <div class="header-botoms">
@@ -120,17 +120,17 @@
         </p>
       </div>
       <div class="cards">
-        <div class="card">
+        <div class="team-card">
           <img src="../assets/Imagen3.png" alt="Persona 1" />
           <h3>Jonathan Rosas</h3>
           <p>CEO & Founder</p>
         </div>
-        <div class="card">
+        <div class="team-card">
           <img src="../assets/Imagen4.png" alt="Persona 2" />
-          <h3>Heidy Rios</h3>
+          <h3>Gersson Valencia</h3>
           <p>CTO & Co-Founder</p>
         </div>
-        <div class="card">
+        <div class="team-card">
           <img src="../assets/Imagen5.png" alt="Persona 3" />
           <h3>Ana Rosas</h3>
           <p>Marketing Director</p>
@@ -228,11 +228,15 @@
   </div>
 </template>
 
-<script setup></script>
+<script setup>
+import { useRoute } from 'vue-router'
+
+const route = useRoute()
+</script>
 
 <style scoped>
 /* ============================================ */
-/* ESTILOS GLOBALES Y CONTENEDOR PRINCIPAL */
+/* GLOBAL STYLES AND MAIN CONTAINER */
 /* ============================================ */
 
 * {
@@ -241,7 +245,7 @@
   box-sizing: border-box;
 }
 
-/* Contenedor principal de toda la página */
+/* Main container for the whole page */
 .home-container {
   width: 100%;
   min-height: 100vh;
@@ -249,10 +253,10 @@
 }
 
 /* ============================================ */
-/* ENCABEZADO (HEADER) */
+/* HEADER */
 /* ============================================ */
 
-/* Barra superior con logo, navegación y botones */
+/* Top bar with logo, navigation and buttons */
 header {
   width: 100%;
   height: 60px;
@@ -264,7 +268,7 @@ header {
   border-bottom: 1px solid #2e5c31;
 }
 
-/* Logo y texto "Finances Pro" */
+/* Logo and "Finances Pro" text */
 .logo {
   display: flex;
   align-items: center;
@@ -273,52 +277,54 @@ header {
   color: #ffffff;
 }
 
-/* Espaciado del texto del logo */
+/* Logo text spacing */
 .logo span {
   margin-left: 10px;
 }
 
-/* Contenedor del ícono del logo */
+/* Logo icon container */
 .logo-icon {
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
-/* Imagen del ícono del logo */
+/* Logo icon image */
 .logo-icon img {
   width: 50px;
   height: 50px;
 }
 
-/* Contenedor de los links de navegación */
+/* Navigation links container */
 .nav-link {
   display: flex;
   gap: 20px;
 }
 
-/* Estilos individuales de cada link (Features, About Us, Prices) */
+/* Individual link styles (Features, About Us, Prices) */
 .nav-item {
   color: #ffffff;
   text-decoration: none;
   font-size: 18px;
-  transition: color 0.3s;
+  transition: color 0.3s, background-color 0.3s;
   padding: 10px 15px;
-}
-
-/* Efecto hover en los links de navegación */
-.nav-item:hover {
-  background-color: #2e5c31;
+  background: transparent;
   border-radius: 4px;
 }
 
-/* Contenedor de los botones (Login y Sign Up) */
+/* Hover and active effect on navigation links */
+.nav-item:hover,
+.nav-item.active {
+  background-color: #2e5c31;
+}
+
+/* Buttons container (Login and Sign Up) */
 .header-botoms {
   display: flex;
   gap: 10px;
 }
 
-/* Botón Login - Estilo base */
+/* Login button - Base style */
 .btn-login {
   padding: 10px 50px;
   border: none;
@@ -333,7 +339,7 @@ header {
   justify-content: center;
 }
 
-/* Botón Sign Up - Estilo base */
+/* Sign Up button - Base style */
 .btn-signup {
   padding: 10px 40px;
   border: none;
@@ -348,33 +354,33 @@ header {
   justify-content: center;
 }
 
-/* Color base del botón Login */
+/* Login button base color */
 .btn-login {
   background-color: #2e5c31;
 }
 
-/* Efecto hover del botón Login */
+/* Login button hover effect */
 .btn-login:hover {
   background-color: #3acf41;
   color: #000000;
 }
 
-/* Color base del botón Sign Up */
+/* Sign Up button base color */
 .btn-signup {
   background-color: #3acf41;
 }
 
-/* Efecto hover del botón Sign Up */
+/* Sign Up button hover effect */
 .btn-signup:hover {
   background-color: #2e5c31;
   color: #ffffff;
 }
 
 /* ============================================ */
-/* SECCIÓN HERO (PRINCIPAL) */
+/* HERO SECTION (MAIN) */
 /* ============================================ */
 
-/* Contenedor principal de la sección hero */
+/* Main hero section container */
 .hero-section {
   display: flex;
   padding: 40px 60px;
@@ -410,7 +416,7 @@ header {
   color: #d1d5db;
 }
 
-/* Contenedor principal de la segunda sección */
+/* Main container for the second section */
 .second-section {
   display: flex;
   padding: 60px 80px;
@@ -517,6 +523,7 @@ header {
   align-items: center;
   justify-content: center;
   width: 100%;
+  background-color: #112218;
 }
 
 .info3-secction {
@@ -545,7 +552,7 @@ header {
   flex-wrap: wrap;
 }
 
-.card {
+.team-card {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -556,26 +563,26 @@ header {
   background-color: #1a3a1e;
 }
 
-.card img {
+.team-card img {
   width: 100%;
   height: 280px;
   object-fit: cover;
   display: block;
 }
 
-.card h3 {
+.team-card h3 {
   font-size: 20px;
   margin-top: 16px;
   color: #ffffff;
 }
 
-.card p {
+.team-card p {
   font-size: 16px;
   color: #3acf41;
   margin-bottom: 16px;
 }
 
-.card:hover {
+.team-card:hover {
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
   transform: translateY(-5px);
   transition: all 0.3s ease;
@@ -640,7 +647,7 @@ header {
   color: #d1d5db;
 }
 
-/* Tarjeta final de llamada a la acción */
+/* Final call-to-action card */
 .card-section2 {
   display: flex;
   flex-direction: column;
@@ -655,13 +662,13 @@ header {
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
-/* Título de la tarjeta final */
+/* Final card title */
 .card-section2 h1 {
   font-size: 36px;
   font-weight: bold;
 }
 
-/* Descripción de la tarjeta final */
+/* Final card description */
 .card-section2 p {
   font-size: 18px;
   line-height: 1.5;
@@ -679,14 +686,14 @@ header {
   transition: background-color 0.3s;
 }
 
-/* Efecto hover del botón crear cuenta */
+/* Create account button hover effect */
 .btn-creat-account:hover {
   background-color: #2e5c31;
   color: #ffffff;
 }
 
 /* ============================================ */
-/* PIE DE PÁGINA (FOOTER) */
+/* FOOTER */
 /* ============================================ */
 
 .footer {
@@ -760,10 +767,10 @@ header {
 }
 
 /* ============================================ */
-/* MEDIA QUERIES - RESPONSIVIDAD */
+/* MEDIA QUERIES - RESPONSIVENESS */
 /* ============================================ */
 
-/* Pantallas grandes - Ajustes finos */
+/* Large screens - Fine tuning */
 @media (max-width: 1200px) {
   header {
     padding: 0 20px;
@@ -800,7 +807,7 @@ header {
   }
 }
 
-/* Tablets grandes y pantallas medianas */
+/* Large tablets and medium screens */
 @media (max-width: 992px) {
   header {
     padding: 0 15px;
@@ -913,7 +920,7 @@ header {
   }
 }
 
-/* Tablets pequeñas */
+/* Small tablets */
 @media (max-width: 768px) {
   header {
     height: 70px;
@@ -1000,7 +1007,7 @@ header {
     flex-wrap: wrap;
   }
 
-  .card {
+  .team-card {
     width: 100%;
     max-width: 250px;
   }
@@ -1042,7 +1049,7 @@ header {
   }
 }
 
-/* Dispositivos móviles - Pantallas medianas */
+/* Mobile devices - Medium screens */
 @media (max-width: 600px) {
   header {
     height: auto;
@@ -1177,16 +1184,16 @@ header {
     align-items: center;
   }
 
-  .card {
+  .team-card {
     width: 100%;
     max-width: 220px;
   }
 
-  .card h3 {
+  .team-card h3 {
     font-size: 16px;
   }
 
-  .card p {
+  .team-card p {
     font-size: 14px;
   }
 
@@ -1272,7 +1279,7 @@ header {
   }
 }
 
-/* Dispositivos móviles muy pequeños */
+/* Very small mobile devices */
 @media (max-width: 400px) {
   .logo {
     font-size: 16px;

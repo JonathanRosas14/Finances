@@ -67,7 +67,7 @@
               >
                 <td>{{ formatDate(transaction.transaction_date) }}</td>
                 <td>{{ transaction.description }}</td>
-                <td>{{ transaction.category_name || "Sin categoría" }}</td>
+                <td>{{ transaction.category_name || "Uncategorized" }}</td>
                 <td>{{ transaction.type }}</td>
                 <td>${{ transaction.amount }}</td>
                 <td>
@@ -198,31 +198,64 @@
       </div>
     </transition>
 
-    <!-- Modal de confirmación para delete -->
+    <!-- Delete confirmation modal -->
     <transition name="modal-fade">
       <div v-if="showDeleteConfirmModal" class="modal" @click="cancelDelete">
-        <div class="modal-content" @click.stop style="max-width: 400px">
+        <div class="modal-content delete-modal" @click.stop>
           <div class="modal-header">
-            <h2 style="color: #e74c3c">Eliminar Transacción</h2>
+            <h2>Delete Transaction</h2>
             <button type="button" class="modal-close" @click="cancelDelete">
               ×
             </button>
           </div>
           <p class="modal-subtitle">
-            ¿Estás seguro de que deseas eliminar esta transacción?
+            Are you sure you want to delete this transaction?
           </p>
-          <p style="padding: 0 24px; color: #666; font-size: 14px">
-            Esta acción no se puede deshacer.
+          <p style="text-align: center; color: #666; font-size: 14px; margin: 0;">
+            This action cannot be undone.
           </p>
-          <div class="form-actions" style="padding: 24px">
+          <div class="form-actions">
             <button type="button" @click="cancelDelete" class="btn-cancel">
-              Cancelar
+              Cancel
             </button>
             <button type="button" @click="confirmDelete" class="btn-delete">
-              Eliminar
+              Delete
             </button>
           </div>
         </div>
+      </div>
+    </transition>
+
+    <!-- Create confirmation modal -->
+    <transition name="modal-fade">
+      <div v-if="showCreateConfirmModal" class="modal" @click="cancelCreateTransaction">
+        <div class="modal-content confirm-modal" @click.stop>
+          <div class="modal-header">
+            <h2>Create Transaction</h2>
+            <button type="button" class="modal-close" @click="cancelCreateTransaction">
+              ×
+            </button>
+          </div>
+          <p class="modal-subtitle">
+            Are you sure you want to create this transaction?
+          </p>
+          <div class="form-actions">
+            <button type="button" @click="cancelCreateTransaction" class="btn-cancel">
+              Cancel
+            </button>
+            <button type="button" @click="confirmCreateTransaction" class="btn-delete">
+              Create
+            </button>
+          </div>
+        </div>
+      </div>
+    </transition>
+
+    <!-- Notification -->
+    <transition name="notif-fade">
+      <div v-if="notification.show" class="notification" :class="notification.type">
+        <span>✓ {{ notification.message }}</span>
+        <button @click="notification.show = false" class="notif-close">×</button>
       </div>
     </transition>
   </div>
@@ -230,9 +263,9 @@
 
 <script setup>
 import { ref, computed, onMounted } from "vue";
-import axios from "axios";
+import api from "../lib/api";
 
-// Estados
+// States
 const transactions = ref([]);
 const categories = ref([]);
 const showModal = ref(false);
@@ -240,11 +273,13 @@ const loading = ref(false);
 const isEditMode = ref(false);
 const editingId = ref(null);
 
-// Modal de confirmación para delete
+// Delete confirmation modal
 const showDeleteConfirmModal = ref(false);
+const showCreateConfirmModal = ref(false);
 const deleteConfirmId = ref(null);
+const notification = ref({ show: false, message: '', type: 'success' });
 
-// Filtros
+// Filters
 const search = ref("");
 const filterCategory = ref("");
 const filterType = ref("");
@@ -263,45 +298,50 @@ const form = ref({
   notes: "",
 });
 
-// Obtener token
+// Get token
 const getToken = () => {
   return localStorage.getItem("token");
 };
 
-// Cargar categorías
+const showNotification = (message, type = 'success') => {
+  notification.value = { show: true, message, type }
+  setTimeout(() => { notification.value.show = false }, 3500)
+}
+
+// Load categories
 const loadCategories = async () => {
   try {
     const token = getToken();
     if (!token) {
-      console.error("No hay token de autenticación");
+      console.error("No authentication token");
       return;
     }
 
-    const response = await axios.get("http://localhost:8000/api/categories/", {
+    const response = await api.get("/api/categories/", {
       headers: {
         Authorization: `Bearer ${token}`,
       },
     });
 
     categories.value = response.data;
-    console.log("✅ Categorías cargadas:", categories.value.length);
+    console.log("✅ Categories loaded:", categories.value.length);
   } catch (error) {
-    console.error("❌ Error al cargar categorías:", error);
-    alert("Error al cargar las categorías");
+    console.error("❌ Error loading categories:", error);
+    showNotification('Error loading categories', 'error')
   }
 };
 
-// Cargar transacciones
+// Load transactions
 const loadTransactions = async () => {
   loading.value = true;
   try {
     const token = getToken();
     if (!token) {
-      console.error("No hay token de autenticación");
+      console.error("No authentication token");
       return;
     }
 
-    const response = await axios.get("http://localhost:8000/api/transactions/", {
+    const response = await api.get("/api/transactions/", {
       headers: {
         Authorization: `Bearer ${token}`,
       },
@@ -310,25 +350,25 @@ const loadTransactions = async () => {
     transactions.value = response.data;
     console.log("✅ Transacciones cargadas:", transactions.value.length);
   } catch (error) {
-    console.error("❌ Error al cargar transacciones:", error);
-    alert("Error al cargar las transacciones");
+    console.error("❌ Error loading transactions:", error);
+    showNotification('Error loading transactions', 'error')
   } finally {
     loading.value = false;
   }
 };
 
-// Transacciones filtradas
+// Filtered transactions
 const filteredTransactions = computed(() => {
   let result = transactions.value;
 
-  // Filtrar por búsqueda
+  // Filter by search
   if (search.value) {
     result = result.filter((t) =>
       t.description?.toLowerCase().includes(search.value.toLowerCase()),
     );
   }
 
-  // Filtrar por categoría
+  // Filter by category
   if (filterCategory.value) {
     result = result.filter((t) => {
       const category = categories.value.find((c) => c.id === t.category_id);
@@ -341,7 +381,7 @@ const filteredTransactions = computed(() => {
     result = result.filter((t) => t.type === filterType.value);
   }
 
-  // Filtrar por fecha
+  // Filter by date
   if (filterDate.value) {
     const now = new Date();
     const days = {
@@ -359,23 +399,23 @@ const filteredTransactions = computed(() => {
   return result;
 });
 
-// Obtener nombre de categoría
+// Get category name
 const getCategoryName = (categoryId) => {
   const category = categories.value.find((c) => c.id === categoryId);
-  return category ? category.name : "Sin categoría";
+  return category ? category.name : "Uncategorized";
 };
 
-// Formatear fecha
+// Format date
 const formatDate = (dateString) => {
   const date = new Date(dateString);
-  return date.toLocaleDateString("es-ES", {
+  return date.toLocaleDateString("en-US", {
     year: "numeric",
     month: "long",
     day: "numeric",
   });
 };
 
-// Formatear monto
+// Format amount
 const formatAmount = (amount, type) => {
   const formatted = parseFloat(amount).toFixed(2);
   const symbol = type === "income" ? "+" : "-";
@@ -383,7 +423,7 @@ const formatAmount = (amount, type) => {
   return { formatted: `${symbol} $${formatted}`, color };
 };
 
-// Abrir modal para crear
+// Open modal to create
 const openModal = () => {
   isEditMode.value = false;
   editingId.value = null;
@@ -401,28 +441,31 @@ const openModal = () => {
   showModal.value = true;
 };
 
-// Cerrar modal
+// Close modal
 const closeModel = () => {
   showModal.value = false;
 };
 
-// Agregar transacción
-const addTransaction = async () => {
-  try {
-    if (
-      !form.value.category_id ||
-      !form.value.amount ||
-      !form.value.transaction_date
-    ) {
-      alert("Por favor completa todos los campos obligatorios");
-      return;
-    }
+// Add transaction
+const addTransaction = () => {
+  if (
+    !form.value.category_id ||
+    !form.value.amount ||
+    !form.value.transaction_date
+  ) {
+    showNotification('Please fill in all required fields', 'error')
+    return
+  }
+  showCreateConfirmModal.value = true
+}
 
+const confirmCreateTransaction = async () => {
+  try {
     loading.value = true;
     const token = getToken();
 
-    const response = await axios.post(
-      "http://localhost:8000/api/transactions/create/",
+    await api.post(
+      "/api/transactions/create/",
       form.value,
       {
         headers: {
@@ -432,19 +475,24 @@ const addTransaction = async () => {
       },
     );
 
-    console.log("✅ Transacción creada:", response.data);
     await loadTransactions();
     closeModel();
-    alert("✅ Transacción creada exitosamente");
+    showCreateConfirmModal.value = false;
+    showNotification('Transaction created successfully')
   } catch (error) {
-    console.error("❌ Error al crear transacción:", error);
-    alert(error.response?.data?.message || "Error al crear la transacción");
+    console.error("❌ Error creating transaction:", error);
+    showCreateConfirmModal.value = false;
+    showNotification(error.response?.data?.message || 'Error creating transaction', 'error')
   } finally {
     loading.value = false;
   }
-};
+}
 
-// Editar transacción
+const cancelCreateTransaction = () => {
+  showCreateConfirmModal.value = false
+}
+
+// Edit transaction
 const editTransaction = async (id) => {
   const transaction = transactions.value.find((t) => t.id === id);
   if (!transaction) return;
@@ -465,7 +513,7 @@ const editTransaction = async (id) => {
   showModal.value = true;
 };
 
-// Actualizar transacción
+// Update transaction
 const updateTransaction = async () => {
   try {
     if (
@@ -473,15 +521,15 @@ const updateTransaction = async () => {
       !form.value.amount ||
       !form.value.transaction_date
     ) {
-      alert("Por favor completa todos los campos obligatorios");
+      showNotification('Please fill in all required fields', 'error')
       return;
     }
 
     loading.value = true;
     const token = getToken();
 
-    await axios.put(
-      `http://localhost:8000/api/transactions/${editingId.value}/`,
+    await api.put(
+      `/api/transactions/${editingId.value}/`,
       form.value,
       {
         headers: {
@@ -491,66 +539,66 @@ const updateTransaction = async () => {
       },
     );
 
-    console.log("✅ Transacción actualizada");
+    console.log("✅ Transaction updated");
     await loadTransactions();
     closeModel();
-    alert("✅ Transacción actualizada exitosamente");
+    showNotification('Transaction updated successfully')
   } catch (error) {
-    console.error("❌ Error al actualizar transacción:", error);
-    alert(
-      error.response?.data?.message || "Error al actualizar la transacción",
-    );
+    console.error("❌ Error updating transaction:", error);
+    showNotification(error.response?.data?.message || 'Error updating transaction', 'error')
   } finally {
     loading.value = false;
   }
 };
 
-// Eliminar transacción
+// Delete transaction
 const deleteTransaction = async (id) => {
-  console.log("🗑️ Abriendo modal de confirmación para:", id);
+  console.log("🗑️ Opening confirmation modal for:", id);
   deleteConfirmId.value = id;
   showDeleteConfirmModal.value = true;
 };
 
-// Confirmar delete después del modal
+// Confirm delete after modal
 const confirmDelete = async () => {
   const id = deleteConfirmId.value;
   showDeleteConfirmModal.value = false;
   
-  console.log("🗑️ Iniciando delete de transacción:", id);
+  console.log("🗑️ Starting transaction delete:", id);
 
   try {
     const token = getToken();
-    console.log("🔑 Token obtenido");
+    console.log("🔑 Token obtained");
     
-    const url = `http://localhost:8000/api/transactions/${id}/delete/`;
-    console.log("📤 Enviando DELETE a:", url);
+    const url = `/api/transactions/${id}/delete/`;
+    console.log("📤 Sending DELETE to:", url);
 
-    const response = await axios.delete(url, {
+    const response = await api.delete(url, {
       headers: {
         Authorization: `Bearer ${token}`,
       },
     });
     
-    console.log("✅ Respuesta del servidor:", response.data);
+    console.log("✅ Server response:", response.data);
     await loadTransactions();
-    alert("✅ Transacción eliminada exitosamente");
+    showDeleteConfirmModal.value = false;
+    showNotification('Transaction deleted successfully')
   } catch (error) {
-    console.error("❌ Error completo:", error);
+    console.error("❌ Full error:", error);
     console.error("❌ Status:", error.response?.status);
-    console.error("❌ Mensaje:", error.response?.data);
-    alert(error.response?.data?.message || "Error al eliminar la transacción");
+    console.error("❌ Message:", error.response?.data);
+    showDeleteConfirmModal.value = false;
+    showNotification(error.response?.data?.message || 'Error deleting transaction', 'error')
   }
 };
 
-// Cancelar delete
+// Cancel delete
 const cancelDelete = () => {
   showDeleteConfirmModal.value = false;
   deleteConfirmId.value = null;
-  console.log("❌ Delete cancelado por el usuario");
+  console.log("❌ Delete cancelled by user");
 };
 
-// Cargar datos al montar
+// Load data on mount
 onMounted(() => {
   loadCategories();
   loadTransactions();
@@ -721,7 +769,7 @@ onMounted(() => {
 }
 .edit-btn,
 .delete-btn {
-  padding: 6px 12px;
+  padding: 5px 10px;
   font-size: 12px;
   font-weight: 500;
   border: none;
@@ -729,6 +777,8 @@ onMounted(() => {
   cursor: pointer;
   transition: all 0.2s ease;
   margin-right: 6px;
+  min-width: 55px;
+  text-align: center;
 }
 .edit-btn {
   background-color: #1a7f3a;
@@ -834,10 +884,10 @@ onMounted(() => {
 }
 
 .modal-subtitle {
-  padding: 0 24px 12px;
-  color: #666;
-  font-size: 13px;
-  margin: 0;
+  text-align: center;
+  padding: 0 24px;
+  font-size: 16px;
+  color: #333;
 }
 
 .transaction-form {
@@ -972,5 +1022,206 @@ onMounted(() => {
 
 .btn-delete:active {
   transform: scale(0.98);
+}
+
+.delete-modal {
+  max-width: 520px;
+  padding: 0;
+}
+
+.delete-modal .modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 24px 24px 16px;
+  border-bottom: 1px solid #f0f0f0;
+  position: sticky;
+  top: 0;
+  background: #fff;
+  z-index: 1;
+}
+
+.delete-modal .modal-header h2 {
+  font-size: 20px;
+  font-weight: 600;
+  color: #e74c3c;
+  margin: 0;
+}
+
+.delete-modal .modal-subtitle {
+  text-align: center;
+  padding: 16px 24px 8px;
+  font-size: 16px;
+  color: #333;
+}
+
+.delete-modal .form-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  margin-top: 16px;
+  padding: 16px 24px 24px;
+  border-top: 1px solid #f0f0f0;
+}
+
+.delete-modal .btn-cancel {
+  padding: 10px 20px;
+  font-size: 14px;
+  font-weight: 500;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  background-color: #f5f5f5;
+  color: #333;
+}
+
+.delete-modal .btn-cancel:hover {
+  background-color: #e8e8e8;
+}
+
+.delete-modal .btn-delete {
+  padding: 10px 20px;
+  font-size: 14px;
+  font-weight: 500;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  background-color: #e74c3c;
+  color: #ffffff;
+}
+
+.delete-modal .btn-delete:hover {
+  background-color: #c0392b;
+  box-shadow: 0 4px 12px rgba(231, 76, 60, 0.25);
+}
+
+.delete-modal .btn-delete:active {
+  transform: scale(0.98);
+}
+
+.confirm-modal {
+  max-width: 520px;
+  padding: 0;
+}
+
+.confirm-modal .modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 24px 24px 16px;
+  border-bottom: 1px solid #f0f0f0;
+  position: sticky;
+  top: 0;
+  background: #fff;
+  z-index: 1;
+}
+
+.confirm-modal .modal-header h2 {
+  font-size: 20px;
+  font-weight: 600;
+  color: #1a7f3a;
+  margin: 0;
+}
+
+.confirm-modal .modal-subtitle {
+  text-align: center;
+  padding: 16px 24px 8px;
+  font-size: 16px;
+  color: #333;
+}
+
+.confirm-modal .form-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  margin-top: 16px;
+  padding: 16px 24px 24px;
+  border-top: 1px solid #f0f0f0;
+}
+
+.confirm-modal .btn-cancel {
+  padding: 10px 20px;
+  font-size: 14px;
+  font-weight: 500;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  background-color: #f5f5f5;
+  color: #333;
+}
+
+.confirm-modal .btn-cancel:hover {
+  background-color: #e8e8e8;
+}
+
+.confirm-modal .btn-delete {
+  padding: 10px 20px;
+  font-size: 14px;
+  font-weight: 500;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  background-color: #1a7f3a;
+  color: #ffffff;
+}
+
+.confirm-modal .btn-delete:hover {
+  background-color: #166f33;
+  box-shadow: 0 4px 12px rgba(26, 127, 58, 0.25);
+}
+
+.confirm-modal .btn-delete:active {
+  transform: scale(0.98);
+}
+
+/* Notification */
+.notification {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  background: #e8f5e9;
+  color: #1a7f3a;
+  border: 1px solid #a5d6a7;
+  border-radius: 10px;
+  padding: 14px 20px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 14px;
+  font-weight: 500;
+  box-shadow: 0 4px 16px rgba(26, 127, 58, 0.15);
+  z-index: 2000;
+}
+
+.notification.error {
+  background: #ffebee;
+  color: #c62828;
+  border: 1px solid #ef9a9a;
+  box-shadow: 0 4px 16px rgba(198, 40, 40, 0.15);
+}
+
+.notif-close {
+  background: none;
+  border: none;
+  font-size: 20px;
+  cursor: pointer;
+  color: inherit;
+  padding: 0;
+  line-height: 1;
+}
+
+.notif-fade-enter-active,
+.notif-fade-leave-active {
+  transition: all 0.3s ease;
+}
+
+.notif-fade-enter-from,
+.notif-fade-leave-to {
+  opacity: 0;
+  transform: translateX(20px);
 }
 </style>

@@ -53,7 +53,7 @@
 
 <script setup>
 import { ref, onMounted } from "vue";
-import axios from "axios";
+import api from "../lib/api";
 import { useRouter } from "vue-router";
 
 const email = ref("");
@@ -63,7 +63,7 @@ const router = useRouter();
 
 onMounted(() => {
   window.google.accounts.id.initialize({
-    client_id: "360602519490-kof8v9cb8ujs0ii4fs68jo4flsbvig6m.apps.googleusercontent.com",
+    client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID || "360602519490-kof8v9cb8ujs0ii4fs68jo4flsbvig6m.apps.googleusercontent.com",
     callback: handleGoogleCallback,
   });
 
@@ -80,22 +80,22 @@ onMounted(() => {
 
 const handleGoogleCallback = async (response) => {
   try {
-    const result = await axios.post("http://localhost:8000/api/google/", {
+    const result = await api.post("/api/google/", {
       token: response.credential,
     });
 
     const { token, user } = result.data;
     localStorage.setItem("token", token);
     localStorage.setItem("user", JSON.stringify(user));
-    router.push("/Dashboard");
+    router.push("/dashboard");
   } catch (error) {
-    errorMessage.value = "Error al iniciar sesión con Google";
+    errorMessage.value = "Error logging in with Google";
   }
 };
 
 const handleLogin = async () => {
   try {
-    const response = await axios.post("http://localhost:8000/api/login/", {
+    const response = await api.post("/api/login/", {
       email: email.value,
       password: password.value,
     });
@@ -103,10 +103,10 @@ const handleLogin = async () => {
     const { token, user } = response.data;
     localStorage.setItem("token", token);
     localStorage.setItem("user", JSON.stringify(user));
-    router.push("/Dashboard");
+    router.push("/dashboard");
   } catch (error) {
     errorMessage.value =
-      error.response?.data?.message || "Error al iniciar sesión";
+      error.response?.data?.message || "Error logging in";
   }
 };
 </script>

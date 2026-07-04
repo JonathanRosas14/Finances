@@ -9,9 +9,9 @@
         <span>Finances Pro</span>
       </div>
       <div class="nav-link">
-        <router-link to="/features" class="nav-item">Features</router-link>
-        <router-link to="/about" class="nav-item">About Us</router-link>
-        <router-link to="/contact" class="nav-item">Contact</router-link>
+        <router-link to="/features" class="nav-item" :class="{ active: route.path === '/features' }">Features</router-link>
+        <router-link to="/about" class="nav-item" :class="{ active: route.path === '/about' }">About Us</router-link>
+        <router-link to="/contact" class="nav-item" :class="{ active: route.path === '/contact' }">Contact</router-link>
       </div>
 
       <div class="header-botoms">
@@ -319,12 +319,14 @@
 </template>
 
 <script setup>
-// No script logic needed for this component
+import { useRoute } from 'vue-router'
+
+const route = useRoute()
 </script>
 
 <style scoped>
 /* ============================================ */
-/* ESTILOS GLOBALES Y CONTENEDOR PRINCIPAL */
+/* GLOBAL STYLES AND MAIN CONTAINER */
 /* ============================================ */
 
 * {
@@ -333,7 +335,7 @@
   box-sizing: border-box;
 }
 
-/* Contenedor principal de toda la página */
+/* Main container for the whole page */
 .home-container {
   width: 100%;
   min-height: 100vh;
@@ -341,10 +343,10 @@
 }
 
 /* ============================================ */
-/* ENCABEZADO (HEADER) */
+/* HEADER */
 /* ============================================ */
 
-/* Barra superior con logo, navegación y botones */
+/* Top bar with logo, navigation and buttons */
 header {
   width: 100%;
   height: 60px;
@@ -356,7 +358,7 @@ header {
   border-bottom: 1px solid #2e5c31;
 }
 
-/* Logo y texto "Finances Pro" */
+/* Logo and "Finances Pro" text */
 .logo {
   display: flex;
   align-items: center;
@@ -365,52 +367,54 @@ header {
   color: #ffffff;
 }
 
-/* Espaciado del texto del logo */
+/* Logo text spacing */
 .logo span {
   margin-left: 10px;
 }
 
-/* Contenedor del ícono del logo */
+/* Logo icon container */
 .logo-icon {
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
-/* Imagen del ícono del logo */
+/* Logo icon image */
 .logo-icon img {
   width: 50px;
   height: 50px;
 }
 
-/* Contenedor de los links de navegación */
+/* Navigation links container */
 .nav-link {
   display: flex;
   gap: 20px;
 }
 
-/* Estilos individuales de cada link (Features, About Us, Prices) */
+/* Individual link styles (Features, About Us, Prices) */
 .nav-item {
   color: #ffffff;
   text-decoration: none;
   font-size: 18px;
-  transition: color 0.3s;
+  transition: color 0.3s, background-color 0.3s;
   padding: 10px 15px;
-}
-
-/* Efecto hover en los links de navegación */
-.nav-item:hover {
-  background-color: #2e5c31;
+  background: transparent;
   border-radius: 4px;
 }
 
-/* Contenedor de los botones (Login y Sign Up) */
+/* Hover and active effect on navigation links */
+.nav-item:hover,
+.nav-item.active {
+  background-color: #2e5c31;
+}
+
+/* Buttons container (Login and Sign Up) */
 .header-botoms {
   display: flex;
   gap: 10px;
 }
 
-/* Botón Login - Estilo base */
+/* Login button - Base style */
 .btn-login {
   padding: 10px 50px;
   border: none;
@@ -425,7 +429,7 @@ header {
   justify-content: center;
 }
 
-/* Botón Sign Up - Estilo base */
+/* Sign Up button - Base style */
 .btn-signup {
   padding: 10px 40px;
   border: none;
@@ -440,33 +444,33 @@ header {
   justify-content: center;
 }
 
-/* Color base del botón Login */
+/* Login button base color */
 .btn-login {
   background-color: #2e5c31;
 }
 
-/* Efecto hover del botón Login */
+/* Login button hover effect */
 .btn-login:hover {
   background-color: #3acf41;
   color: #000000;
 }
 
-/* Color base del botón Sign Up */
+/* Sign Up button base color */
 .btn-signup {
   background-color: #3acf41;
 }
 
-/* Efecto hover del botón Sign Up */
+/* Sign Up button hover effect */
 .btn-signup:hover {
   background-color: #2e5c31;
   color: #ffffff;
 }
 
 /* ============================================ */
-/* SECCIÓN HERO (PRINCIPAL) */
+/* HERO SECTION (MAIN) */
 /* ============================================ */
 
-/* Contenedor principal de la sección hero */
+/* Main hero section container */
 .hero-section {
   display: flex;
   padding: 40px 60px;
@@ -506,10 +510,10 @@ header {
 }
 
 /* ============================================ */
-/* SEGUNDA SECCIÓN (CARACTERÍSTICAS) */
+/* SECOND SECTION (FEATURES) */
 /* ============================================ */
 
-/* Contenedor principal de la segunda sección */
+/* Main container for the second section */
 .second-section {
   display: flex;
   padding: 60px 80px;
@@ -518,7 +522,7 @@ header {
   width: 100%;
 }
 
-/* Contenedor de las tarjetas de características */
+/* Feature cards container */
 .card-infos {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -543,27 +547,27 @@ header {
   flex-shrink: 0;
 }
 
-/* Efecto hover de las tarjetas con sombra y movimiento */
+/* Card hover effect with shadow and motion */
 .cards:hover {
   box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
   transform: translateY(-5px);
   transition: all 0.3s ease;
 }
 
-/* Títulos de las tarjetas */
+/* Card titles */
 .cards h2 {
   font-size: 24px;
   margin: 15px 0;
   text-align: left;
 }
 
-/* Descripción de las tarjetas */
+/* Card descriptions */
 .cards p {
   font-size: 16px;
   line-height: 1.4;
   text-align: left;
 }
-/* Contenedor principal de la tercera sección */
+/* Main container for the third section */
 .third-section {
   display: flex;
   flex-direction: column;
@@ -574,7 +578,7 @@ header {
   background-color: #112218;
 }
 
-/* Contenedor con el texto y la imagen de la sección hero */
+/* Container with hero section text and image */
 .card-section {
   display: flex;
   gap: 60px;
@@ -584,7 +588,7 @@ header {
   max-width: 1200px;
 }
 
-/* Sección izquierda: Título, descripción y botón de crear cuenta */
+/* Left section: Title, description and create account button */
 .info2-secction {
   flex: 1;
   padding: 20px;
@@ -596,14 +600,14 @@ header {
   text-align: left;
 }
 
-/* Título principal de la sección hero */
+/* Hero section main title */
 .info2-secction h1 {
   font-size: 48px;
   font-weight: bold;
   line-height: 1.2;
 }
 
-/* Párrafo de descripción en la sección hero */
+/* Description paragraph in the hero section */
 .info2-secction p {
   font-size: 18px;
   line-height: 1.6;
@@ -613,7 +617,7 @@ header {
   gap: 10px;
 }
 
-/* Alineación de checkmarks con texto */
+/* Checkmark alignment with text */
 .info2-secction p svg {
   color: #3acf41;
   margin-right: 12px;
@@ -621,7 +625,7 @@ header {
   flex-shrink: 0;
 }
 
-/* Sección derecha: Imagen de la sección hero */
+/* Right section: Hero section image */
 .image-section {
   flex: 1;
   display: flex;
@@ -629,7 +633,7 @@ header {
   justify-content: center;
 }
 
-/* Imagen de la sección hero con borde */
+/* Hero section image with border */
 .image-section img {
   width: 100%;
   max-width: 450px;
@@ -693,7 +697,7 @@ header {
   color: #d1d5db;
 }
 
-/* Tarjeta final de llamada a la acción */
+/* Final call-to-action card */
 .card-section2 {
   display: flex;
   flex-direction: column;
@@ -708,13 +712,13 @@ header {
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
-/* Título de la tarjeta final */
+/* Final card title */
 .card-section2 h1 {
   font-size: 36px;
   font-weight: bold;
 }
 
-/* Descripción de la tarjeta final */
+/* Final card description */
 .card-section2 p {
   font-size: 18px;
   line-height: 1.5;
@@ -732,14 +736,14 @@ header {
   transition: background-color 0.3s;
 }
 
-/* Efecto hover del botón crear cuenta */
+/* Create account button hover effect */
 .btn-creat-account:hover {
   background-color: #2e5c31;
   color: #ffffff;
 }
 
 /* ============================================ */
-/* PIE DE PÁGINA (FOOTER) */
+/* FOOTER */
 /* ============================================ */
 
 .footer {
@@ -814,10 +818,10 @@ header {
 }
 
 /* ============================================ */
-/* MEDIA QUERIES - RESPONSIVIDAD */
+/* MEDIA QUERIES - RESPONSIVENESS */
 /* ============================================ */
 
-/* Pantallas XL - Ajustes finos */
+/* XL screens - Fine tuning */
 @media (max-width: 1400px) {
   .card-section,
   .card3-section {
@@ -837,7 +841,7 @@ header {
   }
 }
 
-/* Pantallas grandes */
+/* Large screens */
 @media (max-width: 1200px) {
   header {
     padding: 0 20px;
@@ -1002,7 +1006,7 @@ header {
   }
 }
 
-/* Tablets medianas */
+/* Medium tablets */
 @media (max-width: 892px) {
   header {
     flex-wrap: wrap;
@@ -1168,7 +1172,7 @@ header {
   }
 }
 
-/* Tablets pequeñas */
+/* Small tablets */
 @media (max-width: 768px) {
   header {
     padding: 10px 12px;
@@ -1312,7 +1316,7 @@ header {
   }
 }
 
-/* Dispositivos móviles - Medianos */
+/* Mobile devices - Medium */
 @media (max-width: 600px) {
   header {
     padding: 8px 10px;
@@ -1483,7 +1487,7 @@ header {
   }
 }
 
-/* Dispositivos móviles muy pequeños */
+/* Very small mobile devices */
 @media (max-width: 400px) {
   .logo {
     font-size: 12px;

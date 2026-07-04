@@ -137,6 +137,8 @@
 <script setup>
 import { ref, onMounted } from "vue";
 
+const API_URL = import.meta.env.VITE_API_URL || '';
+
 const categories = ref([]);
 const showModal = ref(false);
 const loading = ref(false);
@@ -199,7 +201,7 @@ const createCategory = async () => {
     loading.value = true;
     const token = localStorage.getItem("token");
 
-    const response = await fetch("http://localhost:8000/api/categories/create/", {
+    const response = await fetch(`${API_URL}/api/categories/create/`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -231,7 +233,7 @@ const fetchCategories = async () => {
     loading.value = true;
     const token = localStorage.getItem("token");
 
-    const response = await fetch("http://localhost:8000/api/categories/", {
+    const response = await fetch(`${API_URL}/api/categories/`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
@@ -267,7 +269,7 @@ const confirmDeleteCategory = async () => {
     const token = localStorage.getItem("token");
 
     const response = await fetch(
-      `http://localhost:8000/api/categories/${categoryId}/delete/`,
+      `${API_URL}/api/categories/${categoryId}/delete/`,
       {
         method: "DELETE",
         headers: {

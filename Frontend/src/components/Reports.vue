@@ -178,7 +178,7 @@
 
 <script setup>
 import { ref, computed, onMounted, onActivated } from 'vue';
-import axios from 'axios';
+import api from '../lib/api';
 
 const transactions = ref([]);
 const categories = ref([]);
@@ -242,13 +242,13 @@ const fetchData = async () => {
     const token = localStorage.getItem('token');
     console.log('🔑 Token available:', !!token);
     
-    const transactionsRes = await axios.get('http://localhost:8000/api/transactions', {
+    const transactionsRes = await api.get('/api/transactions', {
       headers: { Authorization: `Bearer ${token}` },
     });
     console.log('✅ Transactions received:', transactionsRes.data);
     transactions.value = transactionsRes.data || [];
 
-    const categoriesRes = await axios.get('http://localhost:8000/api/categories', {
+    const categoriesRes = await api.get('/api/categories', {
       headers: { Authorization: `Bearer ${token}` },
     });
     console.log('✅ Categories received:', categoriesRes.data);

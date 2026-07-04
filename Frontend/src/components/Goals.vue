@@ -239,7 +239,7 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
-import axios from 'axios'
+import api from '../lib/api'
 
 const goals = ref([])
 const categories = ref([])
@@ -276,7 +276,7 @@ const loadCategories = async () => {
   try {
     const token = getToken()
     if (!token) return
-    const response = await axios.get('http://localhost:8000/api/categories/', {
+    const response = await api.get('/api/categories/', {
       headers: { Authorization: `Bearer ${token}` },
     })
     categories.value = response.data
@@ -289,7 +289,7 @@ const loadGoals = async () => {
   try {
     const token = getToken()
     if (!token) return
-    const response = await axios.get('http://localhost:8000/api/goals/', {
+    const response = await api.get('/api/goals/', {
       headers: { Authorization: `Bearer ${token}` },
     })
     goals.value = response.data
@@ -302,7 +302,7 @@ const loadTransactions = async () => {
   try {
     const token = getToken()
     if (!token) return
-    const response = await axios.get('http://localhost:8000/api/transactions/', {
+    const response = await api.get('/api/transactions/', {
       headers: { Authorization: `Bearer ${token}` },
     })
     transactions.value = response.data
@@ -373,8 +373,8 @@ const addGoal = () => {
 const confirmCreateGoal = async () => {
   try {
     const token = getToken()
-    await axios.post(
-      'http://localhost:8000/api/goals/create/',
+    await api.post(
+      '/api/goals/create/',
       {
         ...form.value,
         category_id: form.value.category_id || null,
@@ -417,8 +417,8 @@ const editGoal = (id) => {
 const updateGoal = async () => {
   try {
     const token = getToken()
-    await axios.put(
-      `http://localhost:8000/api/goals/${editingId.value}/`,
+    await api.put(
+      `/api/goals/${editingId.value}/`,
       {
         ...form.value,
         category_id: form.value.category_id || null,
@@ -442,7 +442,7 @@ const deleteGoal = (id) => {
 const confirmDelete = async () => {
   try {
     const token = getToken()
-    await axios.delete(`http://localhost:8000/api/goals/${goalToDelete.value}/delete/`, {
+    await api.delete(`/api/goals/${goalToDelete.value}/delete/`, {
       headers: { Authorization: `Bearer ${token}` },
     })
     await loadGoals()

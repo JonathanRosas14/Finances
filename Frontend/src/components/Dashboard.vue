@@ -244,10 +244,12 @@
 
 <script setup>
 import { computed, onActivated, onMounted, onUnmounted, ref } from 'vue';
-import axios from 'axios';
+import api from '../lib/api';
 import { readAppSettings } from '../lib/appSettings';
 
-const API_BASE = 'http://localhost:8000/api';
+const API_BASE = import.meta.env.VITE_API_URL
+  ? `${import.meta.env.VITE_API_URL}/api`
+  : '/api';
 const chartColors = ['#1a7f3a', '#2ca84f', '#8bd46d', '#f7c948', '#f97316', '#ef5350'];
 
 const settings = readAppSettings();
@@ -276,10 +278,10 @@ async function loadDashboard() {
 
   const headers = { Authorization: `Bearer ${token}` };
   const requests = await Promise.allSettled([
-    axios.get(`${API_BASE}/transactions`, { headers }),
-    axios.get(`${API_BASE}/budgets`, { headers }),
-    axios.get(`${API_BASE}/goals/`, { headers }),
-    axios.get(`${API_BASE}/debts/`, { headers }),
+    api.get(`${API_BASE}/transactions`, { headers }),
+    api.get(`${API_BASE}/budgets`, { headers }),
+    api.get(`${API_BASE}/goals/`, { headers }),
+    api.get(`${API_BASE}/debts/`, { headers }),
   ]);
 
   const [transactionsRes, budgetsRes, goalsRes, debtsRes] = requests;

@@ -263,7 +263,7 @@
 
 <script setup>
 import { ref, computed, onMounted } from "vue";
-import axios from "axios";
+import api from "../lib/api";
 
 // States
 const transactions = ref([]);
@@ -317,7 +317,7 @@ const loadCategories = async () => {
       return;
     }
 
-    const response = await axios.get("http://localhost:8000/api/categories/", {
+    const response = await api.get("/api/categories/", {
       headers: {
         Authorization: `Bearer ${token}`,
       },
@@ -341,7 +341,7 @@ const loadTransactions = async () => {
       return;
     }
 
-    const response = await axios.get("http://localhost:8000/api/transactions/", {
+    const response = await api.get("/api/transactions/", {
       headers: {
         Authorization: `Bearer ${token}`,
       },
@@ -464,8 +464,8 @@ const confirmCreateTransaction = async () => {
     loading.value = true;
     const token = getToken();
 
-    await axios.post(
-      "http://localhost:8000/api/transactions/create/",
+    await api.post(
+      "/api/transactions/create/",
       form.value,
       {
         headers: {
@@ -528,8 +528,8 @@ const updateTransaction = async () => {
     loading.value = true;
     const token = getToken();
 
-    await axios.put(
-      `http://localhost:8000/api/transactions/${editingId.value}/`,
+    await api.put(
+      \`/api/transactions/${editingId.value}/`,
       form.value,
       {
         headers: {
@@ -569,10 +569,10 @@ const confirmDelete = async () => {
     const token = getToken();
     console.log("🔑 Token obtained");
     
-    const url = `http://localhost:8000/api/transactions/${id}/delete/`;
+    const url = \`/api/transactions/${id}/delete/\`;
     console.log("📤 Sending DELETE to:", url);
 
-    const response = await axios.delete(url, {
+    const response = await api.delete(url, {
       headers: {
         Authorization: `Bearer ${token}`,
       },

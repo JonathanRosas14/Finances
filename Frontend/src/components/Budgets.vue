@@ -286,7 +286,7 @@
 
 <script setup>
 import { ref, computed, onMounted } from "vue";
-import axios from "axios";
+import api from "../lib/api";
 
 // States
 const budgets = ref([]);
@@ -327,7 +327,7 @@ const loadCategories = async () => {
     const token = getToken();
     if (!token) return;
 
-    const response = await axios.get("http://localhost:8000/api/categories", {
+    const response = await api.get("/api/categories", {
       headers: { Authorization: `Bearer ${token}` },
     });
     categories.value = response.data;
@@ -342,7 +342,7 @@ const loadBudgets = async () => {
     const token = getToken();
     if (!token) return;
 
-    const response = await axios.get("http://localhost:8000/api/budgets", {
+    const response = await api.get("/api/budgets", {
       headers: { Authorization: `Bearer ${token}` },
     });
     budgets.value = response.data;
@@ -357,7 +357,7 @@ const loadTransactions = async () => {
     const token = getToken();
     if (!token) return;
 
-    const response = await axios.get("http://localhost:8000/api/transactions", {
+    const response = await api.get("/api/transactions", {
       headers: { Authorization: `Bearer ${token}` },
     });
     transactions.value = response.data;
@@ -461,8 +461,8 @@ const addBudget = () => {
 const confirmCreateBudget = async () => {
   try {
     const token = getToken();
-    await axios.post(
-      "http://localhost:8000/api/budgets/create/",
+    await api.post(
+      "/api/budgets/create/",
       form.value,
       {
         headers: {
@@ -503,8 +503,8 @@ const editBudget = (id) => {
 const updateBudget = async () => {
   try {
     const token = getToken();
-    await axios.put(
-      `http://localhost:8000/api/budgets/${editingId.value}`,
+    await api.put(
+      \`/api/budgets/${editingId.value}`,
       form.value,
       {
         headers: {
@@ -532,7 +532,7 @@ const deleteBudget = (id) => {
 const confirmDelete = async () => {
   try {
     const token = getToken();
-    await axios.delete(`http://localhost:8000/api/budgets/${budgetToDelete.value}/delete/`, {
+    await api.delete(\`/api/budgets/${budgetToDelete.value}/delete/\`, {
       headers: { Authorization: `Bearer ${token}` },
     });
     await loadBudgets();

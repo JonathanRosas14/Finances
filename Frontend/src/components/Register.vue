@@ -109,7 +109,7 @@
 
 <script setup>
 import { ref, onMounted } from "vue";
-import axios from "axios";
+import api from "../lib/api";
 import { useRoute, useRouter } from "vue-router";
 
 const route = useRoute();
@@ -132,7 +132,7 @@ onMounted(() => {
   }
 
   window.google.accounts.id.initialize({
-    client_id: "360602519490-kof8v9cb8ujs0ii4fs68jo4flsbvig6m.apps.googleusercontent.com",
+    client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID || "360602519490-kof8v9cb8ujs0ii4fs68jo4flsbvig6m.apps.googleusercontent.com",
     callback: handleGoogleCallback,
   });
 
@@ -149,7 +149,7 @@ onMounted(() => {
 
 const handleGoogleCallback = async (response) => {
   try {
-    const result = await axios.post("http://localhost:8000/api/google/", {
+    const result = await api.post("/api/google/", {
       token: response.credential,
     });
     const { token, user } = result.data;
@@ -182,7 +182,7 @@ const handleRegister = async () => {
   loading.value = true;
 
   try {
-    const response = await axios.post("http://localhost:8000/api/register/", {
+    const response = await api.post("/api/register/", {
       username: username.value,
       email: email.value,
       password: password.value,

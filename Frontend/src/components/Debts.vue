@@ -311,7 +311,7 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
-import axios from 'axios'
+import api from '../lib/api'
 
 const debts = ref([])
 const categories = ref([])
@@ -364,7 +364,7 @@ const loadCategories = async () => {
   try {
     const token = getToken()
     if (!token) return
-    const response = await axios.get('http://localhost:8000/api/categories/', {
+    const response = await api.get('/api/categories/', {
       headers: { Authorization: `Bearer ${token}` },
     })
     categories.value = response.data
@@ -377,7 +377,7 @@ const loadDebts = async () => {
   try {
     const token = getToken()
     if (!token) return
-    const response = await axios.get('http://localhost:8000/api/debts/', {
+    const response = await api.get('/api/debts/', {
       headers: { Authorization: `Bearer ${token}` },
     })
     debts.value = response.data
@@ -390,7 +390,7 @@ const loadTransactions = async () => {
   try {
     const token = getToken()
     if (!token) return
-    const response = await axios.get('http://localhost:8000/api/transactions/', {
+    const response = await api.get('/api/transactions/', {
       headers: { Authorization: `Bearer ${token}` },
     })
     transactions.value = response.data
@@ -468,7 +468,7 @@ const confirmCreateDebt = async () => {
       category_id: form.value.category_id || null,
       total_with_interest: calculatedTotal.value,
     }
-    await axios.post('http://localhost:8000/api/debts/create/', payload, {
+    await api.post('/api/debts/create/', payload, {
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
     })
     await loadDebts()
@@ -514,7 +514,7 @@ const updateDebt = async () => {
       category_id: form.value.category_id || null,
       total_with_interest: calculatedTotal.value,
     }
-    await axios.put(`http://localhost:8000/api/debts/${editingId.value}/`, payload, {
+    await api.put(`/api/debts/${editingId.value}/`, payload, {
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
     })
     await loadDebts()
@@ -534,7 +534,7 @@ const deleteDebt = (id) => {
 const confirmDelete = async () => {
   try {
     const token = getToken()
-    await axios.delete(`http://localhost:8000/api/debts/${debtToDelete.value}/delete/`, {
+    await api.delete(`/api/debts/${debtToDelete.value}/delete/`, {
       headers: { Authorization: `Bearer ${token}` },
     })
     await loadDebts()

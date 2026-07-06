@@ -2,16 +2,17 @@ import os
 import sys
 from pathlib import Path
 
-# Check if Backend dir exists
-backend_dir = str(Path(__file__).resolve().parent.parent / 'Backend')
-sys.path.insert(0, backend_dir)
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent / 'Backend'))
 
-def application(environ, start_response):
-    status = '200 OK'
-    headers = [('Content-type', 'text/plain')]
-    start_response(status, headers)
-    body = []
-    body.append(f'Python: {sys.version}'.encode())
-    body.append(f'\nPath: {backend_dir}'.encode())
-    body.append(f'\nFiles: {os.listdir(backend_dir) if os.path.exists(backend_dir) else "NOT FOUND"}'.encode())
-    return body
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'core.settings')
+
+try:
+    from django.core.wsgi import get_wsgi_application
+    application = get_wsgi_application()
+except Exception as e:
+    import traceback
+    def application(environ, start_response):
+        status = '500 Internal Server Error'
+        headers = [('Content-type', 'text/plain')]
+        start_response(status, headers)
+        return [traceback.format_exc().encode()]

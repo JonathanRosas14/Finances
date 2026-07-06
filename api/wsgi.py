@@ -2,7 +2,7 @@ import os
 import sys
 from pathlib import Path
 
-sys.path.append(str(Path(__file__).resolve().parent / 'Backend'))
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent / 'Backend'))
 
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'core.settings')
 

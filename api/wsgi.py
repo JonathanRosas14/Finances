@@ -1,16 +1,10 @@
-import os, sys
+import os
+import sys
 from pathlib import Path
 
-backend = Path(__file__).resolve().parent.parent / 'Backend'
-sys.path.insert(0, str(backend))
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent / 'Backend'))
 
-def application(environ, start_response):
-    status = '200 OK'
-    headers = [('Content-type', 'text/plain')]
-    start_response(status, headers)
-    body = [b'Backend exists: ']
-    body.append(str(backend.exists()).encode())
-    if backend.exists():
-        body.append(b'\nContents: ')
-        body.append(str([str(p.name) for p in backend.iterdir()]).encode())
-    return body
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'core.settings')
+
+from django.core.wsgi import get_wsgi_application
+application = get_wsgi_application()

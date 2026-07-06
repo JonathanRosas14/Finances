@@ -16,50 +16,48 @@ try:
     import traceback
 
     lines = []
-    lines.append(f'CWD: {os.getcwd()}')
-    lines.append(f'__file__: {__file__}')
+    lines.append('=== /var/task/.vercel_python_packages/ contents ===')
+    pkg = Path('/var/task/.vercel_python_packages')
+    if pkg.exists():
+        for d in sorted(pkg.iterdir()):
+            lines.append(f'  {d.name}')
+            if d.is_dir() and not d.name.endswith('.dist-info') and not d.name.endswith('.libs'):
+                for f in sorted(d.iterdir()):
+                    lines.append(f'    {f.name}')
     lines.append('')
-    lines.append('=== /var/task contents ===')
-    for p in Path('/var/task').iterdir():
-        lines.append(f'  {p}')
+    lines.append('=== /var/task/_vendor/psycopg_binary/ contents ===')
+    p = Path('/var/task/_vendor/psycopg_binary')
+    if p.exists():
+        for f in sorted(p.iterdir()):
+            lines.append(f'  {f.name}')
     lines.append('')
-    lines.append('=== /var/task/.vercel/ contents ===')
-    vercel_path = Path('/var/task/.vercel')
-    if vercel_path.exists():
-        for p in vercel_path.rglob('*'):
-            lines.append(f'  {p}')
-    else:
-        lines.append('  (does not exist)')
+    lines.append('=== /var/task/_vendor/ contents ===')
+    v = Path('/var/task/_vendor')
+    for d in sorted(v.iterdir()):
+        if d.is_dir() and not d.name.endswith('.dist-info') and not d.name.endswith('.libs'):
+            lines.append(f'  {d.name}/')
+    lines.append('')
+    lines.append('=== try import psycopg ===')
+    import importlib
+    try:
+        # Check if psycopg exists as a module in any path
+        spec = importlib.util.find_spec('psycopg')
+        lines.append(f'  psycopg spec: {spec}')
+    except ImportError as e:
+        lines.append(f'  psycopg find_spec failed: {e}')
+    lines.append('')
+    lines.append('=== try import psycopg_binary ===')
+    try:
+        import psycopg_binary
+        lines.append(f'  psycopg_binary OK: {psycopg_binary.__file__}')
+    except ImportError as e:
+        lines.append(f'  psycopg_binary FAIL: {e}')
     lines.append('')
     lines.append('=== sys.path ===')
     for i, p in enumerate(sys.path):
         lines.append(f'  {i}: {p}')
-    lines.append('')
-    lines.append('=== trying site.addsitedir ===')
-    try:
-        import site
-        lines.append(f'  site-packages: {site.getsitepackages()}')
-        for sp in site.getsitepackages():
-            if sp not in sys.path:
-                lines.append(f'  adding {sp}')
-                sys.path.insert(0, sp)
-    except Exception as e:
-        lines.append(f'  site error: {e}')
-    lines.append('')
-    lines.append('=== try import psycopg again ===')
-    try:
-        import psycopg
-        lines.append(f'  psycopg OK: {psycopg.__file__}')
-    except ImportError as e:
-        lines.append(f'  psycopg FAIL: {e}')
-        lines.append('')
-        lines.append('=== searching for psycopg files ===')
-        for root in ['/var/task', '/var/lang']:
-            for fp in Path(root).rglob('psycopg*'):
-                lines.append(f'  found: {fp}')
-
+    
     body = '\n'.join(lines)
-
     def application(environ, start_response):
         status = '200 OK'
         headers = [('Content-type', 'text/plain')]

@@ -13,28 +13,59 @@ def application(environ, start_response):
     return [b'Django failed']
 
 try:
+    import traceback
+
+    lines = []
+    lines.append(f'CWD: {os.getcwd()}')
+    lines.append(f'__file__: {__file__}')
+    lines.append('')
+    lines.append('=== /var/task contents ===')
+    for p in Path('/var/task').iterdir():
+        lines.append(f'  {p}')
+    lines.append('')
+    lines.append('=== /var/task/.vercel/ contents ===')
+    vercel_path = Path('/var/task/.vercel')
+    if vercel_path.exists():
+        for p in vercel_path.rglob('*'):
+            lines.append(f'  {p}')
+    else:
+        lines.append('  (does not exist)')
+    lines.append('')
+    lines.append('=== sys.path ===')
+    for i, p in enumerate(sys.path):
+        lines.append(f'  {i}: {p}')
+    lines.append('')
+    lines.append('=== trying site.addsitedir ===')
+    try:
+        import site
+        lines.append(f'  site-packages: {site.getsitepackages()}')
+        for sp in site.getsitepackages():
+            if sp not in sys.path:
+                lines.append(f'  adding {sp}')
+                sys.path.insert(0, sp)
+    except Exception as e:
+        lines.append(f'  site error: {e}')
+    lines.append('')
+    lines.append('=== try import psycopg again ===')
     try:
         import psycopg
-        psycopg_ok = f'psycopg OK: {psycopg.__file__}'
+        lines.append(f'  psycopg OK: {psycopg.__file__}')
     except ImportError as e:
-        psycopg_ok = f'psycopg FAIL: {e}'
+        lines.append(f'  psycopg FAIL: {e}')
+        lines.append('')
+        lines.append('=== searching for psycopg files ===')
+        for root in ['/var/task', '/var/lang']:
+            for fp in Path(root).rglob('psycopg*'):
+                lines.append(f'  found: {fp}')
 
-    try:
-        import psycopg2
-        psycopg2_ok = f'psycopg2 OK: {psycopg2.__file__}'
-    except ImportError as e:
-        psycopg2_ok = f'psycopg2 FAIL: {e}'
-
-    sys_path = '\n'.join(sys.path)
+    body = '\n'.join(lines)
 
     def application(environ, start_response):
         status = '200 OK'
         headers = [('Content-type', 'text/plain')]
         start_response(status, headers)
-        body = f'{psycopg_ok}\n{psycopg2_ok}\n\nSys.path:\n{sys_path}'
         return [body.encode()]
 except Exception:
-    import traceback
     _error = traceback.format_exc()
     def application(environ, start_response):
         status = '500 Internal Server Error'

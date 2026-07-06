@@ -120,13 +120,25 @@ def login(request):
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def google_auth(request):
-    try:
-        google_token = request.data.get('token')
+    google_token = request.data.get('token')
+    if not google_token:
+        return Response(
+            {'message': 'Token is required'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
 
+    client_id = os.environ.get('GOOGLE_CLIENT_ID')
+    if not client_id:
+        return Response(
+            {'message': 'Google Client ID is not configured'},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+
+    try:
         idinfo = id_token.verify_oauth2_token(
             google_token,
             google_requests.Request(),
-            os.environ.get('GOOGLE_CLIENT_ID')
+            client_id
         )
 
         email = idinfo['email']
@@ -142,6 +154,11 @@ def google_auth(request):
             }
         )
 
+        if not created and user.provider != 'google':
+            user.provider = 'google'
+            user.provider_id = provider_id
+            user.save()
+
         tokens = get_tokens_for_user(user)
         return Response({
             'token': tokens['token'],
@@ -152,6 +169,11 @@ def google_auth(request):
             },
             'isNewUser': created
         })
+    except ValueError as e:
+        return Response(
+            {'message': f'Invalid Google token: {str(e)}'},
+            status=status.HTTP_401_UNAUTHORIZED
+        )
     except Exception as e:
         print(f"Error in google_auth: {e}")
         return Response(

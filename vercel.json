@@ -1,10 +1,4 @@
 {
-  "functions": {
-    "api/wsgi.py": {
-      "includeFiles": "Backend/**",
-      "maxDuration": 10
-    }
-  },
   "buildCommand": "cd Frontend && npm run build",
   "outputDirectory": "Frontend/dist",
   "rewrites": [

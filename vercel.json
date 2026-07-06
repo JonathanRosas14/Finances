@@ -1,19 +1,13 @@
 {
-  "builds": [
-    {
-      "src": "Frontend/package.json",
-      "use": "@vercel/static-build",
-      "config": {
-        "distDir": "dist"
-      }
-    },
-    {
-      "src": "Backend/core/wsgi.py",
-      "use": "@vercel/python"
+  "outputDirectory": "Frontend/dist",
+  "functions": {
+    "api/wsgi.py": {
+      "memory": 256,
+      "maxDuration": 10
     }
-  ],
+  },
   "rewrites": [
-    { "source": "/api/(.*)", "destination": "/Backend/core/wsgi.py" },
+    { "source": "/api/(.*)", "destination": "/api/wsgi" },
     { "source": "/(.*)", "destination": "/index.html" }
   ]
 }

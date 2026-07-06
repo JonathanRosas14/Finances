@@ -1,15 +1,22 @@
 {
-  "functions": {
-    "api/wsgi.py": {
-      "includeFiles": "Backend/**",
-      "memory": 256,
-      "maxDuration": 10
+  "builds": [
+    {
+      "src": "Frontend/package.json",
+      "use": "@vercel/static-build",
+      "config": {
+        "distDir": "dist"
+      }
+    },
+    {
+      "src": "Backend/core/wsgi.py",
+      "use": "@vercel/python"
     }
-  },
-  "buildCommand": "cd Frontend && npm run build",
-  "outputDirectory": "Frontend/dist",
-  "rewrites": [
-    { "source": "/api/(.*)", "destination": "/api/wsgi" },
-    { "source": "/(.*)", "destination": "/index.html" }
+  ],
+  "routes": [
+    { "src": "/api/(.*)", "dest": "Backend/core/wsgi.py" },
+    { "handle": "filesystem" },
+    { "src": "/assets/(.*)", "dest": "/assets/$1" },
+    { "src": "/(.*)\\.(.+)", "dest": "/$1.$2" },
+    { "src": "/(.*)", "dest": "/index.html" }
   ]
 }
